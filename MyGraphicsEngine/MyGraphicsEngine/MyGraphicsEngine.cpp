@@ -1,6 +1,13 @@
 #include <vector>
 #include <iostream>
 
+/**********************************************
+class Matrix
+
+@brief Class used to represent matrices with
+	   overloaded operator functions for proper
+       matrix operations
+************************************************/
 class Matrix
 {
 public:
@@ -11,8 +18,10 @@ public:
 		value.resize(row, std::vector<int>(col));
 	}
 
+	// Copies vector to this classes vector
 	void Assign(std::vector< std::vector<int> > v)
 	{
+		// Check for proper dimensions
 		if (value.size() == v.size() && value[0].size() == v[0].size())
 		{
 			value = v;
@@ -21,11 +30,14 @@ public:
 			throw "Maxtrices are not of same dimension!";
 	}
 
+
 	Matrix operator + (Matrix const& obj)
 	{
 		Matrix res(r, c);
 		std::vector< std::vector<int> > result;
 		result.resize(r, std::vector<int>(c));
+
+		// Check for proper dimensions
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
@@ -46,6 +58,8 @@ public:
 		Matrix res(r, c);
 		std::vector< std::vector<int> > result;
 		result.resize(r, std::vector<int>(c));
+
+		// Check for proper dimensions
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
@@ -61,12 +75,14 @@ public:
 
 	}
 
-
+	// Implements the dot product between two matrices
 	Matrix operator * (Matrix const& obj)
 	{
 		Matrix res(r, obj.c);
 		std::vector< std::vector<int> > result;
 		result.resize(r, std::vector<int>(obj.c));
+
+		// Check for proper dimensions
 		if (value[0].size() == obj.value.size())
 		{
 			for (int k = 0; k < r; k++)
@@ -89,9 +105,11 @@ public:
 
 	}
 
+	// Holds values in proper structure
 	std::vector< std::vector<int> > value;
 
 private:
+	// Holds the values for rows and columns of this object
 	int r;
 	int c;
 
