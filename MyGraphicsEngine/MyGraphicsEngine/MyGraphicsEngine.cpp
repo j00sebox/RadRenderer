@@ -115,6 +115,40 @@ private:
 
 };
 
+int z_far = 1000; // represents the distance from the theoretical distance in the screen to the users face
+int z_near = 10; // represents the distance from the users face to the screen
+int theta = 60; // the field of view for the player
+
+int height = 50;
+int width = 50;
+
+int scaling_factor = 1 / tan(theta / 2); // amount needed to scale coordinates based on the fov
+
+// translations for the coordinates
+int x_translation(int x, int z)
+{
+	int aspect_ratio = height / width;
+	int result = aspect_ratio * scaling_factor * x / z;
+
+	return result;
+}
+
+int y_translation(int y, int z)
+{
+	int result = scaling_factor * y / z;
+
+	return result;
+}
+
+int z_translation(int z)
+{
+	int q = z_far / (z_far - z_near);
+	int result = z * q - z * z_near;
+
+	return result;
+}
+
+
 int main()
 {
 	std::vector< std::vector<int> > v = { { 0, 1, 1 }, { 0, 1, 1 } };
