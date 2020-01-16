@@ -35,6 +35,14 @@ public:
 			throw "Maxtrices are not of same dimension!";
 	}
 
+	// Reduce the amount of columns by 1
+	void clip()
+	{
+		for (auto vec : value)
+			vec.pop_back();
+		c--;
+	}
+
 
 	Matrix operator + (Matrix const& obj)
 	{
@@ -148,7 +156,6 @@ public:
 		vertices.Assign(v);
 	}
 
-private:
 	Matrix vertices;
 };
 
@@ -184,23 +191,37 @@ public:
 	{
 		// Clear screen to redraw
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
+
+		Matrix pro1(1, 3); 
+		Matrix pro2(1, 3);
+		Matrix pro3(1, 3);
+
+		for (auto t : cube)
+		{
+			pro1 = coordinate_projection(t.vertices.value[0][0], t.vertices.value[0][0], t.vertices.value[0][0]);
+
+
+		}
 	}
 
 	// Map 3D coordinates to 2D space
-	Matrix coordinate_translation(float x, float y, float z)
+	Matrix coordinate_projection(float x, float y, float z)
 	{
 		// Put coordinates in vector format
 		std::vector< std::vector<float> > coordinates = { { x, y, z, 1 } }; // 1 is added so that -z*near can be subtracted from z*q
-		std::vector< std::vector<float> > translation_functions = { { aspect_ratio*scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z*z_near }, { 0, 0, 1, 0 } };
+		std::vector< std::vector<float> > projection_functions = { { aspect_ratio*scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z*z_near }, { 0, 0, 1, 0 } };
 		Matrix coordinate_vec(1, 4);
-		Matrix translation_matrix(4, 4);
+		Matrix projection_matrix(4, 4);
 		coordinate_vec.Assign(coordinates);
-		translation_matrix.Assign(translation_functions);
+		projection_matrix.Assign(projection_functions);
 
-		Matrix res = coordinate_vec * translation_matrix;
+		Matrix res = coordinate_vec * projection_matrix;
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		res = res / res.value[0][3];
+
+		// Change matrix to 1X3
+		res.clip();
 
 		return res;
 	}
