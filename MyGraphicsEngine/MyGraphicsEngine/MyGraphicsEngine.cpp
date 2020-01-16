@@ -1,6 +1,12 @@
 #include <vector>
 #include <iostream>
 
+/*
+ - Library provided from https://github.com/OneLoneCoder
+ - Used to draw shapes to the console 
+*/
+#include "olcConsoleGameEngine.h"
+
 /**********************************************
 class Matrix
 @brief Class used to represent matrices with
@@ -133,17 +139,18 @@ private:
 
 };
 
-class Triangle
+class EmazingEngine : public olcConsoleGameEngine
 {
 public:
-	Triangle(std::vector< std::vector<float> > coordinates)
+	bool OnUserCreate() override
 	{
-		vertices.Assign(coordinates);
 	}
 
-private:
-	Matrix vertices(3, 3);
+	bool OnUserUpdate(float fElapsedTime) override
+	{
+	}
 };
+
 
 float z_far = 1000; // represents the distance from the theoretical distance in the screen to the users face
 float z_near = 10; // represents the distance from the users face to the screen
@@ -161,7 +168,8 @@ float aspect_ratio = height / width;
 
 Matrix coordinate_translation(float x, float y, float z)
 {
-	std::vector< std::vector<float> > coordinates = { { x, y, z, 1 } };
+	// Put coordinates in vector format
+	std::vector< std::vector<float> > coordinates = { { x, y, z, 1 } }; // 1 is added so that -z*near can be subtracted from z*q
 	std::vector< std::vector<float> > translation_functions = { { aspect_ratio*scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z*z_near }, { 0, 0, 1, 0 } };
 	Matrix coordinate_vec(1, 4);
 	Matrix translation_matrix(4, 4);
@@ -169,6 +177,9 @@ Matrix coordinate_translation(float x, float y, float z)
 	translation_matrix.Assign(translation_functions);
 
 	Matrix res = coordinate_vec * translation_matrix;
+
+	// Dived entire matrix by the last value to convert it back to 3D space
+	res = res / res.value[0][3];
 
 	return res;
 }
