@@ -3,10 +3,9 @@
 
 /**********************************************
 class Matrix
-
 @brief Class used to represent matrices with
-	   overloaded operator functions for proper
-       matrix operations
+overloaded operator functions for proper
+matrix operations
 ************************************************/
 class Matrix
 {
@@ -15,11 +14,11 @@ public:
 	{
 		r = row;
 		c = col;
-		value.resize(row, std::vector<int>(col));
+		value.resize(row, std::vector<float>(col));
 	}
 
 	// Copies vector to this classes vector
-	void Assign(std::vector< std::vector<int> > v)
+	void Assign(std::vector< std::vector<float> > v)
 	{
 		// Check for proper dimensions
 		if (value.size() == v.size() && value[0].size() == v[0].size())
@@ -34,15 +33,15 @@ public:
 	Matrix operator + (Matrix const& obj)
 	{
 		Matrix res(r, c);
-		std::vector< std::vector<int> > result;
-		result.resize(r, std::vector<int>(c));
+		std::vector< std::vector<float> > result;
+		result.resize(r, std::vector<float>(c));
 
 		// Check for proper dimensions
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
-				for (int j = 0; j < c; j++)
-					result[i][j] = value[i][j] + obj.value[i][j];
+			for (int j = 0; j < c; j++)
+				result[i][j] = value[i][j] + obj.value[i][j];
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -56,15 +55,15 @@ public:
 	Matrix operator - (Matrix const& obj)
 	{
 		Matrix res(r, c);
-		std::vector< std::vector<int> > result;
-		result.resize(r, std::vector<int>(c));
+		std::vector< std::vector<float> > result;
+		result.resize(r, std::vector<float>(c));
 
 		// Check for proper dimensions
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
-				for (int j = 0; j < c; j++)
-					result[i][j] = value[i][j] - obj.value[i][j];
+			for (int j = 0; j < c; j++)
+				result[i][j] = value[i][j] - obj.value[i][j];
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -79,8 +78,8 @@ public:
 	Matrix operator * (Matrix const& obj)
 	{
 		Matrix res(r, obj.c);
-		std::vector< std::vector<int> > result;
-		result.resize(r, std::vector<int>(obj.c));
+		std::vector< std::vector<float> > result;
+		result.resize(r, std::vector<float>(obj.c));
 
 		// Check for proper dimensions
 		if (value[0].size() == obj.value.size())
@@ -102,11 +101,30 @@ public:
 		res.Assign(result);
 
 		return res;
+	}
 
+	Matrix operator / (float divisor)
+	{
+		Matrix res(r, c);
+		std::vector< std::vector<float> > result;
+		result.resize(r, std::vector<float>(c));
+		result = value;
+
+
+		for (int i = 0; i < r; i++)
+		{
+
+			for (int j = 0; j < c; j++)
+				result[i][j] /= divisor;
+		}
+
+		res.Assign(result);
+
+		return res;
 	}
 
 	// Holds values in proper structure
-	std::vector< std::vector<int> > value;
+	std::vector< std::vector<float> > value;
 
 private:
 	// Holds the values for rows and columns of this object
@@ -115,51 +133,62 @@ private:
 
 };
 
-int z_far = 1000; // represents the distance from the theoretical distance in the screen to the users face
-int z_near = 10; // represents the distance from the users face to the screen
-int theta = 60; // the field of view for the player
-
-int height = 50;
-int width = 50;
-
-int scaling_factor = 1 / tan(theta / 2); // amount needed to scale coordinates based on the fov
-
-// translations for the coordinates
-int x_translation(int x, int z)
+class Triangle
 {
-	int aspect_ratio = height / width;
-	int result = aspect_ratio * scaling_factor * x / z;
+public:
+	Triangle(std::vector< std::vector<float> > coordinates)
+	{
+		vertices.Assign(coordinates);
+	}
 
-	return result;
-}
+private:
+	Matrix vertices(3, 3);
+};
 
-int y_translation(int y, int z)
+float z_far = 1000; // represents the distance from the theoretical distance in the screen to the users face
+float z_near = 10; // represents the distance from the users face to the screen
+float q = z_far / (z_far - z_near);
+
+float theta = 60; // the field of view for the player
+
+float height = 50;
+float width = 50;
+
+float scaling_factor = 1 / tan(theta / 2); // amount needed to scale coordinates based on the fov
+
+float aspect_ratio = height / width;
+
+
+Matrix coordinate_translation(float x, float y, float z)
 {
-	int result = scaling_factor * y / z;
+	std::vector< std::vector<float> > coordinates = { { x, y, z, 1 } };
+	std::vector< std::vector<float> > translation_functions = { { aspect_ratio*scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z*z_near }, { 0, 0, 1, 0 } };
+	Matrix coordinate_vec(1, 4);
+	Matrix translation_matrix(4, 4);
+	coordinate_vec.Assign(coordinates);
+	translation_matrix.Assign(translation_functions);
 
-	return result;
+	Matrix res = coordinate_vec * translation_matrix;
+
+	return res;
 }
-
-int z_translation(int z)
-{
-	int q = z_far / (z_far - z_near);
-	int result = z * q - z * z_near;
-
-	return result;
-}
-
 
 int main()
 {
-	std::vector< std::vector<int> > v = { { 0, 1, 1 }, { 0, 1, 1 } };
-	std::vector< std::vector<int> > d = { { 1, 1 }, { 1, 1 }, { 1, 1 } };
-	Matrix m(2, 3);
-	Matrix n(3, 2);
-	n.Assign(d);
-	m.Assign(v);
-	Matrix result(2, 3);
-	result = m * n;
-	std::cout << result.value[0][1];
+	float x, y, z;
+
+
+	/*std::vector< std::vector<float> > test = { { 2, 2 } };
+	float w = 2;
+	Matrix t(1, 2);
+	t.Assign(test);
+
+	Matrix res(1, 2);
+	res = t / 2;
+
+	std::cout << res.value[0][0] << res.value[0][1];
+
+	while (1);*/
+
 	return 0;
 }
-
