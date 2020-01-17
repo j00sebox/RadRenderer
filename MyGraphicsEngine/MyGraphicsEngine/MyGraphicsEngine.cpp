@@ -146,6 +146,16 @@ public:
 		return res;
 	}
 
+	// allows value to be accessed easier
+	float operator () (int i, int j)
+	{
+		return value[i][j];
+	}
+
+	
+
+
+
 	// Holds values in proper structure
 	std::vector< std::vector<float> > value;
 
@@ -231,21 +241,21 @@ public:
 		{
 			
 
-			rZ1 = z_axis_rotation(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
-			rZ2 = z_axis_rotation(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
-			rZ3 = z_axis_rotation(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+			rZ1 = z_axis_rotation(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2));
+			rZ2 = z_axis_rotation(t.vertices(1, 0), t.vertices(1, 1), t.vertices(1, 2));
+			rZ3 = z_axis_rotation(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2));
 
-			rX1 = x_axis_rotation(rZ1.value[0][0], rZ1.value[0][1], rZ1.value[0][2]);
-			rX2 = x_axis_rotation(rZ2.value[0][0], rZ2.value[0][1], rZ2.value[0][2]);
-			rX3 = x_axis_rotation(rZ3.value[0][0], rZ3.value[0][1], rZ3.value[0][2]);
+			rX1 = x_axis_rotation(rZ1(0, 0), rZ1(0, 1), rZ1(0, 2));
+			rX2 = x_axis_rotation(rZ2(0, 1), rZ2(0, 2), rZ2(0, 2));
+			rX3 = x_axis_rotation(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2));
 
 			rX1.value[0][2] += 3.0f;
 			rX2.value[0][2] += 3.0f;
 			rX3.value[0][2] += 3.0f;
 
-			pro1 = coordinate_projection(rX1.value[0][0], rX1.value[0][1], rX1.value[0][2]);
-			pro2 = coordinate_projection(rX2.value[0][0], rX2.value[0][1], rX2.value[0][2]);
-			pro3 = coordinate_projection(rX3.value[0][0], rX3.value[0][1], rX3.value[0][2]);
+			pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
+			pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
+			pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
 
 			pro1.value[0][0] += 1.0f;
 			pro1.value[0][1] += 1.0f;
@@ -265,7 +275,7 @@ public:
 			pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
 			pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
-			DrawTriangle(pro1.value[0][0], pro1.value[0][1], pro2.value[0][0], pro2.value[0][1], pro3.value[0][0], pro3.value[0][1], PIXEL_SOLID, FG_WHITE);
+			DrawTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
 		}
 
 		return true;
