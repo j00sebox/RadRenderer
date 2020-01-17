@@ -210,15 +210,36 @@ public:
 		// Clear screen to redraw
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-		Matrix pro1(1, 3); 
+		rotate_angle += 1.0f * fElapsedTime;
+
+		// Projection matrices
+		Matrix pro1(1, 3);
 		Matrix pro2(1, 3);
 		Matrix pro3(1, 3);
 
+		Matrix rX1(1, 3);
+		Matrix rX2(1, 3);
+		Matrix rX3(1, 3);
+
+		Matrix rZ1(1, 3);
+		Matrix rZ2(1, 3);
+		Matrix rZ3(1, 3);
+
+		
+
 		for (auto t : object)
 		{
-			pro1 = coordinate_projection(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
-			pro2 = coordinate_projection(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
-			pro3 = coordinate_projection(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+			t.vertices.value[0][2] += 3.0f;
+			t.vertices.value[1][2] += 3.0f;
+			t.vertices.value[2][2] += 3.0f;
+
+			rX1 = x_axis_rotation(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
+			rX2 = x_axis_rotation(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
+			rX3 = x_axis_rotation(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+
+			pro1 = coordinate_projection(rX1.value[0][0], rX1.value[0][1], rX1.value[0][2]);
+			pro2 = coordinate_projection(rX2.value[0][0], rX2.value[0][1], rX2.value[0][2]);
+			pro3 = coordinate_projection(rX3.value[0][0], rX3.value[0][1], rX3.value[0][2]);
 
 			pro1.value[0][0] += 1.0f;
 			pro1.value[0][1] += 1.0f;
@@ -239,7 +260,6 @@ public:
 			pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
 			DrawTriangle(pro1.value[0][0], pro1.value[0][1], pro2.value[0][0], pro2.value[0][1], pro3.value[0][0], pro3.value[0][1], PIXEL_SOLID, FG_WHITE);
-			//DrawTriangle(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[2][0], t.vertices.value[2][1], PIXEL_SOLID, FG_WHITE);
 		}
 
 		return true;
@@ -250,8 +270,9 @@ public:
 	{
 		// Put coordinates in vector format
 		Matrix coordinate_vec(1, 4);
-		Matrix projection_matrix(4, 4);
 		coordinate_vec.Assign({ { x, y, z, 1.0f } }); // 1 is added so that -z_near*q can be subtracted from z*q
+
+		Matrix projection_matrix(4, 4);
 		projection_matrix.Assign({ { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } });
 
 		Matrix res = coordinate_vec * projection_matrix;
@@ -261,7 +282,49 @@ public:
 		res = res / res.value[0][3];
 
 		// Change matrix to 1X3
-		//res.clip();
+		res.clip();
+
+		return res;
+	}
+
+	Matrix x_axis_rotation(float x, float y, float z)
+	{
+		// Put coordinates in vector format
+		Matrix coordinate_vec(1, 4);
+		coordinate_vec.Assign({ { x, y, z, 1.0f } });
+
+		Matrix x_rotation(4, 4);
+		x_rotation.Assign({ {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} });
+
+		Matrix res = coordinate_vec * x_rotation;
+
+		// Dived entire matrix by the last value to convert it back to 3D space
+		// Also satistfies dividing the terms by z
+		res = res / res.value[0][3];
+
+		// Change matrix to 1X3
+		res.clip();
+
+		return res;
+	}
+
+	Matrix z_axis_rotation(float x, float y, float z)
+	{
+		// Put coordinates in vector format
+		Matrix coordinate_vec(1, 4);
+		coordinate_vec.Assign({ { x, y, z, 1.0f } });
+
+		Matrix z_rotation(4, 4);
+		z_rotation.Assign({ {cosf(rotate_angle), sinf(rotate_angle, 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} });
+
+		Matrix res = coordinate_vec * z_rotation;
+
+		// Dived entire matrix by the last value to convert it back to 3D space
+		// Also satistfies dividing the terms by z
+		res = res / res.value[0][3];
+
+		// Change matrix to 1X3
+		res.clip();
 
 		return res;
 	}
@@ -275,7 +338,9 @@ private:
 	float theta = 90.0f; // the field of view for the player
 
 	float scaling_factor = 1.0f / tanf(theta * 0.5f / 180.0f * 3.14159f); // amount needed to scale coordinates based on the fov
-	float aspect_ratio = (float)88 / (float)88;
+	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
+
+	float rotate_angle;
 };
 
 
