@@ -57,8 +57,8 @@ public:
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
-			for (int j = 0; j < c; j++)
-				result[i][j] = value[i][j] + obj.value[i][j];
+				for (int j = 0; j < c; j++)
+					result[i][j] = value[i][j] + obj.value[i][j];
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -79,8 +79,8 @@ public:
 		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
 		{
 			for (int i = 0; i < r; i++)
-			for (int j = 0; j < c; j++)
-				result[i][j] = value[i][j] - obj.value[i][j];
+				for (int j = 0; j < c; j++)
+					result[i][j] = value[i][j] - obj.value[i][j];
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -104,10 +104,10 @@ public:
 			
 				for (int i = 0; i < r; i++)
 				{
-					for (int k = 0; k < r; k++)
+					for (int k = 0; k < obj.c; k++)
 					{
-						for (int j = 0; j < c; j++)
-							result[k][i] += value[k][j] * obj.value[j][i];
+						for (int j = 0; j < obj.r; j++)
+							result[i][k] += value[i][j] * obj.value[j][k];
 					}
 				}
 		}
@@ -137,6 +137,10 @@ public:
 			}
 
 			res.Assign(result);
+		}
+		else
+		{
+			return *this;
 		}
 
 		return res;
@@ -197,8 +201,6 @@ public:
 		object = cube_demo();		
 #endif  CUBE_DEMO
 
-		
-
 		return true;
 
 	}
@@ -215,8 +217,8 @@ public:
 		for (auto t : object)
 		{
 			pro1 = coordinate_projection(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
-			pro1 = coordinate_projection(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
-			pro1 = coordinate_projection(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+			pro2 = coordinate_projection(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
+			pro3 = coordinate_projection(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
 
 			pro1.value[0][0] += 1.0f;
 			pro1.value[0][1] += 1.0f;
@@ -237,6 +239,7 @@ public:
 			pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
 			DrawTriangle(pro1.value[0][0], pro1.value[0][1], pro2.value[0][0], pro2.value[0][1], pro3.value[0][0], pro3.value[0][1], PIXEL_SOLID, FG_WHITE);
+			//DrawTriangle(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[2][0], t.vertices.value[2][1], PIXEL_SOLID, FG_WHITE);
 		}
 
 		return true;
@@ -246,12 +249,10 @@ public:
 	Matrix coordinate_projection(float x, float y, float z)
 	{
 		// Put coordinates in vector format
-		std::vector< std::vector<float> > coordinates = { { x, y, z, 1.0f } }; // 1 is added so that -z*near can be subtracted from z*q
-		std::vector< std::vector<float> > projection_functions = { { aspect_ratio * scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z_near * q } , { 0, 0, 1, 0 } };
 		Matrix coordinate_vec(1, 4);
 		Matrix projection_matrix(4, 4);
-		coordinate_vec.Assign(coordinates);
-		projection_matrix.Assign(projection_functions);
+		coordinate_vec.Assign({ { x, y, z, 1.0f } }); // 1 is added so that -z_near*q can be subtracted from z*q
+		projection_matrix.Assign({ { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } });
 
 		Matrix res = coordinate_vec * projection_matrix;
 
@@ -260,7 +261,7 @@ public:
 		res = res / res.value[0][3];
 
 		// Change matrix to 1X3
-		res.clip();
+		//res.clip();
 
 		return res;
 	}
@@ -271,32 +272,39 @@ private:
 	float z_near = 0.1f; // represents the distance from the users face to the screen
 	float q = z_far / (z_far - z_near);
 
-	float theta = 60.0f; // the field of view for the player
+	float theta = 90.0f; // the field of view for the player
 
-	float scaling_factor = 1 / tanf(theta / 2 * 180.0f / 3.14159f); // amount needed to scale coordinates based on the fov
-	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
+	float scaling_factor = 1.0f / tanf(theta * 0.5f / 180.0f * 3.14159f); // amount needed to scale coordinates based on the fov
+	float aspect_ratio = (float)88 / (float)88;
 };
-
-
 
 
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(88, 88, 4, 4))
+	if (game.ConstructConsole(250, 250, 4, 4))
 		game.Start();
 
-	/*Matrix test(3, 3);
-	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 0.0f } });
+	/*Matrix test(2, 3);
+	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
 
-	Matrix yeet(3, 3);
-	yeet.Assign({ { 2.0f, 3.0f, 0.0f }, { 5.0f, 1.0f, 4.0f }, { 1.0f, 1.0f, 2.0f } });
+	Matrix yeet(3, 4);
+	yeet.Assign({ { 2.0f, 3.0f, 0.0f, 5.0f }, { 5.0f, 1.0f, 4.0f, 7.8f }, { 1.0f, 1.0f, 2.0f, 3.5f } });
 
-	Matrix res = test * yeet;
+	Matrix res = test * yeet;*/
+	/*EmazingEngine game;
 
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-			std::cout << res.value[i][j];*/
+	Matrix res = game.coordinate_projection(0.0f, 1.0f, 0.0f);
+
+	std::cout << res.value[0][3] << std::endl << res.value[0][0] << std::endl << res.value[0][1] << std::endl << res.value[0][2];*/
+
+	/*for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			std::cout << res.value[i][j];
+		std::cout << std::endl;
+	}*/
+
 
 
 	return 0;
