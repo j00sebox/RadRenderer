@@ -229,13 +229,19 @@ public:
 
 		for (auto t : object)
 		{
-			t.vertices.value[0][2] += 3.0f;
-			t.vertices.value[1][2] += 3.0f;
-			t.vertices.value[2][2] += 3.0f;
+			
 
-			rX1 = x_axis_rotation(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
-			rX2 = x_axis_rotation(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
-			rX3 = x_axis_rotation(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+			rZ1 = z_axis_rotation(t.vertices.value[0][0], t.vertices.value[0][1], t.vertices.value[0][2]);
+			rZ2 = z_axis_rotation(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
+			rZ3 = z_axis_rotation(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
+
+			rX1 = x_axis_rotation(rZ1.value[0][0], rZ1.value[0][1], rZ1.value[0][2]);
+			rX2 = x_axis_rotation(rZ2.value[0][0], rZ2.value[0][1], rZ2.value[0][2]);
+			rX3 = x_axis_rotation(rZ3.value[0][0], rZ3.value[0][1], rZ3.value[0][2]);
+
+			rX1.value[0][2] += 3.0f;
+			rX2.value[0][2] += 3.0f;
+			rX3.value[0][2] += 3.0f;
 
 			pro1 = coordinate_projection(rX1.value[0][0], rX1.value[0][1], rX1.value[0][2]);
 			pro2 = coordinate_projection(rX2.value[0][0], rX2.value[0][1], rX2.value[0][2]);
@@ -315,7 +321,7 @@ public:
 		coordinate_vec.Assign({ { x, y, z, 1.0f } });
 
 		Matrix z_rotation(4, 4);
-		z_rotation.Assign({ {cosf(rotate_angle), sinf(rotate_angle, 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} });
+		z_rotation.Assign({ {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} });
 
 		Matrix res = coordinate_vec * z_rotation;
 
