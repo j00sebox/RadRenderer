@@ -101,16 +101,15 @@ public:
 		// Check for proper dimensions
 		if (value[0].size() == obj.value.size())
 		{
-			for (int k = 0; k < r; k++)
-			{
+			
 				for (int i = 0; i < r; i++)
 				{
-
-					for (int j = 0; j < c; j++)
-						result[i][k] += value[i][j] * obj.value[j][i];
+					for (int k = 0; k < r; k++)
+					{
+						for (int j = 0; j < c; j++)
+							result[k][i] += value[k][j] * obj.value[j][i];
+					}
 				}
-			}
-
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -139,8 +138,6 @@ public:
 
 			res.Assign(result);
 		}
-		else
-			throw "Attempting to divide by 0!";
 
 		return res;
 	}
@@ -166,6 +163,30 @@ public:
 
 	Matrix vertices;
 };
+
+std::vector<Triangle> cube_demo()
+{
+	return
+	{
+		Triangle({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 0.0f } }),
+		Triangle({ { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }),
+
+		Triangle({ { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }),
+		Triangle({ { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 1.0f } }),
+
+		Triangle({ { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f } }),
+		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }),
+
+		Triangle({ { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } }),
+		Triangle({ { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }),
+
+		Triangle({ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } }),
+		Triangle({ { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f } }),
+
+		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } }),
+		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }),
+	};
+}
 
 class EmazingEngine : public olcConsoleGameEngine
 {
@@ -197,16 +218,36 @@ public:
 			pro1 = coordinate_projection(t.vertices.value[1][0], t.vertices.value[1][1], t.vertices.value[1][2]);
 			pro1 = coordinate_projection(t.vertices.value[2][0], t.vertices.value[2][1], t.vertices.value[2][2]);
 
+			pro1.value[0][0] += 1.0f;
+			pro1.value[0][1] += 1.0f;
+
+			pro2.value[0][0] += 1.0f;
+			pro2.value[0][1] += 1.0f;
+
+			pro3.value[0][0] += 1.0f;
+			pro3.value[0][1] += 1.0f;
+
+			pro1.value[0][0] *= 0.5f * (float)ScreenWidth();
+			pro1.value[0][1] *= 0.5f * (float)ScreenHeight();
+
+			pro2.value[0][0] *= 0.5f * (float)ScreenWidth();
+			pro2.value[0][1] *= 0.5f * (float)ScreenHeight();
+
+			pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
+			pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
+
 			DrawTriangle(pro1.value[0][0], pro1.value[0][1], pro2.value[0][0], pro2.value[0][1], pro3.value[0][0], pro3.value[0][1], PIXEL_SOLID, FG_WHITE);
 		}
+
+		return true;
 	}
 
 	// Map 3D coordinates to 2D space
 	Matrix coordinate_projection(float x, float y, float z)
 	{
 		// Put coordinates in vector format
-		std::vector< std::vector<float> > coordinates = { { x, y, z, 1 } }; // 1 is added so that -z*near can be subtracted from z*q
-		std::vector< std::vector<float> > projection_functions = { { aspect_ratio*scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z*z_near }, { 0, 0, 1, 0 } };
+		std::vector< std::vector<float> > coordinates = { { x, y, z, 1.0f } }; // 1 is added so that -z*near can be subtracted from z*q
+		std::vector< std::vector<float> > projection_functions = { { aspect_ratio * scaling_factor, 0, 0, 0 }, { 0, scaling_factor, 0, 0 }, { 0, 0, q, -z_near * q } , { 0, 0, 1, 0 } };
 		Matrix coordinate_vec(1, 4);
 		Matrix projection_matrix(4, 4);
 		coordinate_vec.Assign(coordinates);
@@ -232,40 +273,31 @@ private:
 
 	float theta = 60.0f; // the field of view for the player
 
-	float scaling_factor = 1 / tan(theta / 2); // amount needed to scale coordinates based on the fov
+	float scaling_factor = 1 / tanf(theta / 2 * 180.0f / 3.14159f); // amount needed to scale coordinates based on the fov
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 };
 
-std::vector<Triangle> cube_demo()
-{
-	return
-	{
-		Triangle({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 0.0f } }),
-		Triangle({ { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }),
 
-		Triangle({ { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }),
-		Triangle({ { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 1.0f } }),
-
-		Triangle({ { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f } }),
-		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }),
-
-		Triangle({ { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } }),
-		Triangle({ { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }),
-
-		Triangle({ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } }),
-		Triangle({ { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f } }),
-
-		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } }),
-		Triangle({ { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }),
-	};
-}
 
 
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(256, 240, 4, 4))
+	if (game.ConstructConsole(88, 88, 4, 4))
 		game.Start();
+
+	/*Matrix test(3, 3);
+	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 0.0f } });
+
+	Matrix yeet(3, 3);
+	yeet.Assign({ { 2.0f, 3.0f, 0.0f }, { 5.0f, 1.0f, 4.0f }, { 1.0f, 1.0f, 2.0f } });
+
+	Matrix res = test * yeet;
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			std::cout << res.value[i][j];*/
+
 
 	return 0;
 }
