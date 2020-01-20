@@ -1,6 +1,4 @@
-
 #include <iostream>
-#include <cmath>
 
 /*
  - Library provided from https://github.com/OneLoneCoder
@@ -85,8 +83,7 @@ public:
 		Vector3D l2;
 		Vector3D normal;
 
-		Matrix cam(1, 3);
-
+		Vector3D cam;
 
 		for (auto t : object)
 		{
@@ -114,14 +111,11 @@ public:
 
 			normal = l1.cross(l2);
 
-			float normalize = sqrtf(exp2(normal.x) + exp2(normal.y) + exp2(normal.z));
-			normal.x /= normalize;
-			normal.y /= normalize;
-			normal.z /= normalize;
+			normal.normalize();
 
-			if ( (normal.x * rX1(0, 0) - cam(0, 0)
-				+ normal.y * rX1(0, 1) - cam(0, 1)
-				+ normal.z * rX1(0, 2) - cam(0, 2) ) < 0 )
+			if ( (normal.x * rX1(0, 0) - cam.x
+				+ normal.y * rX1(0, 1) - cam.y
+				+ normal.z * rX1(0, 2) - cam.z ) < 0 )
 			{
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));

@@ -1,4 +1,5 @@
 #include <vector>
+#include <cmath>
 
 /**********************************************
 class Matrix
@@ -67,6 +68,15 @@ public:
 		normal.z = x * line.y - y * line.x;
 
 		return normal;
+	}
+
+	void normalize()
+	{
+		float normalize = sqrtf(exp2(x) + exp2(y) + exp2(z));
+
+		x /= normalize;
+		y /= normalize;
+		z /= normalize;
 	}
 	
 	float x, y, z;
