@@ -10,10 +10,7 @@
 
 #include "Matrix.h"
 
-
 #define CUBE_DEMO
-
-
 
 class Triangle
 {
@@ -84,9 +81,9 @@ public:
 		Matrix rZ2(1, 3);
 		Matrix rZ3(1, 3);
 
-		Matrix l1(1, 3);
-		Matrix l2(1, 3);
-		Matrix normal(1, 3);
+		Vector3D l1;
+		Vector3D l2;
+		Vector3D normal;
 
 		Matrix cam(1, 3);
 
@@ -106,28 +103,25 @@ public:
 			rX3.value[0][2] += 3.0f;
 
 			// Construct line 1 of the triangle
-			l1.value[0][0] = rX2(0, 0) - rX1(0, 0);
-			l1.value[0][1] = rX2(0, 1) - rX1(0, 1);
-			l1.value[0][2] = rX2(0, 2) - rX1(0, 2);
+			l1.x = rX2(0, 0) - rX1(0, 0);
+			l1.y = rX2(0, 1) - rX1(0, 1);
+			l1.z = rX2(0, 2) - rX1(0, 2);
 
 			// Contstruct line 2 of the triangle
-			l2.value[0][0] = rX3(0, 0) - rX1(0, 0);
-			l2.value[0][1] = rX3(0, 1) - rX1(0, 1);
-			l2.value[0][2] = rX3(0, 2) - rX1(0, 2);
+			l2.x = rX3(0, 0) - rX1(0, 0);
+			l2.y = rX3(0, 1) - rX1(0, 1);
+			l2.z = rX3(0, 2) - rX1(0, 2);
 
-			// Calculate normal vector of the traingle
-			normal.value[0][0] = l1(0, 1) * l2(0, 2) - l1(0, 2) * l2(0, 1);
-			normal.value[0][1] = l1(0, 2) * l2(0, 0) - l1(0, 0) * l2(0, 2);
-			normal.value[0][2] = l1(0, 0) * l2(0, 1) - l1(0, 1) * l2(0, 0);
+			normal = l1.cross(l2);
 
-			float normalize = sqrtf(exp2(normal(0, 0)) + exp2(normal(0, 1)) + exp2(normal(0, 2)));
-			normal.value[0][0] /= normalize;
-			normal.value[0][1] /= normalize;
-			normal.value[0][2] /= normalize;
+			float normalize = sqrtf(exp2(normal.x) + exp2(normal.y) + exp2(normal.z));
+			normal.x /= normalize;
+			normal.y /= normalize;
+			normal.z /= normalize;
 
-			if ( (normal(0, 0) * rX1(0, 0) - cam(0, 0)
-				+ normal(0, 1) * rX1(0, 1) - cam(0, 1)
-				+ normal(0, 2) * rX1(0, 2) - cam(0, 2) ) < 0 )
+			if ( (normal.x * rX1(0, 0) - cam(0, 0)
+				+ normal.y * rX1(0, 1) - cam(0, 1)
+				+ normal.z * rX1(0, 2) - cam(0, 2) ) < 0 )
 			{
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
@@ -238,7 +232,6 @@ private:
 
 	
 };
-
 
 int main()
 {
