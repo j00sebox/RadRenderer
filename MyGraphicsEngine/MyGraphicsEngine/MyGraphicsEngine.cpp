@@ -235,6 +235,10 @@ public:
 		Matrix rZ2(1, 3);
 		Matrix rZ3(1, 3);
 
+		Matrix l1(1, 3);
+		Matrix l2(1, 3);
+		Matrix normal(1, 3);
+
 		
 
 		for (auto t : object)
@@ -246,36 +250,55 @@ public:
 			rZ3 = z_axis_rotation(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2));
 
 			rX1 = x_axis_rotation(rZ1(0, 0), rZ1(0, 1), rZ1(0, 2));
-			rX2 = x_axis_rotation(rZ2(0, 1), rZ2(0, 2), rZ2(0, 2));
+			rX2 = x_axis_rotation(rZ2(0, 0), rZ2(0, 1), rZ2(0, 2));
 			rX3 = x_axis_rotation(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2));
 
 			rX1.value[0][2] += 3.0f;
 			rX2.value[0][2] += 3.0f;
 			rX3.value[0][2] += 3.0f;
 
-			pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
-			pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
-			pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
+			// Construct line 1 of the triangle
+			l1.value[0][0] = rX2(0, 0) - rX1(0, 0);
+			l1.value[0][1] = rX2(0, 1) - rX1(0, 1);
+			l1.value[0][2] = rX2(0, 2) - rX1(0, 2);
 
-			pro1.value[0][0] += 1.0f;
-			pro1.value[0][1] += 1.0f;
+			// Contstruct line 2 of the triangle
+			l2.value[0][0] = rX3(0, 0) - rX1(0, 0);
+			l2.value[0][1] = rX3(0, 1) - rX1(0, 1);
+			l2.value[0][2] = rX3(0, 2) - rX1(0, 2);
 
-			pro2.value[0][0] += 1.0f;
-			pro2.value[0][1] += 1.0f;
+			// Calculate normal vector of the traingle
+			normal.value[0][0] = l1(0, 1) * l2(0, 2) - l1(0, 2) * l2(0, 1);
+			normal.value[0][1] = l1(0, 2) * l2(0, 0) - l1(0, 0) * l2(0, 2);
+			normal.value[0][2] = l1(0, 0) * l2(0, 1) - l1(0, 1) * l2(0, 0);
 
-			pro3.value[0][0] += 1.0f;
-			pro3.value[0][1] += 1.0f;
+			if (normal(0, 2) > 0)
+			{
+				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
+				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
+				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
 
-			pro1.value[0][0] *= 0.5f * (float)ScreenWidth();
-			pro1.value[0][1] *= 0.5f * (float)ScreenHeight();
+				pro1.value[0][0] += 1.0f;
+				pro1.value[0][1] += 1.0f;
 
-			pro2.value[0][0] *= 0.5f * (float)ScreenWidth();
-			pro2.value[0][1] *= 0.5f * (float)ScreenHeight();
+				pro2.value[0][0] += 1.0f;
+				pro2.value[0][1] += 1.0f;
 
-			pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
-			pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
+				pro3.value[0][0] += 1.0f;
+				pro3.value[0][1] += 1.0f;
 
-			DrawTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
+				pro1.value[0][0] *= 0.5f * (float)ScreenWidth();
+				pro1.value[0][1] *= 0.5f * (float)ScreenHeight();
+
+				pro2.value[0][0] *= 0.5f * (float)ScreenWidth();
+				pro2.value[0][1] *= 0.5f * (float)ScreenHeight();
+
+				pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
+				pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
+
+				DrawTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
+			}
+	
 		}
 
 		return true;
