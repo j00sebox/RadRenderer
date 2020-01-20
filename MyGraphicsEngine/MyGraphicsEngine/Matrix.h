@@ -43,11 +43,19 @@ private:
 
 };
 
+/**********************************************
+class Vector3D
+@brief Class used to represent a vector in 3D 
+		space. Inheirets from the Matrix class.
+@overrides Assign()
+************************************************/
 class Vector3D : public Matrix
 {
 public:
+	// Creates a 1x3 matrix
 	Vector3D() : Matrix(1, 3) {}
 
+	// overridden to assign vector coordinates as well as matrix value
 	void Assign(std::vector< std::vector<float> > v) override
 	{
 		// Check for proper dimensions
@@ -63,6 +71,7 @@ public:
 			throw "Maxtrices are not of same dimension!";
 	}
 
+	// computes cross product of two vectors
 	Vector3D cross(Vector3D line)
 	{
 		Vector3D normal;
@@ -79,6 +88,7 @@ public:
 		return normal;
 	}
 
+	// Used to change to unit vector
 	void normalize()
 	{
 		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
@@ -91,5 +101,6 @@ public:
 		value[0][2] /= normalize;
 	}
 
+	// vector coordinates
 	float x, y, z;
 };

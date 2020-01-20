@@ -27,6 +27,7 @@ void Matrix::clip()
 	c--;
 }
 
+// Inverts the rows and columns of a matrix
 Matrix Matrix::transpose()
 {
 	Matrix res(c, r);

@@ -82,12 +82,15 @@ public:
 		Matrix rZ2(1, 3);
 		Matrix rZ3(1, 3);
 
+		// Vectors to calculate the normal of triangle faces.
 		Vector3D l1;
 		Vector3D l2;
 		Vector3D normal;
 
+		// Position of camera aka user's view
 		Vector3D cam;
 
+		// Direction that the light would be pointing in game
 		Vector3D lighting;
 		lighting.Assign({ {0.0f, 0.0f, -1.0f} });
 
@@ -95,14 +98,17 @@ public:
 
 		for (auto t : object)
 		{
+			// Rotate around z-axis
 			rZ1 = z_axis_rotation(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2));
 			rZ2 = z_axis_rotation(t.vertices(1, 0), t.vertices(1, 1), t.vertices(1, 2));
 			rZ3 = z_axis_rotation(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2));
 
+			// Rotate around x-axis
 			rX1 = x_axis_rotation(rZ1(0, 0), rZ1(0, 1), rZ1(0, 2));
 			rX2 = x_axis_rotation(rZ2(0, 0), rZ2(0, 1), rZ2(0, 2));
 			rX3 = x_axis_rotation(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2));
 
+			// move object back so it is in view of the camera
 			rX1.value[0][2] += 3.0f;
 			rX2.value[0][2] += 3.0f;
 			rX3.value[0][2] += 3.0f;
@@ -117,23 +123,28 @@ public:
 			l2.y = rX3(0, 1) - rX1(0, 1);
 			l2.z = rX3(0, 2) - rX1(0, 2);
 
+			// calculate normal of triangle face
 			normal = l1.cross(l2);
 
 			normal.normalize();
 
+			// Calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
 			if ( (normal.x * rX1(0, 0) - cam.x
 				+ normal.y * rX1(0, 1) - cam.y
 				+ normal.z * rX1(0, 2) - cam.z ) < 0 )
 			{
-
+				// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 				float dotProd = (normal * lighting.transpose())(0, 0);
 
+				// The larger dot product in this case means the more lit up the triangle face will be 
 				CHAR_INFO colour = GetColour(dotProd);
 				
+				// Project all the coordinates to 2D space
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
 				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
 
+				// Center the points and change the scale
 				pro1.value[0][0] += 1.0f;
 				pro1.value[0][1] += 1.0f;
 
@@ -152,6 +163,7 @@ public:
 				pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
 				pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
+				// Draw traingle on screen
 				FillTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), colour.Char.UnicodeChar, colour.Attributes);
 			}
 	
@@ -235,7 +247,7 @@ private:
 	float scaling_factor = 1.0f / tanf(theta * 0.5f / 180.0f * 3.14159f); // amount needed to scale coordinates based on the fov
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
-	float rotate_angle;
+	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
 	
 };
