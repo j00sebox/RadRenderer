@@ -258,49 +258,5 @@ int main()
 	if (game.ConstructConsole(264, 250, 4, 4))
 		game.Start();
 
-	/*Vector3D yeet;
-	yeet.Assign({ { 0.0f, 0.0f, -1.0f} });
-
-	yeet.normalize();
-
-	Vector3D yeem;
-	yeem.Assign({ { 5.0f, 0.0f, -5.0f} });
-
-	yeem.normalize();
-
-	float res = (yeem * yeet.transpose())(0, 0);
-
-	float f = yeet.x * yeem.x + yeet.y * yeem.y + yeet.z * yeem.z;*/
-
-	/*Matrix test(2, 3);
-	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
-	Matrix res = test * yeet.transpose();
-*/
-	//std::cout << res << std::endl << f;
-	/*for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 1; j++)
-			std::cout << res(i, j);
-		std::cout << std::endl;
-	}*/
-	/*Matrix yeet(3, 4);
-	yeet.Assign({ { 2.0f, 3.0f, 0.0f, 5.0f }, { 5.0f, 1.0f, 4.0f, 7.8f }, { 1.0f, 1.0f, 2.0f, 3.5f } });
-
-	Matrix res = test * yeet;*/
-	/*EmazingEngine game;
-
-	Matrix res = game.coordinate_projection(0.0f, 1.0f, 0.0f);
-
-	std::cout << res.value[0][3] << std::endl << res.value[0][0] << std::endl << res.value[0][1] << std::endl << res.value[0][2];*/
-
-	/*for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 4; j++)
-			std::cout << res.value[i][j];
-		std::cout << std::endl;
-	}*/
-
-
-
 	return 0;
 }
