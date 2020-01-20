@@ -20,6 +20,9 @@ public:
 	}
 
 	Matrix vertices;
+
+	wchar_t symbol;
+	short colour;
 };
 
 std::vector<Triangle> cube_demo()
@@ -85,6 +88,11 @@ public:
 
 		Vector3D cam;
 
+		Vector3D lighting;
+		lighting.Assign({ {0.0f, 0.0f, -1.0f} });
+
+		lighting.normalize();
+
 		for (auto t : object)
 		{
 			rZ1 = z_axis_rotation(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2));
@@ -117,6 +125,8 @@ public:
 				+ normal.y * rX1(0, 1) - cam.y
 				+ normal.z * rX1(0, 2) - cam.z ) < 0 )
 			{
+
+				//float dotprod = 
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
 				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
@@ -235,8 +245,16 @@ int main()
 
 	/*Matrix test(2, 3);
 	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
+	
+	test.transpose();
 
-	Matrix yeet(3, 4);
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 2; j++)
+			std::cout << test(i, j);
+		std::cout << std::endl;
+	}*/
+	/*Matrix yeet(3, 4);
 	yeet.Assign({ { 2.0f, 3.0f, 0.0f, 5.0f }, { 5.0f, 1.0f, 4.0f, 7.8f }, { 1.0f, 1.0f, 2.0f, 3.5f } });
 
 	Matrix res = test * yeet;*/

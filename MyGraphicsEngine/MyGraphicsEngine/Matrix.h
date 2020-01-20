@@ -18,6 +18,8 @@ public:
 	// Reduce the amount of columns by 1
 	void clip();
 
+	void transpose();
+
 	Matrix operator + (Matrix const& obj);
 
 	Matrix operator - (Matrix const& obj);
@@ -53,6 +55,8 @@ public:
 			x = v[0][0];
 			y = v[0][1];
 			z = v[0][2];
+
+			value = v;
 		}
 		else
 			throw "Maxtrices are not of same dimension!";
@@ -75,8 +79,11 @@ public:
 		float normalize = sqrtf(exp2(x) + exp2(y) + exp2(z));
 
 		x /= normalize;
+		value[0][0] /= normalize;
 		y /= normalize;
+		value[0][1] /= normalize;
 		z /= normalize;
+		value[0][2] /= normalize;
 	}
 	
 	float x, y, z;
