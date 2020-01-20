@@ -1,5 +1,6 @@
-#include <vector>
+
 #include <iostream>
+#include <cmath>
 
 /*
  - Library provided from https://github.com/OneLoneCoder
@@ -7,164 +8,12 @@
 */
 #include "olcConsoleGameEngine.h"
 
+#include "Matrix.h"
+
 
 #define CUBE_DEMO
 
-/**********************************************
-class Matrix
-@brief Class used to represent matrices with
-overloaded operator functions for proper
-matrix operations
-************************************************/
-class Matrix
-{
-public:
-	Matrix(int row, int col)
-	{
-		r = row;
-		c = col;
-		value.resize(row, std::vector<float>(col));
-	}
 
-	// Copies vector to this classes vector
-	void Assign(std::vector< std::vector<float> > v)
-	{
-		// Check for proper dimensions
-		if (value.size() == v.size() && value[0].size() == v[0].size())
-		{
-			value = v;
-		}
-		else
-			throw "Maxtrices are not of same dimension!";
-	}
-
-	// Reduce the amount of columns by 1
-	void clip()
-	{
-		for (auto vec : value)
-			vec.pop_back();
-		c--;
-	}
-
-
-	Matrix operator + (Matrix const& obj)
-	{
-		Matrix res(r, c);
-		std::vector< std::vector<float> > result;
-		result.resize(r, std::vector<float>(c));
-
-		// Check for proper dimensions
-		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
-		{
-			for (int i = 0; i < r; i++)
-				for (int j = 0; j < c; j++)
-					result[i][j] = value[i][j] + obj.value[i][j];
-		}
-		else
-			throw "Maxtrices are not of same dimension!";
-
-		res.Assign(result);
-
-		return res;
-
-	}
-
-	Matrix operator - (Matrix const& obj)
-	{
-		Matrix res(r, c);
-		std::vector< std::vector<float> > result;
-		result.resize(r, std::vector<float>(c));
-
-		// Check for proper dimensions
-		if (value.size() == obj.value.size() && value[0].size() == obj.value[0].size())
-		{
-			for (int i = 0; i < r; i++)
-				for (int j = 0; j < c; j++)
-					result[i][j] = value[i][j] - obj.value[i][j];
-		}
-		else
-			throw "Maxtrices are not of same dimension!";
-
-		res.Assign(result);
-
-		return res;
-
-	}
-
-	// Implements the dot product between two matrices
-	Matrix operator * (Matrix const& obj)
-	{
-		Matrix res(r, obj.c);
-		std::vector< std::vector<float> > result;
-		result.resize(r, std::vector<float>(obj.c));
-
-		// Check for proper dimensions
-		if (value[0].size() == obj.value.size())
-		{
-			
-				for (int i = 0; i < r; i++)
-				{
-					for (int k = 0; k < obj.c; k++)
-					{
-						for (int j = 0; j < obj.r; j++)
-							result[i][k] += value[i][j] * obj.value[j][k];
-					}
-				}
-		}
-		else
-			throw "Maxtrices are not of same dimension!";
-
-		res.Assign(result);
-
-		return res;
-	}
-
-	Matrix operator / (float divisor)
-	{
-		Matrix res(r, c);
-		std::vector< std::vector<float> > result;
-		result.resize(r, std::vector<float>(c));
-		result = value;
-
-		if (divisor != 0.0f)
-		{
-
-			for (int i = 0; i < r; i++)
-			{
-
-				for (int j = 0; j < c; j++)
-					result[i][j] /= divisor;
-			}
-
-			res.Assign(result);
-		}
-		else
-		{
-			return *this;
-		}
-
-		return res;
-	}
-
-	// allows value to be accessed easier
-	float operator () (int i, int j)
-	{
-		return value[i][j];
-	}
-
-	
-
-
-
-	// Holds values in proper structure
-	std::vector< std::vector<float> > value;
-
-private:
-	// Holds the values for rows and columns of this object
-	int r;
-	int c;
-
-};
 
 class Triangle
 {
@@ -239,12 +88,11 @@ public:
 		Matrix l2(1, 3);
 		Matrix normal(1, 3);
 
-		
+		Matrix cam(1, 3);
+
 
 		for (auto t : object)
 		{
-			
-
 			rZ1 = z_axis_rotation(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2));
 			rZ2 = z_axis_rotation(t.vertices(1, 0), t.vertices(1, 1), t.vertices(1, 2));
 			rZ3 = z_axis_rotation(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2));
@@ -272,7 +120,14 @@ public:
 			normal.value[0][1] = l1(0, 2) * l2(0, 0) - l1(0, 0) * l2(0, 2);
 			normal.value[0][2] = l1(0, 0) * l2(0, 1) - l1(0, 1) * l2(0, 0);
 
-			if (normal(0, 2) > 0)
+			float normalize = sqrtf(exp2(normal(0, 0)) + exp2(normal(0, 1)) + exp2(normal(0, 2)));
+			normal.value[0][0] /= normalize;
+			normal.value[0][1] /= normalize;
+			normal.value[0][2] /= normalize;
+
+			if ( (normal(0, 0) * rX1(0, 0) - cam(0, 0)
+				+ normal(0, 1) * rX1(0, 1) - cam(0, 1)
+				+ normal(0, 2) * rX1(0, 2) - cam(0, 2) ) < 0 )
 			{
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
@@ -296,7 +151,7 @@ public:
 				pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
 				pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
-				DrawTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
+				FillTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
 			}
 	
 		}
@@ -380,13 +235,15 @@ private:
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
 	float rotate_angle;
+
+	
 };
 
 
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(250, 250, 4, 4))
+	if (game.ConstructConsole(264, 250, 4, 4))
 		game.Start();
 
 	/*Matrix test(2, 3);
