@@ -27,6 +27,21 @@ void Matrix::clip()
 	c--;
 }
 
+Matrix Matrix::transpose()
+{
+	Matrix res(c, r);
+	std::vector< std::vector<float> > result;
+	result.resize(c, std::vector<float>(r));
+
+	for (int i = 0; i < c; i++)
+		for (int j = 0; j < r; j++)
+			result[i][j] = value[j][i];
+
+	res.Assign(result);
+
+	return res;
+}
+
 
 Matrix Matrix::operator + (Matrix const& obj)
 {

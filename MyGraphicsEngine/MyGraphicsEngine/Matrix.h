@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 /**********************************************
 class Matrix
@@ -18,7 +19,7 @@ public:
 	// Reduce the amount of columns by 1
 	void clip();
 
-	void transpose();
+	Matrix transpose();
 
 	Matrix operator + (Matrix const& obj);
 
@@ -71,12 +72,16 @@ public:
 		normal.y = z * line.x - x * line.z;
 		normal.z = x * line.y - y * line.x;
 
+		normal.value[0][0] = normal.x;
+		normal.value[0][1] = normal.y;
+		normal.value[0][2] = normal.z;
+
 		return normal;
 	}
 
 	void normalize()
 	{
-		float normalize = sqrtf(exp2(x) + exp2(y) + exp2(z));
+		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
 		x /= normalize;
 		value[0][0] /= normalize;
@@ -85,6 +90,6 @@ public:
 		z /= normalize;
 		value[0][2] /= normalize;
 	}
-	
+
 	float x, y, z;
 };

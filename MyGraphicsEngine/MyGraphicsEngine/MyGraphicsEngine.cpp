@@ -126,7 +126,10 @@ public:
 				+ normal.z * rX1(0, 2) - cam.z ) < 0 )
 			{
 
-				//float dotprod = 
+				float dotProd = (normal * lighting.transpose())(0, 0);
+
+				CHAR_INFO colour = GetColour(dotProd);
+				
 				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
 				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
 				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
@@ -149,7 +152,7 @@ public:
 				pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
 				pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
-				FillTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), PIXEL_SOLID, FG_WHITE);
+				FillTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), colour.Char.UnicodeChar, colour.Attributes);
 			}
 	
 		}
@@ -243,15 +246,29 @@ int main()
 	if (game.ConstructConsole(264, 250, 4, 4))
 		game.Start();
 
+	/*Vector3D yeet;
+	yeet.Assign({ { 0.0f, 0.0f, -1.0f} });
+
+	yeet.normalize();
+
+	Vector3D yeem;
+	yeem.Assign({ { 5.0f, 0.0f, -5.0f} });
+
+	yeem.normalize();
+
+	float res = (yeem * yeet.transpose())(0, 0);
+
+	float f = yeet.x * yeem.x + yeet.y * yeem.y + yeet.z * yeem.z;*/
+
 	/*Matrix test(2, 3);
 	test.Assign({ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
-	
-	test.transpose();
-
-	for (int i = 0; i < 3; i++)
+	Matrix res = test * yeet.transpose();
+*/
+	//std::cout << res << std::endl << f;
+	/*for (int i = 0; i < 3; i++)
 	{
-		for (int j = 0; j < 2; j++)
-			std::cout << test(i, j);
+		for (int j = 0; j < 1; j++)
+			std::cout << res(i, j);
 		std::cout << std::endl;
 	}*/
 	/*Matrix yeet(3, 4);
