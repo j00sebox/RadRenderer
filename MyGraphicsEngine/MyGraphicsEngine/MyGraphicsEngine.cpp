@@ -9,7 +9,7 @@
 
 #include "Matrix.h"
 
-#define CUBE_DEMO
+//#define CUBE_DEMO
 
 class Triangle
 {
@@ -179,7 +179,7 @@ public:
 				float avg_z1 = (tri1.vertices(0, 2) + tri1.vertices(1, 2) + tri1.vertices(2, 2)) / 3.0f;
 				float avg_z2 = (tri2.vertices(0, 2) + tri2.vertices(1, 2) + tri2.vertices(2, 2)) / 3.0f;
 
-				if (avg_z1 > avg_z2)
+				return avg_z1 > avg_z2)
 					return true;
 				else
 					return false;

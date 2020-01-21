@@ -16,7 +16,7 @@ void Matrix::Assign(std::vector< std::vector<float> > v)
 		value = v;
 	}
 	else
-		throw "Maxtrices are not of same dimension!";
+		throw std::invalid_argument("Maxtrices are not of same dimension!");
 }
 
 // Reduce the amount of columns by 1
@@ -58,7 +58,7 @@ Matrix Matrix::operator + (Matrix const& obj)
 				result[i][j] = value[i][j] + obj.value[i][j];
 	}
 	else
-		throw "Maxtrices are not of same dimension!";
+		throw std::invalid_argument("Maxtrices are not of same dimension!");
 
 	res.Assign(result);
 
@@ -80,7 +80,7 @@ Matrix Matrix::operator - (Matrix const& obj)
 				result[i][j] = value[i][j] - obj.value[i][j];
 	}
 	else
-		throw "Maxtrices are not of same dimension!";
+		throw std::invalid_argument("Maxtrices are not of same dimension!");
 
 	res.Assign(result);
 
@@ -109,7 +109,7 @@ Matrix Matrix::operator * (Matrix const& obj)
 		}
 	}
 	else
-		throw "Maxtrices are not of same dimension!";
+		throw std::invalid_argument("Maxtrices are not of same dimension!");
 
 	res.Assign(result);
 
