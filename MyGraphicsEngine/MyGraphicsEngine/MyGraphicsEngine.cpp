@@ -12,7 +12,7 @@
 
 #include "Matrix.h"
 
-//#define CUBE_DEMO
+#define CUBE_DEMO
 
 class Triangle
 {
@@ -115,9 +115,9 @@ public:
 			rX3 = x_axis_rotation(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2));
 
 			// move object back so it is in view of the camera
-			rX1.value[0][2] += 3.0f;
-			rX2.value[0][2] += 3.0f;
-			rX3.value[0][2] += 3.0f;
+			rX1.value[0][2] += 6.0f;
+			rX2.value[0][2] += 6.0f;
+			rX3.value[0][2] += 6.0f;
 
 			// Construct line 1 of the triangle
 			l1.x = rX2(0, 0) - rX1(0, 0);
@@ -174,7 +174,6 @@ public:
 				tri.colour = colour.Attributes;
 
 				renderTriangles.push_back(tri);
-
 				
 			}
 	

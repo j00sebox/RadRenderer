@@ -21,6 +21,10 @@ public:
 
 	Matrix transpose();
 
+	Matrix inverse();
+
+	float determinant(std::vector< std::vector<float> > dmatrix);
+
 	Matrix operator + (Matrix const& obj);
 
 	Matrix operator - (Matrix const& obj);

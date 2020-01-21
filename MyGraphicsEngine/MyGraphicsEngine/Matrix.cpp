@@ -43,6 +43,42 @@ Matrix Matrix::transpose()
 	return res;
 }
 
+// calculates the inverse of a matrix
+//Matrix Matrix::inverse()
+//{
+//
+//}
+
+float Matrix::determinant(std::vector< std::vector<float> > dmatrix)
+{
+	int col, row;
+	float result = 0;
+	if (dmatrix.size() > 2)
+	{
+		col = dmatrix[0].size();
+		row = dmatrix.size();
+
+		std::vector< std::vector<float> > miniMatrix;
+		
+		for (int j = 0; j < col; j++)
+		{
+			miniMatrix = dmatrix;
+			miniMatrix.erase(miniMatrix.begin());
+			for (int k = 0; k < miniMatrix.size(); k++)
+				miniMatrix[k].erase(miniMatrix[k].begin() + j);
+
+			result += pow(-1, j)*dmatrix[0][j]*determinant(miniMatrix);
+		}	
+	}
+	else
+	{
+		result = dmatrix[0][0] * dmatrix[1][1] - dmatrix[1][0] * dmatrix[0][1];
+	}
+
+	return result;
+
+}
+
 
 Matrix Matrix::operator + (Matrix const& obj)
 {
