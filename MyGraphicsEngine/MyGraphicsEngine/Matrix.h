@@ -1,6 +1,7 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 
 /**********************************************
 class Matrix
@@ -23,8 +24,6 @@ public:
 
 	Matrix inverse();
 
-	float determinant(std::vector< std::vector<float> > dmatrix);
-
 	Matrix operator + (Matrix const& obj);
 
 	Matrix operator - (Matrix const& obj);
@@ -44,6 +43,10 @@ private:
 	// Holds the values for rows and columns of this object
 	int r;
 	int c;
+
+	float determinant(std::vector< std::vector<float> > dmatrix);
+
+	
 
 };
 

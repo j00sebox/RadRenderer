@@ -44,11 +44,42 @@ Matrix Matrix::transpose()
 }
 
 // calculates the inverse of a matrix
-//Matrix Matrix::inverse()
-//{
-//
-//}
+Matrix Matrix::inverse()
+{
+	Matrix inverse(r, c);
+	if (r == c)
+	{
+		float det = determinant(value);
+		float subd = 0;
+		Matrix adjugate(r, c);
 
+		std::vector<Matrix> sub_matrices;
+
+		Matrix submatrix(r, c);
+
+		for (int i = 0; i < r; i++)
+		{
+			for (int j = 0; j < c; j++)
+			{
+				submatrix.value = value;
+				submatrix.value.erase(submatrix.value.begin() + i);
+				for (int k = 0; k < submatrix.value.size(); k++)
+					submatrix.value[k].erase(submatrix.value[k].begin() + j);
+
+				subd = determinant(submatrix.value);
+				adjugate.value[j][i] = pow(-1, i + j + 2) * subd;
+			}
+		}
+
+		inverse = adjugate / det;
+	}
+	else
+		throw std::invalid_argument("Maxtrix must have same number of rows and columns!");
+
+	return inverse;
+}
+
+// Calculates deteminant of a given matrix value
 float Matrix::determinant(std::vector< std::vector<float> > dmatrix)
 {
 	int col, row;
@@ -70,7 +101,7 @@ float Matrix::determinant(std::vector< std::vector<float> > dmatrix)
 			result += pow(-1, j)*dmatrix[0][j]*determinant(miniMatrix);
 		}	
 	}
-	else
+	else // matrix should now be in a 2x2 shape
 	{
 		result = dmatrix[0][0] * dmatrix[1][1] - dmatrix[1][0] * dmatrix[0][1];
 	}
