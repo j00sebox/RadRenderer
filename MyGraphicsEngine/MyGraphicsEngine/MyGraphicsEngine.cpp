@@ -1,5 +1,8 @@
 #include <iostream>
 #include <algorithm>
+#include <string>
+#include <fstream>
+#include <strstream>
 
 /*
  - Library provided from https://github.com/OneLoneCoder
@@ -56,7 +59,9 @@ public:
 	bool OnUserCreate() override
 	{
 #ifdef CUBE_DEMO
-		object = cube_demo();		
+		object = cube_demo();	
+#else
+		object = LoadOBJFile("blender_cube.txt");
 #endif  CUBE_DEMO
 
 		return true;
@@ -175,22 +180,26 @@ public:
 	
 		}
 
+		// sort triangles by their average z value
+		// higher z values mean the traingle should be rendered later
 		std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
-				float avg_z1 = (tri1.vertices(0, 2) + tri1.vertices(1, 2) + tri1.vertices(2, 2)) / 3.0f;
-				float avg_z2 = (tri2.vertices(0, 2) + tri2.vertices(1, 2) + tri2.vertices(2, 2)) / 3.0f;
+			float avg_z1 = (tri1.vertices(0, 2) + tri1.vertices(1, 2) + tri1.vertices(2, 2)) / 3.0f;
+			float avg_z2 = (tri2.vertices(0, 2) + tri2.vertices(1, 2) + tri2.vertices(2, 2)) / 3.0f;
 
-				return avg_z1 > avg_z2)
-					return true;
-				else
-					return false;
+			if (avg_z1 > avg_z2)
+				return true;
+			else
+				return false;
 			});
-
+					
+		// render all the triangles in order now 
 		for (auto& t : renderTriangles) 
 		{
 			FillTriangle(t.vertices(0, 0), t.vertices(0, 1), t.vertices(1, 0), t.vertices(1, 1), t.vertices(2, 0), t.vertices(2, 1), t.symbol, t.colour);
 		}
-			
 		
+		// vector needs to be empty for next redraw
+		renderTriangles.clear();
 
 		return true;
 	}
@@ -257,6 +266,54 @@ public:
 		res.clip();
 
 		return res;
+	}
+
+	// Loads vertex and face data from txt file realting to obj file
+	std::vector<Triangle> LoadOBJFile(std::string fname)
+	{
+		std::ifstream readFile;
+		readFile.open(fname);
+
+		if (!readFile.is_open())
+		{
+			std::cout << "Cannot open file!";
+		}
+
+		Vector3D vertex;
+		std::vector<Vector3D> vertices;
+
+		std::vector<Triangle> triangles;
+
+		std::string line;
+
+		char startingChar; // Stores the starting character of the line
+
+		int i1, i2, i3; // indexes of the vertices
+
+		// iterate through all lines in file
+		while (std::getline(readFile, line))
+		{
+			std::strstream st;
+			st << line;
+
+			// indicates vertex data
+			if (line[0] == 'v')
+			{
+				st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
+				vertices.push_back(vertex);
+			}
+			// indicates traingle face data
+			else if (line[0] == 'f')
+			{
+				st >> startingChar >> i1 >> i2 >> i3;
+				triangles.push_back(Triangle({
+					{vertices[i1 - 1].x, vertices[i1 - 1].y, vertices[i1 - 1].z},
+					{vertices[i2 - 1].x, vertices[i2 - 1].y, vertices[i2 - 1].z},
+					{vertices[i3 - 1].x, vertices[i3 - 1].y, vertices[i3 - 1].z} }));
+			}
+		}
+
+		return triangles;
 	}
 
 private:
