@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include <stdexcept>
 
 /**********************************************
 class Matrix
@@ -67,7 +68,7 @@ public:
 			value = v;
 		}
 		else
-			throw "Maxtrices are not of same dimension!";
+			throw std::invalid_argument("Maxtrices are not of same dimension!");
 	}
 
 	// computes cross product of two vectors

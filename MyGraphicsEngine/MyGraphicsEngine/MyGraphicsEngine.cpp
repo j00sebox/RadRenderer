@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string>
+#include <fstream>
+#include <strstream>
 
 /*
  - Library provided from https://github.com/OneLoneCoder
@@ -8,7 +11,7 @@
 
 #include "Matrix.h"
 
-#define CUBE_DEMO
+//#define CUBE_DEMO
 
 class Triangle
 {
@@ -55,8 +58,11 @@ public:
 	bool OnUserCreate() override
 	{
 #ifdef CUBE_DEMO
-		object = cube_demo();		
+		object = cube_demo();
+#else
+		object = LoadOBJFile("C:/Users/josh/Projects/MyGraphicsEngine/MyGraphicsEngine/MyGraphicsEngine/blender_cube.txt");
 #endif  CUBE_DEMO
+
 
 		return true;
 
@@ -235,6 +241,55 @@ public:
 
 		return res;
 	}
+	
+
+	// Loads vertex and face data from txt file realting to obj file
+	std::vector<Triangle> LoadOBJFile(std::string fname)
+	{
+		std::ifstream readFile;
+		readFile.open(fname);
+
+		if (!readFile.is_open()) 
+		{
+			std::cout << "Cannot open file!";
+		}
+
+		Vector3D vertex;
+		std::vector<Vector3D> vertices;
+		
+		std::vector<Triangle> triangles;
+
+		std::string line;
+		std::strstream st;
+
+		char startingChar; // Stores the starting character of the line
+
+		int i1, i2, i3; // indexes of the vertices
+
+		// iterate through all lines in file
+		while (std::getline(readFile, line))
+		{
+			st << line;
+
+			// indicates vertex data
+			if (line[0] == 'v')
+			{
+				st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
+				vertices.push_back(vertex);
+			}
+			// indicates traingle face data
+			else if (line[0] == 'f')
+			{
+				st >> startingChar >> i1 >> i2 >> i3;
+				triangles.push_back(Triangle({ 
+					{vertices[i1 - 1].x, vertices[i1 - 1].y, vertices[i1 - 1].z},
+					{vertices[i2 - 1].x, vertices[i2 - 1].y, vertices[i2 - 1].z},
+					{vertices[i3 - 1].x, vertices[i3 - 1].y, vertices[i3 - 1].z} }));
+			}
+		}
+
+		return triangles;
+	}
 
 private:
 	std::vector<Triangle> object;
@@ -255,7 +310,7 @@ private:
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(264, 250, 4, 4))
+	if (game.ConstructConsole(88, 88, 4, 4))
 		game.Start();
 
 	return 0;
