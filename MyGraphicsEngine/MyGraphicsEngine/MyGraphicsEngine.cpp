@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 /*
  - Library provided from https://github.com/OneLoneCoder
@@ -163,11 +164,33 @@ public:
 				pro3.value[0][0] *= 0.5f * (float)ScreenWidth();
 				pro3.value[0][1] *= 0.5f * (float)ScreenHeight();
 
-				// Draw traingle on screen
-				FillTriangle(pro1(0, 0), pro1(0, 1), pro2(0, 0), pro2(0, 1), pro3(0, 0), pro3(0, 1), colour.Char.UnicodeChar, colour.Attributes);
+				Triangle tri({ {pro1(0, 0), pro1(0, 1), pro1(0, 2)}, {pro2(0, 0), pro2(0, 1), pro2(0, 2)}, {pro3(0, 0), pro3(0, 1), pro3(0, 2)} });
+				tri.symbol = colour.Char.UnicodeChar;
+				tri.colour = colour.Attributes;
+
+				renderTriangles.push_back(tri);
+
+				
 			}
 	
 		}
+
+		std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
+				float avg_z1 = (tri1.vertices(0, 2) + tri1.vertices(1, 2) + tri1.vertices(2, 2)) / 3.0f;
+				float avg_z2 = (tri2.vertices(0, 2) + tri2.vertices(1, 2) + tri2.vertices(2, 2)) / 3.0f;
+
+				if (avg_z1 > avg_z2)
+					return true;
+				else
+					return false;
+			});
+
+		for (auto& t : renderTriangles) 
+		{
+			FillTriangle(t.vertices(0, 0), t.vertices(0, 1), t.vertices(1, 0), t.vertices(1, 1), t.vertices(2, 0), t.vertices(2, 1), t.symbol, t.colour);
+		}
+			
+		
 
 		return true;
 	}
@@ -248,6 +271,8 @@ private:
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
+
+	std::vector<Triangle> renderTriangles;
 
 	
 };
