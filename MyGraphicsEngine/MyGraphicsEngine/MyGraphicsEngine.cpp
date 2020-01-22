@@ -17,6 +17,10 @@
 class Triangle
 {
 public:
+
+	Triangle() : vertices(3) {
+		Triangle({ {0.0f, 0.0f, 0.f}, {0.0f, 0.0f, 0.f}, {0.0f, 0.0f, 0.f} });
+	}
 	
 	Triangle(std::vector< std::vector<float > > v) : vertices(3)
 	{
@@ -98,30 +102,33 @@ public:
 
 		for (auto o : object)
 		{
+			
 			// Rotate around z-axis
-			coordinate_projection(o.vertices[0], z_rotation, rZ1);
-			coordinate_projection(o.vertices[1], z_rotation, rZ2);
-			coordinate_projection(o.vertices[2], z_rotation, rZ3);
+			coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
+			coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
+			coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
+
+			
 
 			// Rotate around x-axis
-			coordinate_projection(rZ1, x_rotation, rX1);
-			coordinate_projection(rZ2, x_rotation, rX2);
-			coordinate_projection(rZ3, x_rotation, rX3);
+			coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
+			coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
+			coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 			// move object back so it is in view of the camera
-			rX1.z += 8.0f;
-			rX2.z += 8.0f;
-			rX3.z += 8.0f;
+			rX.vertices[0].z += 8.0f;
+			rX.vertices[1].z += 8.0f;
+			rX.vertices[2].z += 8.0f;
 
 			// Construct line 1 of the triangle
-			l1.x = rX2.x - rX1.x;
-			l1.y = rX2.y - rX1.y;
-			l1.z = rX2.z - rX1.z;
+			l1.x = rX.vertices[1].x - rX.vertices[0].x;
+			l1.y = rX.vertices[1].y - rX.vertices[0].y;
+			l1.z = rX.vertices[1].z - rX.vertices[0].z;
 
 			// Contstruct line 2 of the triangle
-			l2.x = rX3.x - rX1.x;
-			l2.y = rX3.y - rX1.y;
-			l2.z = rX3.z - rX1.z;
+			l2.x = rX.vertices[2].x - rX.vertices[0].x;
+			l2.y = rX.vertices[2].y - rX.vertices[0].y;
+			l2.z = rX.vertices[2].z - rX.vertices[0].z;
 
 			// calculate normal of triangle face
 			l1.cross(l2, normal);
@@ -129,9 +136,9 @@ public:
 			normal.normalize();
 
 			// Calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-			if ( (normal.x * ( rX1.x - cam.x )
-				+ normal.y * ( rX1.y - cam.y )
-				+ normal.z * ( rX1.z - cam.z ) ) < 0.0f )
+			if ( (normal.x * ( rX.vertices[0].x - cam.x )
+				+ normal.y * ( rX.vertices[0].y - cam.y )
+				+ normal.z * ( rX.vertices[0].z - cam.z ) ) < 0.0f )
 			{
 				// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 				float dotProd = normal.dot(lighting);
@@ -140,34 +147,33 @@ public:
 				CHAR_INFO colour = GetColour(dotProd);
 				
 				// Project all the coordinates to 2D space
-				coordinate_projection(rX1, projection_matrix, pro1);
-				coordinate_projection(rX2, projection_matrix, pro2);
-				coordinate_projection(rX3, projection_matrix, pro3);
+				coordinate_projection(rX.vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(rX.vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(rX.vertices[2], projection_matrix, pro.vertices[2]);
 
 				// Center the points and change the scale
-				pro1.x += 1.0f;
-				pro1.y += 1.0f;
+				pro.vertices[0].x += 1.0f;
+				pro.vertices[0].y += 1.0f;
 
-				pro2.x += 1.0f;
-				pro2.y += 1.0f;
+				pro.vertices[1].x += 1.0f;
+				pro.vertices[1].y += 1.0f;
 
-				pro3.x += 1.0f;
-				pro3.y += 1.0f;
+				pro.vertices[2].x += 1.0f;
+				pro.vertices[2].y += 1.0f;
 
-				pro1.x *= 0.5f * (float)ScreenWidth();
-				pro1.y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
 
-				pro2.x *= 0.5f * (float)ScreenWidth();
-				pro2.y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
 
-				pro3.x *= 0.5f * (float)ScreenWidth();
-				pro3.y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
 
-				Triangle tri({ {pro1.x, pro1.y, pro1.z}, {pro2.x, pro2.y, pro2.z}, {pro3.x, pro3.y, pro3.z} });
-				tri.symbol = colour.Char.UnicodeChar;
-				tri.colour = colour.Attributes;
+				pro.symbol = colour.Char.UnicodeChar;
+				pro.colour = colour.Attributes;
 
-				renderTriangles.push_back(tri);	
+				renderTriangles.push_back(pro);	
 			}
 	
 		}
@@ -281,17 +287,11 @@ private:
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
 	// Projection matrices
-	Vector3D pro1;
-	Vector3D pro2;
-	Vector3D pro3;
+	Triangle pro;
 
-	Vector3D rX1;
-	Vector3D rX2;
-	Vector3D rX3;
+	Triangle rX;
 
-	Vector3D rZ1;
-	Vector3D rZ2;
-	Vector3D rZ3;
+	Triangle rZ;
 
 	// Vectors to calculate the normal of triangle faces.
 	Vector3D l1;
