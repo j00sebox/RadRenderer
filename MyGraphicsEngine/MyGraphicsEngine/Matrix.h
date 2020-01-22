@@ -33,6 +33,8 @@ public:
 
 	Matrix operator / (float divisor);
 
+	void operator = (std::vector< std::vector<float> > val);
+
 	// allows value to be accessed easier
 	float operator () (int i, int j);
 
@@ -60,7 +62,7 @@ class Vector3D : public Matrix
 {
 public:
 	// Creates a 1x3 matrix
-	Vector3D() : Matrix(1, 3) {}
+	Vector3D() : Matrix(1, 3) { x = 0; y = 0; z = 0; }
 
 	// overridden to assign vector coordinates as well as matrix value
 	void Assign(std::vector< std::vector<float> > v) override
@@ -94,6 +96,28 @@ public:
 
 		return normal;
 	}
+
+	float dot(Vector3D vec)
+	{
+		return x * vec.x + y * vec.y + z * vec.z;
+	}
+
+	/*Vector3D operator / (float div) 
+	{
+		Vector3D out;
+
+		if (div != 0.0f)
+		{
+			out.x /= div;
+			out.value[0][0] /= div;
+			out.y /= div;
+			out.value[0][1] /= div;
+			out.z /= div;
+			out.value[0][2] /= div;
+		}
+
+		return out;
+	}*/
 
 	// Used to change to unit vector
 	void normalize()

@@ -12,7 +12,7 @@
 
 #include "Matrix.h"
 
-#define CUBE_DEMO
+//#define CUBE_DEMO
 
 class Triangle
 {
@@ -53,6 +53,10 @@ std::vector<Triangle> cube_demo()
 	};
 }
 
+Matrix projection_matrix(4, 4);
+Matrix x_rotation(4, 4);
+Matrix z_rotation(4, 4);
+
 class EmazingEngine : public olcConsoleGameEngine
 {
 public:
@@ -61,9 +65,11 @@ public:
 #ifdef CUBE_DEMO
 		object = cube_demo();	
 #else
-		object = LoadOBJFile("blender_cube.txt");
+		object = LoadOBJFile("3DTestObjects/teapot.obj");
 #endif  CUBE_DEMO
 
+		projection_matrix.Assign({ { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } });
+		
 		return true;
 
 	}
@@ -75,18 +81,21 @@ public:
 
 		rotate_angle += 1.0f * fElapsedTime;
 
+		x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
+		z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
+
 		// Projection matrices
-		Matrix pro1(1, 3);
-		Matrix pro2(1, 3);
-		Matrix pro3(1, 3);
+		Vector3D pro1;
+		Vector3D pro2;
+		Vector3D pro3;
 
-		Matrix rX1(1, 3);
-		Matrix rX2(1, 3);
-		Matrix rX3(1, 3);
+		Vector3D rX1;
+		Vector3D rX2;
+		Vector3D rX3;
 
-		Matrix rZ1(1, 3);
-		Matrix rZ2(1, 3);
-		Matrix rZ3(1, 3);
+		Vector3D rZ1;
+		Vector3D rZ2;
+		Vector3D rZ3;
 
 		// Vectors to calculate the normal of triangle faces.
 		Vector3D l1;
@@ -105,14 +114,14 @@ public:
 		for (auto t : object)
 		{
 			// Rotate around z-axis
-			rZ1 = z_axis_rotation(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2));
-			rZ2 = z_axis_rotation(t.vertices(1, 0), t.vertices(1, 1), t.vertices(1, 2));
-			rZ3 = z_axis_rotation(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2));
+			rZ1 = coordinate_projection(t.vertices(0, 0), t.vertices(0, 1), t.vertices(0, 2), z_rotation);
+			rZ2 = coordinate_projection(t.vertices(1, 0), t.vertices(1, 1), t.vertices(1, 2), z_rotation);
+			rZ3 = coordinate_projection(t.vertices(2, 0), t.vertices(2, 1), t.vertices(2, 2), z_rotation);
 
 			// Rotate around x-axis
-			rX1 = x_axis_rotation(rZ1(0, 0), rZ1(0, 1), rZ1(0, 2));
-			rX2 = x_axis_rotation(rZ2(0, 0), rZ2(0, 1), rZ2(0, 2));
-			rX3 = x_axis_rotation(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2));
+			rX1 = coordinate_projection(rZ1(0, 0), rZ1(0, 1), rZ1(0, 2), x_rotation);
+			rX2 = coordinate_projection(rZ2(0, 0), rZ2(0, 1), rZ2(0, 2), x_rotation);
+			rX3 = coordinate_projection(rZ3(0, 0), rZ3(0, 1), rZ3(0, 2), x_rotation);
 
 			// move object back so it is in view of the camera
 			rX1.value[0][2] += 6.0f;
@@ -140,15 +149,15 @@ public:
 				+ normal.z * rX1(0, 2) - cam.z ) < 0 )
 			{
 				// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
-				float dotProd = (normal * lighting.transpose())(0, 0);
+				float dotProd = normal.dot(lighting);
 
 				// The larger dot product in this case means the more lit up the triangle face will be 
 				CHAR_INFO colour = GetColour(dotProd);
 				
 				// Project all the coordinates to 2D space
-				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2));
-				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2));
-				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2));
+				pro1 = coordinate_projection(rX1(0, 0), rX1(0, 1), rX1(0, 2), projection_matrix);
+				pro2 = coordinate_projection(rX2(0, 0), rX2(0, 1), rX2(0, 2), projection_matrix);
+				pro3 = coordinate_projection(rX3(0, 0), rX3(0, 1), rX3(0, 2), projection_matrix);
 
 				// Center the points and change the scale
 				pro1.value[0][0] += 1.0f;
@@ -204,65 +213,26 @@ public:
 	}
 
 	// Map 3D coordinates to 2D space
-	Matrix coordinate_projection(float x, float y, float z)
+	Vector3D coordinate_projection(float x, float y, float z, Matrix operation)
 	{
-		// Put coordinates in vector format
-		Matrix coordinate_vec(1, 4);
-		coordinate_vec.Assign({ { x, y, z, 1.0f } }); // 1 is added so that -z_near*q can be subtracted from z*q
+		Vector3D res;
+		res.value[0][0] = x * operation(0, 0) + y * operation(1, 0) + z * operation(2, 0) + operation(3, 0);
+		res.value[0][1] = x * operation(0, 1) + y * operation(1, 1) + z * operation(2, 1) + operation(3, 1);
+		res.value[0][2] = x * operation(0, 2) + y * operation(1, 2) + z * operation(2, 2) + operation(3, 2);
 
-		Matrix projection_matrix(4, 4);
-		projection_matrix.Assign({ { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } });
-
-		Matrix res = coordinate_vec * projection_matrix;
+		float leftOver = x * operation(0, 3) + y * operation(1, 3) + z * operation(2, 3) + operation(3, 3);
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		// Also satistfies dividing the terms by z
-		res = res / res.value[0][3];
+		/*Matrix hold = res / leftOver;
+		res.Assign(hold.value);*/
 
-		// Change matrix to 1X3
-		res.clip();
-
-		return res;
-	}
-
-	Matrix x_axis_rotation(float x, float y, float z)
-	{
-		// Put coordinates in vector format
-		Matrix coordinate_vec(1, 4);
-		coordinate_vec.Assign({ { x, y, z, 1.0f } });
-
-		Matrix x_rotation(4, 4);
-		x_rotation.Assign({ {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} });
-
-		Matrix res = coordinate_vec * x_rotation;
-
-		// Dived entire matrix by the last value to convert it back to 3D space
-		// Also satistfies dividing the terms by z
-		res = res / res.value[0][3];
-
-		// Change matrix to 1X3
-		res.clip();
-
-		return res;
-	}
-
-	Matrix z_axis_rotation(float x, float y, float z)
-	{
-		// Put coordinates in vector format
-		Matrix coordinate_vec(1, 4);
-		coordinate_vec.Assign({ { x, y, z, 1.0f } });
-
-		Matrix z_rotation(4, 4);
-		z_rotation.Assign({ {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} });
-
-		Matrix res = coordinate_vec * z_rotation;
-
-		// Dived entire matrix by the last value to convert it back to 3D space
-		// Also satistfies dividing the terms by z
-		res = res / res.value[0][3];
-
-		// Change matrix to 1X3
-		res.clip();
+		if (leftOver != 0.0f)
+		{
+			res.value[0][0] /= leftOver;
+			res.value[0][1] /= leftOver;
+			res.value[0][2] /= leftOver;
+		}
 
 		return res;
 	}
@@ -315,6 +285,8 @@ public:
 		return triangles;
 	}
 
+	
+
 private:
 	std::vector<Triangle> object;
 	float z_far = 1000.0f; // represents the distance from the theoretical distance in the screen to the users face
@@ -327,6 +299,8 @@ private:
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
+
+	
 
 	std::vector<Triangle> renderTriangles;
 
