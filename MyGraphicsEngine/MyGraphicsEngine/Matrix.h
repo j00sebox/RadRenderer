@@ -81,23 +81,15 @@ public:
 	}
 
 	// computes cross product of two vectors
-	Vector3D cross(Vector3D line)
+	void cross(Vector3D& line, Vector3D& normal)
 	{
-		Vector3D normal;
-
 		// Calculate normal vector of the traingle
 		normal.x = y * line.z - z * line.y;
 		normal.y = z * line.x - x * line.z;
 		normal.z = x * line.y - y * line.x;
-
-		normal.value[0][0] = normal.x;
-		normal.value[0][1] = normal.y;
-		normal.value[0][2] = normal.z;
-
-		return normal;
 	}
 
-	float dot(Vector3D vec)
+	float dot(Vector3D& vec)
 	{
 		return x * vec.x + y * vec.y + z * vec.z;
 	}
@@ -125,11 +117,13 @@ public:
 		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
 		x /= normalize;
-		value[0][0] /= normalize;
 		y /= normalize;
-		value[0][1] /= normalize;
 		z /= normalize;
-		value[0][2] /= normalize;
+	}
+
+	void operator = (std::vector<float> f)
+	{
+		x = f[0]; y = f[1]; z = f[2];
 	}
 
 	// vector coordinates

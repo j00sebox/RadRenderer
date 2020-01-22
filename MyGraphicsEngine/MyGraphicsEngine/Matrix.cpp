@@ -216,7 +216,7 @@ float Matrix::operator () (int i, int j)
 	return value[i][j];
 }
 
-void Matrix::operator = (std::vector< std::vector<float> > val)
-{
-	value = val;
-}
+//void Matrix::operator = (std::vector< std::vector<float> > val)
+//{
+//	value = val;
+//}
