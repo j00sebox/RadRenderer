@@ -9,44 +9,52 @@ class Matrix
 overloaded operator functions for proper
 matrix operations
 ************************************************/
-class Matrix
+struct Matrix
 {
-public:
-	Matrix(int row, int col);
+	//Matrix() {};
+
+	//Matrix(int row, int col);
+
+	void set(int row, int col)
+	{
+		r = row;
+		c = col;
+		v.resize(row, std::vector<float>(col));
+	}
 
 	// Copies vector to this classes vector
-	virtual void Assign(std::vector< std::vector<float> > v);
+	//virtual void Assign(std::vector< std::vector<float> > v);
 
 	// Reduce the amount of columns by 1
-	void clip();
+	//void clip();
 
-	Matrix transpose();
+	//Matrix transpose();
 
-	Matrix inverse();
+	//Matrix inverse();
 
-	Matrix operator + (Matrix const& obj);
+	//Matrix operator + (Matrix const& obj);
 
-	Matrix operator - (Matrix const& obj);
+	//Matrix operator - (Matrix const& obj);
 
-	// Implements the dot product between two matrices
-	Matrix operator * (Matrix const& obj);
+	//// Implements the dot product between two matrices
+	//Matrix operator * (Matrix const& obj);
 
-	Matrix operator / (float divisor);
+	//Matrix operator / (float divisor);
 
-	void operator = (std::vector< std::vector<float> > val);
+	//void operator = (std::vector< std::vector<float> > val);
 
-	// allows value to be accessed easier
-	float operator () (int i, int j);
+	//// allows value to be accessed easier
+	//float operator () (int i, int j);
 
-	// Holds values in proper structure
-	std::vector< std::vector<float> > value;
+	//// Holds values in proper structure
+	std::vector< std::vector<float> > v;
 
-private:
+	float m[4][4];
 	// Holds the values for rows and columns of this object
 	int r;
 	int c;
 
-	float determinant(std::vector< std::vector<float> > dmatrix);
+	//float determinant(std::vector< std::vector<float> > dmatrix);
 
 	
 

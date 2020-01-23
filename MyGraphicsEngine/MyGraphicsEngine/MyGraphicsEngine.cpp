@@ -71,7 +71,7 @@ struct Triangle {
 
 struct operation_matrix
 {
-	Matrix m(4, 4);
+	Matrix m;
 };
 
 std::vector<Triangle> cube_demo()
@@ -106,9 +106,12 @@ std::vector<Triangle> cube_demo()
 	
 }
 
-operation_matrix projection_matrix;
-operation_matrix x_rotation;
-operation_matrix z_rotation;
+Matrix projection_matrix;
+
+Matrix x_rotation;
+
+Matrix z_rotation;
+
 
 class EmazingEngine : public olcConsoleGameEngine
 {
@@ -121,13 +124,31 @@ public:
 		object = LoadOBJFile("3DTestObjects/teapot.obj");
 #endif  CUBE_DEMO
 
-		projection_matrix.m.Assign({ { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } });
+		projection_matrix.set(4, 4);
+		//projection_matrix.value = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
+
+		projection_matrix.m[0][0] = aspect_ratio * scaling_factor;
+		projection_matrix.m[1][1] = scaling_factor;
+		projection_matrix.m[2][2] = q;
+		projection_matrix.m[3][2] = -z_near * q;
+		projection_matrix.m[2][3] = 1.0f;
+		projection_matrix.m[3][3] = 0.0f;
+
 
 		lighting.x = 0.0f; lighting.y = 0.0f; lighting.z = -1.0f;
 
 		lighting.normalize();
 
 		cam.x = 0.0f; cam.y = 0.0f; cam.z = 0.0f;
+
+		x_rotation.set(4, 4);
+		z_rotation.set(4, 4);
+
+		z_rotation.m[2][2] = 1;
+		z_rotation.m[3][3] = 1;
+
+		x_rotation.m[0][0] = 1;
+		x_rotation.m[3][3] = 1;
 		
 		return true;
 
@@ -140,22 +161,36 @@ public:
 
 		rotate_angle += 1.0f * fElapsedTime;
 
-		x_rotation.m.Assign({ {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} });
-		z_rotation.m.Assign({ {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} });
+		/*x_rotation.value = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
+		z_rotation.value = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };*/
+
+		// Rotation Z
+		z_rotation.m[0][0] = cosf(rotate_angle);
+		z_rotation.m[0][1] = sinf(rotate_angle);
+		z_rotation.m[1][0] = -sinf(rotate_angle);
+		z_rotation.m[1][1] = cosf(rotate_angle);
+		
+
+		// Rotation X
+		x_rotation.m[1][1] = cosf(rotate_angle * 0.5f);
+		x_rotation.m[1][2] = sinf(rotate_angle * 0.5f);
+		x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
+		x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
+		
 
 
 		for (auto o : object)
 		{
 			
 			// Rotate around z-axis
-			coordinate_projection(o.vertices[0], matRotZ, rZ.vertices[0]);
-			coordinate_projection(o.vertices[1], matRotZ, rZ.vertices[1]);
-			coordinate_projection(o.vertices[2], matRotZ, rZ.vertices[2]);
+			coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
+			coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
+			coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
 
 			// Rotate around x-axis
-			coordinate_projection(rZ.vertices[0], matRotX, rX.vertices[0]);
-			coordinate_projection(rZ.vertices[1], matRotX, rX.vertices[1]);
-			coordinate_projection(rZ.vertices[2], matRotX, rX.vertices[2]);
+			coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
+			coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
+			coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 			// move object back so it is in view of the camera
 			rX.vertices[0].z += 8.0f;
@@ -189,9 +224,9 @@ public:
 				CHAR_INFO colour = GetColour(dotProd);
 				
 				// Project all the coordinates to 2D space
-				coordinate_projection(rX.vertices[0], matProj, pro.vertices[0]);
-				coordinate_projection(rX.vertices[1], matProj, pro.vertices[1]);
-				coordinate_projection(rX.vertices[2], matProj, pro.vertices[2]);
+				coordinate_projection(rX.vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(rX.vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(rX.vertices[2], projection_matrix, pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -245,13 +280,13 @@ public:
 	}
 
 	// Map 3D coordinates to 2D space
-	void coordinate_projection(Vector3D& vertex, operation_matrix& operation, Vector3D& outVec)
+	void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
 	{
-		outVec.x = vertex.x * operation.m.(0, 0) + vertex.y * operation.m.value[1][0] + vertex.z * operation.m.value[2][0] + operation.m.value[3][0];
-		outVec.y = vertex.x * operation.m.value[0][1] + vertex.y * operation.m.value[1][1] + vertex.z * operation.m.value[2][1] + operation.m.value[3][1];
-		outVec.z = vertex.x * operation.m.value[0][2] + vertex.y * operation.m.value[1][2] + vertex.z * operation.m.value[2][2] + operation.m.value[3][2];
+		outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
+		outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
+		outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
 
-		float leftOver = vertex.x * operation.m.value[0][3] + vertex.y * operation.m.value[1][3] + vertex.z * operation.m.value[2][3] + operation.m.value[3][3];
+		float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		// Also satistfies dividing the terms by z
