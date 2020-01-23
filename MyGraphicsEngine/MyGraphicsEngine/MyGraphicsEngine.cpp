@@ -60,6 +60,30 @@ struct Vector3D {
 		y /= normalize;
 		z /= normalize;
 	}
+
+	void add(Vector3D& vec, Vector3D& res)
+	{
+		res.x = x + vec.x;
+		res.y = y + vec.y;
+		res.z = z + vec.z;
+	}
+
+	void subtract(Vector3D& vec, Vector3D& res)
+	{
+		res.x = x - vec.x;
+		res.y = y - vec.y;
+		res.z = z - vec.z;
+	}
+
+	Vector3D multiply(float multiplier)
+	{
+		Vector3D prod;
+		prod.x = x * multiplier;
+		prod.y = y * multiplier;
+		prod.z = multiplier;
+
+		return prod;
+	}
 };
 
 struct Triangle {
@@ -121,7 +145,7 @@ public:
 #ifdef CUBE_DEMO
 		object = cube_demo();	
 #else
-		object = LoadOBJFile("3DTestObjects/teapot.obj");
+		object = LoadOBJFile("3DTestObjects/axis.obj");
 #endif  CUBE_DEMO
 
 		projection_matrix.set(4, 4);
@@ -135,11 +159,11 @@ public:
 		projection_matrix.m[3][3] = 0.0f;
 
 
-		lighting.x = 0.0f; lighting.y = 0.0f; lighting.z = -1.0f;
+		lighting = { 0.0f, 0.0f, -1.0f };
 
 		lighting.normalize();
 
-		cam.x = 0.0f; cam.y = 0.0f; cam.z = 0.0f;
+		cam = { 0.0f, 0.0f, 0.0f };
 
 		x_rotation.set(4, 4);
 		z_rotation.set(4, 4);
@@ -159,7 +183,19 @@ public:
 		// Clear screen to redraw
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-		rotate_angle += 1.0f * fElapsedTime;
+		//rotate_angle += 1.0f * fElapsedTime;
+
+		if (GetKey(VK_UP).bHeld)
+			cam.y += 8.0f * fElapsedTime;	// Travel Upwards
+
+		if (GetKey(VK_DOWN).bHeld)
+			cam.y -= 8.0f * fElapsedTime;	// Travel Downwards
+
+		if (GetKey(VK_LEFT).bHeld)
+			cam.x -= 8.0f * fElapsedTime;	// Travel Along X-Axis
+
+		if (GetKey(VK_RIGHT).bHeld)
+			cam.x += 8.0f * fElapsedTime;	// Travel Along X-Axis
 
 		/*x_rotation.value = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 		z_rotation.value = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };*/
@@ -176,8 +212,15 @@ public:
 		x_rotation.m[1][2] = sinf(rotate_angle * 0.5f);
 		x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
 		x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
-		
 
+		Vector3D vUp = { 0,1,0 };
+		Vector3D look_dir = { 0,0,1 };
+		Vector3D forward;
+		cam.add(look_dir, forward);
+
+		Matrix cameraM = point_at(cam, forward, vUp);
+
+		Matrix cameraInv = look_at(cameraM);
 
 		for (auto o : object)
 		{
@@ -222,11 +265,15 @@ public:
 
 				// The larger dot product in this case means the more lit up the triangle face will be 
 				CHAR_INFO colour = GetColour(dotProd);
+
+				coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
+				coordinate_projection(rX.vertices[1], cameraInv, viewed.vertices[1]);
+				coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);
 				
 				// Project all the coordinates to 2D space
-				coordinate_projection(rX.vertices[0], projection_matrix, pro.vertices[0]);
-				coordinate_projection(rX.vertices[1], projection_matrix, pro.vertices[1]);
-				coordinate_projection(rX.vertices[2], projection_matrix, pro.vertices[2]);
+				coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -300,6 +347,41 @@ public:
 
 	}
 
+	Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
+	{
+		Vector3D nForward;
+		forward.subtract(up, nForward);
+		nForward.normalize();
+
+		Vector3D temp = nForward.multiply(up.dot(nForward));
+		Vector3D nUp; 
+		up.subtract(temp, nUp);
+
+		Vector3D nRight;
+		nUp.cross(nForward, nRight);
+
+		Matrix matrix;
+		matrix.m[0][0] = nRight.x;		matrix.m[0][1] = nRight.y;		matrix.m[0][2] = nRight.z;		matrix.m[0][3] = 0.0f;
+		matrix.m[1][0] = nUp.x;			matrix.m[1][1] = nUp.y;			matrix.m[1][2] = nUp.z;			matrix.m[1][3] = 0.0f;
+		matrix.m[2][0] = nForward.x;	matrix.m[2][1] = nForward.y;	matrix.m[2][2] = nForward.z;	matrix.m[2][3] = 0.0f;
+		matrix.m[3][0] = point_to.x;	matrix.m[3][1] = point_to.y;	matrix.m[3][2] = point_to.z;	matrix.m[3][3] = 1.0f;
+
+		return matrix;
+	}
+
+	Matrix look_at(Matrix& pointAt)
+	{
+		Matrix matrix;
+		matrix.m[0][0] = pointAt.m[0][0]; matrix.m[0][1] = pointAt.m[1][0]; matrix.m[0][2] = pointAt.m[2][0]; matrix.m[0][3] = 0.0f;
+		matrix.m[1][0] = pointAt.m[0][1]; matrix.m[1][1] = pointAt.m[1][1]; matrix.m[1][2] = pointAt.m[2][1]; matrix.m[1][3] = 0.0f;
+		matrix.m[2][0] = pointAt.m[0][2]; matrix.m[2][1] = pointAt.m[1][2]; matrix.m[2][2] = pointAt.m[2][2]; matrix.m[2][3] = 0.0f;
+		matrix.m[3][0] = -(pointAt.m[3][0] * matrix.m[0][0] + pointAt.m[3][1] * matrix.m[1][0] + pointAt.m[3][2] * matrix.m[2][0]);
+		matrix.m[3][1] = -(pointAt.m[3][0] * matrix.m[0][1] + pointAt.m[3][1] * matrix.m[1][1] + pointAt.m[3][2] * matrix.m[2][1]);
+		matrix.m[3][2] = -(pointAt.m[3][0] * matrix.m[0][2] + pointAt.m[3][1] * matrix.m[1][2] + pointAt.m[3][2] * matrix.m[2][2]);
+		matrix.m[3][3] = 1.0f;
+		return matrix;
+	}
+
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname)
 	{
@@ -368,6 +450,8 @@ private:
 
 	Triangle rZ;
 
+	Triangle viewed;
+
 	// Vectors to calculate the normal of triangle faces.
 	Vector3D l1;
 	Vector3D l2;
@@ -386,7 +470,7 @@ private:
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(264, 250, 4, 4))
+	if (game.ConstructConsole(88, 88, 4, 4))
 		game.Start();
 		
 	return 0;
