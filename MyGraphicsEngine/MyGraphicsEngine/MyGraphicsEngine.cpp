@@ -168,12 +168,12 @@ public:
 		x_rotation.set(4, 4);
 		z_rotation.set(4, 4);
 
-		z_rotation.m[2][2] = 1;
-		z_rotation.m[3][3] = 1;
+		z_rotation.m[2][2] = 1.0f;
+		z_rotation.m[3][3] = 1.0f;
 
-		x_rotation.m[0][0] = 1;
-		x_rotation.m[3][3] = 1;
-		
+		x_rotation.m[0][0] = 1.0f;
+		x_rotation.m[3][3] = 1.0f;
+
 		return true;
 
 	}
@@ -186,10 +186,10 @@ public:
 		//rotate_angle += 1.0f * fElapsedTime;
 
 		if (GetKey(VK_UP).bHeld)
-			cam.y += 8.0f * fElapsedTime;	// Travel Upwards
+			cam.y -= 8.0f * fElapsedTime;	// Travel Upwards
 
 		if (GetKey(VK_DOWN).bHeld)
-			cam.y -= 8.0f * fElapsedTime;	// Travel Downwards
+			cam.y += 8.0f * fElapsedTime;	// Travel Downwards
 
 		if (GetKey(VK_LEFT).bHeld)
 			cam.x -= 8.0f * fElapsedTime;	// Travel Along X-Axis
@@ -205,7 +205,6 @@ public:
 		z_rotation.m[0][1] = sinf(rotate_angle);
 		z_rotation.m[1][0] = -sinf(rotate_angle);
 		z_rotation.m[1][1] = cosf(rotate_angle);
-		
 
 		// Rotation X
 		x_rotation.m[1][1] = cosf(rotate_angle * 0.5f);
@@ -213,9 +212,8 @@ public:
 		x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
 		x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
 
-		Vector3D vUp = { 0,1,0 };
-		Vector3D look_dir = { 0,0,1 };
-		Vector3D forward;
+		vUp = { 0,1,0 };
+		look_dir = { 0,0,1 };
 		cam.add(look_dir, forward);
 
 		Matrix cameraM = point_at(cam, forward, vUp);
@@ -236,9 +234,9 @@ public:
 			coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 			// move object back so it is in view of the camera
-			rX.vertices[0].z += 8.0f;
-			rX.vertices[1].z += 8.0f;
-			rX.vertices[2].z += 8.0f;
+			rX.vertices[0].z += 20.0f;
+			rX.vertices[1].z += 20.0f;
+			rX.vertices[2].z += 20.0f;
 
 			// Construct line 1 of the triangle
 			l1.x = rX.vertices[1].x - rX.vertices[0].x;
@@ -327,7 +325,7 @@ public:
 	}
 
 	// Map 3D coordinates to 2D space
-	void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
+	inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
 	{
 		outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
 		outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
@@ -347,15 +345,16 @@ public:
 
 	}
 
-	Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
+	inline Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
 	{
 		Vector3D nForward;
-		forward.subtract(up, nForward);
+		forward.subtract(point_to, nForward);
 		nForward.normalize();
 
 		Vector3D temp = nForward.multiply(up.dot(nForward));
 		Vector3D nUp; 
 		up.subtract(temp, nUp);
+		nUp.normalize();
 
 		Vector3D nRight;
 		nUp.cross(nForward, nRight);
@@ -369,7 +368,7 @@ public:
 		return matrix;
 	}
 
-	Matrix look_at(Matrix& pointAt)
+	inline Matrix look_at(Matrix& pointAt)
 	{
 		Matrix matrix;
 		matrix.m[0][0] = pointAt.m[0][0]; matrix.m[0][1] = pointAt.m[1][0]; matrix.m[0][2] = pointAt.m[2][0]; matrix.m[0][3] = 0.0f;
@@ -437,11 +436,12 @@ private:
 	float q = z_far / (z_far - z_near);
 
 	float theta = 90.0f; // the field of view for the player
+	float thetaRAD = theta / 180.0f * 3.14159f;
 
-	float scaling_factor = 1.0f / tanf(theta * 0.5f / 180.0f * 3.14159f); // amount needed to scale coordinates based on the fov
+	float scaling_factor = 1.0f / tanf(thetaRAD * 0.5f); // amount needed to scale coordinates based on the fov
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
-	float rotate_angle; // perodically changing to give the appearance that the object is rotating
+	float rotate_angle = 3.14159f*0.5f; // perodically changing to give the appearance that the object is rotating
 
 	// Projection matrices
 	Triangle pro;
@@ -464,13 +464,17 @@ private:
 	Vector3D lighting;
 
 	std::vector<Triangle> renderTriangles;
+
+	Vector3D vUp;
+	Vector3D look_dir;
+	Vector3D forward;
 	
 };
 
 int main()
 {
 	EmazingEngine game;
-	if (game.ConstructConsole(88, 88, 4, 4))
+	if (game.ConstructConsole(250, 250, 4, 4))
 		game.Start();
 		
 	return 0;
