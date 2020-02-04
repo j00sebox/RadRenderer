@@ -35,144 +35,177 @@
 //	short colour;
 //};
 
-struct Vector3D {
-	// vector coordinates
-	float x, y, z;
+//struct Vector3D {
+//	// vector coordinates
+//	float x, y, z;
+//
+//	void cross(Vector3D& line, Vector3D& normal)
+//	{
+//		// Calculate normal vector of the traingle
+//		normal.x = y * line.z - z * line.y;
+//		normal.y = z * line.x - x * line.z;
+//		normal.z = x * line.y - y * line.x;
+//	}
+//
+//	float dot(Vector3D& vec)
+//	{
+//		return x * vec.x + y * vec.y + z * vec.z;
+//	}
+//
+//	void normalize()
+//	{
+//		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
+//
+//		x /= normalize;
+//		y /= normalize;
+//		z /= normalize;
+//	}
+//
+//	void add(Vector3D& vec, Vector3D& res)
+//	{
+//		res.x = x + vec.x;
+//		res.y = y + vec.y;
+//		res.z = z + vec.z;
+//	}
+//
+//	void subtract(Vector3D& vec, Vector3D& res)
+//	{
+//		res.x = x - vec.x;
+//		res.y = y - vec.y;
+//		res.z = z - vec.z;
+//	}
+//
+//	Vector3D multiply(float multiplier)
+//	{
+//		Vector3D prod;
+//		prod.x = x * multiplier;
+//		prod.y = y * multiplier;
+//		prod.z = multiplier;
+//
+//		return prod;
+//	}
+//};
 
-	void cross(Vector3D& line, Vector3D& normal)
-	{
-		// Calculate normal vector of the traingle
-		normal.x = y * line.z - z * line.y;
-		normal.y = z * line.x - x * line.z;
-		normal.z = x * line.y - y * line.x;
+//class Triangle {
+//public:
+//	Triangle() { 
+//		vertices[0].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
+//		vertices[1].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
+//		vertices[2].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
+//	}
+//
+//	Triangle(std::vector < std::vector<float> > val) { vertices[0].value = { val[0] }; vertices[1].value = { val[1] }; vertices[2].value = { val[2] }; }
+//
+//	Vector3D vertices[3];
+//
+//	wchar_t symbol;
+//	short colour;
+//};
+
+class Triangle
+{
+public:
+
+	Triangle() : vertices(3)
+	{	
+		std::vector<float> init{ 0.0f, 0.0f, 0.0f };
+		vertices[0].assign(init);
+		vertices[1].assign(init);
+		vertices[2].assign(init);
 	}
 
-	float dot(Vector3D& vec)
+	Triangle(std::vector< std::vector<float > > v) : vertices(3)
 	{
-		return x * vec.x + y * vec.y + z * vec.z;
+		vertices[0].assign(v[0]);
+		vertices[1].assign(v[1]);
+		vertices[2].assign(v[2]);
 	}
 
-	void normalize()
-	{
-		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
-
-		x /= normalize;
-		y /= normalize;
-		z /= normalize;
-	}
-
-	void add(Vector3D& vec, Vector3D& res)
-	{
-		res.x = x + vec.x;
-		res.y = y + vec.y;
-		res.z = z + vec.z;
-	}
-
-	void subtract(Vector3D& vec, Vector3D& res)
-	{
-		res.x = x - vec.x;
-		res.y = y - vec.y;
-		res.z = z - vec.z;
-	}
-
-	Vector3D multiply(float multiplier)
-	{
-		Vector3D prod;
-		prod.x = x * multiplier;
-		prod.y = y * multiplier;
-		prod.z = multiplier;
-
-		return prod;
-	}
-};
-
-struct Triangle {
-	Vector3D vertices[3];
+	std::vector<Vector3D> vertices;
 
 	wchar_t symbol;
 	short colour;
-};
-
-struct operation_matrix
-{
-	Matrix m;
 };
 
 std::vector<Triangle> cube_demo()
 {
 	return {
 
-		// SOUTH
-		{ 0.0f, 0.0f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 0.0f, 0.0f },
+		// south
+		Triangle({ {0.0f, 0.0f, 0.0f},    {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 0.0f} }),
+		Triangle({ {0.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }),
 
-		// EAST                                                      
-		{ 1.0f, 0.0f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 1.0f, 1.0f },
-		{ 1.0f, 0.0f, 0.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f },
+		// east                                                      
+		Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f} }),
+		Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 0.0f, 1.0f} }),
 
-		// NORTH                                                     
-		{ 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f },
-		{ 1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f },
+		// north                                                     
+		Triangle({ {1.0f, 0.0f, 1.0f},    {1.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 1.0f} }),
+		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 0.0f, 1.0f} }),
 
-		// WEST                                                      
-		{ 0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f,    0.0f, 0.0f, 0.0f },
+		// west                                                      
+		Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 0.0f} }),
+		Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 0.0f},    {0.0f, 0.0f, 0.0f} }),
 
-		// TOP                                                       
-		{ 0.0f, 1.0f, 0.0f,    0.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f },
-		{ 0.0f, 1.0f, 0.0f,    1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 0.0f },
+		// top                                                       
+		Triangle({ {0.0f, 1.0f, 0.0f},    {0.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 1.0f} }),
+		Triangle({ {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 0.0f} }),
 
-		// BOTTOM                                                    
-		{ 1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 0.0f, 0.0f },
-		{ 1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 0.0f,    1.0f, 0.0f, 0.0f },
+		// bottom                                                    
+		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f} }),
+		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }),
 
 	};
 	
 }
 
-Matrix projection_matrix;
+Matrix projection_matrix(4, 4);
 
-Matrix x_rotation;
+Matrix x_rotation(4, 4);
 
-Matrix z_rotation;
+Matrix z_rotation(4, 4);
+
+Matrix tempVec(1, 4);
 
 
 class EmazingEngine : public olcConsoleGameEngine
 {
 public:
+	EmazingEngine() {}
+
 	bool OnUserCreate() override
 	{
 #ifdef CUBE_DEMO
 		object = cube_demo();	
 #else
-		object = LoadOBJFile("3DTestObjects/axis.obj");
+		object = LoadOBJFile("3DTestObjects/teapot.obj");
 #endif  CUBE_DEMO
 
-		projection_matrix.set(4, 4);
-		//projection_matrix.value = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
+		//projection_matrix.set(4, 4);
+		projection_matrix = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
 
-		projection_matrix.m[0][0] = aspect_ratio * scaling_factor;
+		/*projection_matrix.m[0][0] = aspect_ratio * scaling_factor;
 		projection_matrix.m[1][1] = scaling_factor;
 		projection_matrix.m[2][2] = q;
 		projection_matrix.m[3][2] = -z_near * q;
 		projection_matrix.m[2][3] = 1.0f;
-		projection_matrix.m[3][3] = 0.0f;
+		projection_matrix.m[3][3] = 0.0f;*/
 
-
-		lighting = { 0.0f, 0.0f, -1.0f };
+		
+		lighting.value = { { 0.0f, 0.0f, -1.0f } };
 
 		lighting.normalize();
 
-		cam = { 0.0f, 0.0f, 0.0f };
+		cam.value = { { 0.0f, 0.0f, 0.0f } };
 
-		x_rotation.set(4, 4);
+		/*x_rotation.set(4, 4);
 		z_rotation.set(4, 4);
 
 		z_rotation.m[2][2] = 1.0f;
 		z_rotation.m[3][3] = 1.0f;
 
 		x_rotation.m[0][0] = 1.0f;
-		x_rotation.m[3][3] = 1.0f;
+		x_rotation.m[3][3] = 1.0f;*/
 
 		return true;
 
@@ -183,7 +216,7 @@ public:
 		// Clear screen to redraw
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-		//rotate_angle += 1.0f * fElapsedTime;
+		rotate_angle += 1.0f * fElapsedTime;
 
 		if (GetKey(VK_UP).bHeld)
 			cam.y -= 8.0f * fElapsedTime;	// Travel Upwards
@@ -196,29 +229,29 @@ public:
 
 		if (GetKey(VK_RIGHT).bHeld)
 			cam.x += 8.0f * fElapsedTime;	// Travel Along X-Axis
-
-		/*x_rotation.value = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
-		z_rotation.value = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };*/
+		
+		x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
+		z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
 
 		// Rotation Z
-		z_rotation.m[0][0] = cosf(rotate_angle);
-		z_rotation.m[0][1] = sinf(rotate_angle);
-		z_rotation.m[1][0] = -sinf(rotate_angle);
-		z_rotation.m[1][1] = cosf(rotate_angle);
+		//z_rotation.m[0][0] = cosf(rotate_angle);
+		//z_rotation.m[0][1] = sinf(rotate_angle);
+		//z_rotation.m[1][0] = -sinf(rotate_angle);
+		//z_rotation.m[1][1] = cosf(rotate_angle);
 
-		// Rotation X
-		x_rotation.m[1][1] = cosf(rotate_angle * 0.5f);
-		x_rotation.m[1][2] = sinf(rotate_angle * 0.5f);
-		x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
-		x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
+		//// Rotation X
+		//x_rotation.m[1][1] = cosf(rotate_angle * 0.5f);
+		//x_rotation.m[1][2] = sinf(rotate_angle * 0.5f);
+		//x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
+		//x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
 
-		vUp = { 0,1,0 };
+		/*vUp = { 0,1,0 };
 		look_dir = { 0,0,1 };
-		cam.add(look_dir, forward);
+		cam.add(look_dir, forward);*/
 
-		Matrix cameraM = point_at(cam, forward, vUp);
+		/*Matrix cameraM = point_at(cam, forward, vUp);
 
-		Matrix cameraInv = look_at(cameraM);
+		Matrix cameraInv = look_at(cameraM);*/
 
 		for (auto o : object)
 		{
@@ -234,9 +267,9 @@ public:
 			coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 			// move object back so it is in view of the camera
-			rX.vertices[0].z += 20.0f;
-			rX.vertices[1].z += 20.0f;
-			rX.vertices[2].z += 20.0f;
+			rX.vertices[0].z += 10.0f;
+			rX.vertices[1].z += 10.0f;
+			rX.vertices[2].z += 10.0f;
 
 			// Construct line 1 of the triangle
 			l1.x = rX.vertices[1].x - rX.vertices[0].x;
@@ -264,14 +297,14 @@ public:
 				// The larger dot product in this case means the more lit up the triangle face will be 
 				CHAR_INFO colour = GetColour(dotProd);
 
-				coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
+				/*coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
 				coordinate_projection(rX.vertices[1], cameraInv, viewed.vertices[1]);
-				coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);
+				coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);*/
 				
 				// Project all the coordinates to 2D space
-				coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
-				coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
-				coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
+				coordinate_projection(rX.vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(rX.vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(rX.vertices[2], projection_matrix, pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -325,27 +358,57 @@ public:
 	}
 
 	// Map 3D coordinates to 2D space
+	//inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
+	//{
+	//	outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
+	//	outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
+	//	outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
+
+	//	float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];
+
+	//	// Dived entire matrix by the last value to convert it back to 3D space
+	//	// Also satistfies dividing the terms by z
+
+	//	if (leftOver != 0.0f)
+	//	{
+	//		outVec.x /= leftOver;
+	//		outVec.y /= leftOver;
+	//		outVec.z /= leftOver;
+	//	}
+
+	//}
+
 	inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
 	{
-		outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
+		/*outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
 		outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
 		outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
 
-		float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];
+		float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];*/
+
+		tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
+
+		Matrix res = tempVec * operation;
+
+		res = res / res(0, 3);
+
+		res.clip();
+
+		outVec.value = res.value;
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		// Also satistfies dividing the terms by z
 
-		if (leftOver != 0.0f)
+		/*if (leftOver != 0.0f)
 		{
 			outVec.x /= leftOver;
 			outVec.y /= leftOver;
 			outVec.z /= leftOver;
-		}
+		}*/
 
 	}
 
-	inline Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
+	/*inline Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
 	{
 		Vector3D nForward;
 		forward.subtract(point_to, nForward);
@@ -379,7 +442,7 @@ public:
 		matrix.m[3][2] = -(pointAt.m[3][0] * matrix.m[0][2] + pointAt.m[3][1] * matrix.m[1][2] + pointAt.m[3][2] * matrix.m[2][2]);
 		matrix.m[3][3] = 1.0f;
 		return matrix;
-	}
+	}*/
 
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname)
@@ -420,7 +483,8 @@ public:
 			{
 				st >> startingChar >> i1 >> i2 >> i3;
 				triangles.push_back(
-					{vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1]} );
+					Triangle({ vertices[i1 - 1].value[0], vertices[i2 - 1].value[0], vertices[i3 - 1].value[0] })
+				);
 			}
 		}
 
@@ -441,7 +505,7 @@ private:
 	float scaling_factor = 1.0f / tanf(thetaRAD * 0.5f); // amount needed to scale coordinates based on the fov
 	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
 
-	float rotate_angle = 3.14159f*0.5f; // perodically changing to give the appearance that the object is rotating
+	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
 	// Projection matrices
 	Triangle pro;
@@ -476,6 +540,30 @@ int main()
 	EmazingEngine game;
 	if (game.ConstructConsole(250, 250, 4, 4))
 		game.Start();
+
+	/*Vector3D testVec;
+	std::vector<float> t{ 17.0f, 2.0f, 1.0f };
+	testVec.assign(t);
+
+	testVec.value[0][0] = 4.0f;
+
+	std::cout << testVec.x;*/
+
+	/*Matrix test(3, 2);
+	Matrix oTest(3, 3);
+
+	test = { {4.0f, 6.0f}, {7.0f, 8.0f}, {19.0f, 2.0f} };
+	oTest = { {13.0f, 12.0f, 5.0f}, {3.0f, 0.0f, 2.0f}, {17.0f, 2.0f, 1.0f} };
+
+	Matrix res = oTest * test;
+
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 2; j++)
+			std::cout << res.value[i][j] << " ";
+
+		std::cout << std::endl;
+	}*/
 		
 	return 0;
 }
