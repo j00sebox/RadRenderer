@@ -12,7 +12,7 @@
 
 #include "Matrix.h"
 
-//#define CUBE_DEMO
+#define CUBE_DEMO
 
 //class Triangle
 //{
@@ -216,7 +216,7 @@ public:
 		// Clear screen to redraw
 		Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-		rotate_angle += 1.0f * fElapsedTime;
+		//rotate_angle += 1.0f * fElapsedTime;
 
 		if (GetKey(VK_UP).bHeld)
 			cam.y -= 8.0f * fElapsedTime;	// Travel Upwards
@@ -267,9 +267,9 @@ public:
 			coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 			// move object back so it is in view of the camera
-			rX.vertices[0].z += 10.0f;
-			rX.vertices[1].z += 10.0f;
-			rX.vertices[2].z += 10.0f;
+			rX.vertices[0].z += 3.0f;
+			rX.vertices[1].z += 3.0f;
+			rX.vertices[2].z += 3.0f;
 
 			// Construct line 1 of the triangle
 			l1.x = rX.vertices[1].x - rX.vertices[0].x;
@@ -358,55 +358,55 @@ public:
 	}
 
 	// Map 3D coordinates to 2D space
-	//inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
-	//{
-	//	outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
-	//	outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
-	//	outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
-
-	//	float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];
-
-	//	// Dived entire matrix by the last value to convert it back to 3D space
-	//	// Also satistfies dividing the terms by z
-
-	//	if (leftOver != 0.0f)
-	//	{
-	//		outVec.x /= leftOver;
-	//		outVec.y /= leftOver;
-	//		outVec.z /= leftOver;
-	//	}
-
-	//}
-
 	inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
 	{
-		/*outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
-		outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
-		outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
+		outVec.x = vertex.x * operation.value[0][0] + vertex.y * operation.value[1][0] + vertex.z * operation.value[2][0] + operation.value[3][0];
+		outVec.y = vertex.x * operation.value[0][1] + vertex.y * operation.value[1][1] + vertex.z * operation.value[2][1] + operation.value[3][1];
+		outVec.z = vertex.x * operation.value[0][2] + vertex.y * operation.value[1][2] + vertex.z * operation.value[2][2] + operation.value[3][2];
 
-		float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];*/
-
-		tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
-
-		Matrix res = tempVec * operation;
-
-		res = res / res(0, 3);
-
-		res.clip();
-
-		outVec.value = res.value;
+		float leftOver = vertex.x * operation.value[0][3] + vertex.y * operation.value[1][3] + vertex.z * operation.value[2][3] + operation.value[3][3];
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		// Also satistfies dividing the terms by z
 
-		/*if (leftOver != 0.0f)
+		if (leftOver != 0.0f)
 		{
 			outVec.x /= leftOver;
 			outVec.y /= leftOver;
 			outVec.z /= leftOver;
-		}*/
+		}
 
 	}
+
+	//inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
+	//{
+	//	/*outVec.x = vertex.x * operation.m[0][0] + vertex.y * operation.m[1][0] + vertex.z * operation.m[2][0] + operation.m[3][0];
+	//	outVec.y = vertex.x * operation.m[0][1] + vertex.y * operation.m[1][1] + vertex.z * operation.m[2][1] + operation.m[3][1];
+	//	outVec.z = vertex.x * operation.m[0][2] + vertex.y * operation.m[1][2] + vertex.z * operation.m[2][2] + operation.m[3][2];
+
+	//	float leftOver = vertex.x * operation.m[0][3] + vertex.y * operation.m[1][3] + vertex.z * operation.m[2][3] + operation.m[3][3];*/
+
+	//	tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
+
+	//	Matrix res = tempVec * operation;
+
+	//	res = res / res(0, 3);
+
+	//	res.clip();
+
+	//	outVec.value = res.value;
+
+	//	// Dived entire matrix by the last value to convert it back to 3D space
+	//	// Also satistfies dividing the terms by z
+
+	//	/*if (leftOver != 0.0f)
+	//	{
+	//		outVec.x /= leftOver;
+	//		outVec.y /= leftOver;
+	//		outVec.z /= leftOver;
+	//	}*/
+
+	//}
 
 	/*inline Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
 	{
