@@ -88,12 +88,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>Z:\Visual Studio\jarmstrong%40trojanuv.com\googletest-release-1.8.0\googletest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\Administrator\Documents\googletest-release-1.10.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Debug\gtestd.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Release\gtest.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Release\gtest_main.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Debug\gtest_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,10 +151,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MyGraphicsEngine.cpp" />
+    <ClCompile Include="EmazingDemo.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="MyGraphicsEngine.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\jarmstrong%40trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\olcConsoleGameEngine.h" />
+    <ClInclude Include="Matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
