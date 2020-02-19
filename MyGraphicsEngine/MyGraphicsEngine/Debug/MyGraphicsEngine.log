@@ -1,9 +1,9 @@
 ﻿  MyGraphicsEngine.cpp
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,115): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,98): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,81): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,64): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,47): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(322,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,115): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,98): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,81): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,64): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,47): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 LINK : warning LNK4076: invalid incremental status file 'Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.ilk' (which will be deleted); linking nonincrementally
   MyGraphicsEngine.vcxproj -> Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe

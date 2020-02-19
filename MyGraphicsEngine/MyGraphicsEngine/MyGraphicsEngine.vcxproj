@@ -158,9 +158,6 @@
     <ClCompile Include="MyGraphicsEngine.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\jarmstrong%40trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\olcConsoleGameEngine.h" />

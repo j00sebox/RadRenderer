@@ -102,6 +102,15 @@ public:
 		x = f[0]; y = f[1]; z = f[2];
 	}
 
+	// Assign a matrix value to the vector if it has the correct dim
+	void operator = (Matrix& m)
+	{
+		if (m.c == 3 && m.r == 1)
+		{
+			value = m.value;
+		}
+	}
+
 	// vector coordinates
 	float& x = value[0][0];
 	float& y = value[0][1];
