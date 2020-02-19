@@ -1,1 +1,10 @@
-﻿  MyGraphicsEngine.vcxproj -> Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe
+﻿  Matrix.cpp
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Matrix.cpp(66,23): warning C4018: '<': signed/unsigned mismatch
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Matrix.cpp(70,47): warning C4244: '=': conversion from 'double' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=float
+          ]
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Matrix.cpp(98,22): warning C4018: '<': signed/unsigned mismatch
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Matrix.cpp(101,62): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+  MyGraphicsEngine.vcxproj -> Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe

@@ -157,7 +157,7 @@ Matrix Matrix::operator - (Matrix const& obj)
 
 float myproduct(float x, float* y) { return x * (*y); }
 
-// Implements the dot product between two matrices
+// Implements the product between two matrices
 Matrix Matrix::operator * (Matrix& obj)
 {
 	Matrix res(r, obj.c);
@@ -173,7 +173,7 @@ Matrix Matrix::operator * (Matrix& obj)
 		for (int i = 0; i < obj.c; i++)
 		{
 			for (int j = 0; j < r; j++)
-				result[j][i] = std::inner_product(value[j].begin(), value[j].end(), colPtr.begin(), 0, std::plus<float>(), myproduct);
+				result[j][i] = std::inner_product(value[j].begin(), value[j].end(), colPtr.begin(), 0.0f, std::plus<float>(), myproduct);
 
 			std::transform(colPtr.begin(), colPtr.end(), colPtr.begin(), [](float* x) {return ++x;});
 		}

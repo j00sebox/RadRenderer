@@ -21,5 +21,8 @@
     <ClCompile Include="matrix_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\MyGraphicsEngine\Matrix.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
