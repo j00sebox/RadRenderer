@@ -14,94 +14,6 @@
 
 #define CUBE_DEMO
 
-//class Triangle
-//{
-//public:
-//
-//	Triangle() : vertices(3) {
-//		Triangle({ {0.0f, 0.0f, 0.f}, {0.0f, 0.0f, 0.f}, {0.0f, 0.0f, 0.f} });
-//	}
-//	
-//	Triangle(std::vector< std::vector<float > > v) : vertices(3)
-//	{
-//		vertices[0] = v[0];
-//		vertices[1] = v[1];
-//		vertices[2] = v[2];
-//	}
-//
-//	std::vector<Vector3D> vertices;
-//
-//	wchar_t symbol;
-//	short colour;
-//};
-
-//struct Vector3D {
-//	// vector coordinates
-//	float x, y, z;
-//
-//	void cross(Vector3D& line, Vector3D& normal)
-//	{
-//		// Calculate normal vector of the traingle
-//		normal.x = y * line.z - z * line.y;
-//		normal.y = z * line.x - x * line.z;
-//		normal.z = x * line.y - y * line.x;
-//	}
-//
-//	float dot(Vector3D& vec)
-//	{
-//		return x * vec.x + y * vec.y + z * vec.z;
-//	}
-//
-//	void normalize()
-//	{
-//		float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
-//
-//		x /= normalize;
-//		y /= normalize;
-//		z /= normalize;
-//	}
-//
-//	void add(Vector3D& vec, Vector3D& res)
-//	{
-//		res.x = x + vec.x;
-//		res.y = y + vec.y;
-//		res.z = z + vec.z;
-//	}
-//
-//	void subtract(Vector3D& vec, Vector3D& res)
-//	{
-//		res.x = x - vec.x;
-//		res.y = y - vec.y;
-//		res.z = z - vec.z;
-//	}
-//
-//	Vector3D multiply(float multiplier)
-//	{
-//		Vector3D prod;
-//		prod.x = x * multiplier;
-//		prod.y = y * multiplier;
-//		prod.z = multiplier;
-//
-//		return prod;
-//	}
-//};
-
-//class Triangle {
-//public:
-//	Triangle() { 
-//		vertices[0].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
-//		vertices[1].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
-//		vertices[2].value = { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f} };
-//	}
-//
-//	Triangle(std::vector < std::vector<float> > val) { vertices[0].value = { val[0] }; vertices[1].value = { val[1] }; vertices[2].value = { val[2] }; }
-//
-//	Vector3D vertices[3];
-//
-//	wchar_t symbol;
-//	short colour;
-//};
-
 class Triangle
 {
 public:
@@ -109,16 +21,16 @@ public:
 	Triangle() : vertices(3)
 	{	
 		std::vector<float> init{ 0.0f, 0.0f, 0.0f };
-		vertices[0].assign(init);
-		vertices[1].assign(init);
-		vertices[2].assign(init);
+		vertices[0] = init;
+		vertices[1] = init;
+		vertices[2] = init;
 	}
 
 	Triangle(std::vector< std::vector<float > > v) : vertices(3)
 	{
-		vertices[0].assign(v[0]);
-		vertices[1].assign(v[1]);
-		vertices[2].assign(v[2]);
+		vertices[0] = v[0];
+		vertices[1] = v[1];
+		vertices[2] = v[2];
 	}
 
 	std::vector<Vector3D> vertices;
@@ -184,28 +96,11 @@ public:
 		//projection_matrix.set(4, 4);
 		projection_matrix = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
 
-		/*projection_matrix.m[0][0] = aspect_ratio * scaling_factor;
-		projection_matrix.m[1][1] = scaling_factor;
-		projection_matrix.m[2][2] = q;
-		projection_matrix.m[3][2] = -z_near * q;
-		projection_matrix.m[2][3] = 1.0f;
-		projection_matrix.m[3][3] = 0.0f;*/
-
-		
-		lighting.value = { { 0.0f, 0.0f, -1.0f } };
+		lighting = { 0.0f, 0.0f, -1.0f };
 
 		lighting.normalize();
 
-		cam.value = { { 0.0f, 0.0f, 0.0f } };
-
-		/*x_rotation.set(4, 4);
-		z_rotation.set(4, 4);
-
-		z_rotation.m[2][2] = 1.0f;
-		z_rotation.m[3][3] = 1.0f;
-
-		x_rotation.m[0][0] = 1.0f;
-		x_rotation.m[3][3] = 1.0f;*/
+		cam = { 0.0f, 0.0f, 0.0f };
 
 		return true;
 
@@ -232,18 +127,6 @@ public:
 		
 		x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 		z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
-
-		// Rotation Z
-		//z_rotation.m[0][0] = cosf(rotate_angle);
-		//z_rotation.m[0][1] = sinf(rotate_angle);
-		//z_rotation.m[1][0] = -sinf(rotate_angle);
-		//z_rotation.m[1][1] = cosf(rotate_angle);
-
-		//// Rotation X
-		//x_rotation.m[1][1] = cosf(rotate_angle * 0.5f);
-		//x_rotation.m[1][2] = sinf(rotate_angle * 0.5f);
-		//x_rotation.m[2][1] = -sinf(rotate_angle * 0.5f);
-		//x_rotation.m[2][2] = cosf(rotate_angle * 0.5f);
 
 		/*vUp = { 0,1,0 };
 		look_dir = { 0,0,1 };
@@ -368,7 +251,6 @@ public:
 
 		// Dived entire matrix by the last value to convert it back to 3D space
 		// Also satistfies dividing the terms by z
-
 		if (leftOver != 0.0f)
 		{
 			outVec.x /= leftOver;

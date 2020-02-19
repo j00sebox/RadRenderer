@@ -111,7 +111,69 @@ TEST_F(MatrixTest, addandsubtract) {
 		{
 			for(int j = 0; j < test_arr[i].col1; j++)
 				// Evalute if this is true
-				EXPECT_NEAR(res(k, j), test_arr[i].expected_res[k][j], 0.01);
+				EXPECT_NEAR(res(k, j), test_arr[i].expected_res[k][j], 0.0001);
 		}
 	}
+}
+
+class VectorTest : public ::testing::Test
+{
+protected:
+	void SetUp() override {
+
+	}
+};
+
+TEST_F(VectorTest, CoordinateTests)
+{
+	Vector3D test_vec;
+
+	// Give vector initial value
+	test_vec = {2.0f, 7.7f, 1.23f};
+
+	// Check to ensure that the coordinates are the same as it's matrix value
+	EXPECT_FLOAT_EQ(test_vec(0, 0), test_vec.x);
+	EXPECT_FLOAT_EQ(test_vec(0, 1), test_vec.y);
+	EXPECT_FLOAT_EQ(test_vec(0, 2), test_vec.z);
+
+	// Increment all the coordinates
+	test_vec.x += 4.0f;
+	test_vec.y += 4.0f;
+	test_vec.z += 4.0f;
+
+	// Check again to ensure they are equal
+	EXPECT_FLOAT_EQ(test_vec(0, 0), test_vec.x);
+	EXPECT_FLOAT_EQ(test_vec(0, 1), test_vec.y);
+	EXPECT_FLOAT_EQ(test_vec(0, 2), test_vec.z);
+}
+
+TEST_F(VectorTest, DotProd) 
+{
+	Vector3D vec1, vec2;
+	float res, exp_res;
+
+	exp_res = 156.69;
+
+	vec1 = {12.0f, 7.9f, 1.23f};
+	vec2 = {10.3f, 4.5f, -2.0f};
+
+	res = vec1.dot(vec2);
+
+	EXPECT_FLOAT_EQ(res, exp_res);
+}
+
+TEST_F(VectorTest, CrossProd)
+{
+	Vector3D vec1, vec2, res, exp_res;
+
+	exp_res = {-21.335, 36.669, -27.37};
+
+	vec1 = {12.0f, 7.9f, 1.23f};
+	vec2= {10.3f, 4.5f, -2.0f};
+
+	vec1.cross(vec2, res);
+
+	EXPECT_FLOAT_EQ(res.x, exp_res.x);
+	EXPECT_FLOAT_EQ(res.y, exp_res.y);
+	EXPECT_FLOAT_EQ(res.z, exp_res.z);
 }

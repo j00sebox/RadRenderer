@@ -25,9 +25,6 @@ public:
 		value.resize(row, std::vector<float>(col));
 	}
 
-	// Copies vector to this classes vector
-	//virtual void Assign(std::vector< std::vector<float> > v);
-
 	// Reduce the amount of columns by 1
 	void clip();
 
@@ -62,57 +59,6 @@ public:
 
 };
 
-//struct Matrix
-//{
-//	//Matrix() {};
-//
-//	//Matrix(int row, int col);
-//
-//	void set(int row, int col)
-//	{
-//		r = row;
-//		c = col;
-//		v.resize(row, std::vector<float>(col));
-//	}
-//
-//	// Copies vector to this classes vector
-//	//virtual void Assign(std::vector< std::vector<float> > v);
-//
-//	// Reduce the amount of columns by 1
-//	//void clip();
-//
-//	//Matrix transpose();
-//
-//	//Matrix inverse();
-//
-//	//Matrix operator + (Matrix const& obj);
-//
-//	//Matrix operator - (Matrix const& obj);
-//
-//	//// Implements the dot product between two matrices
-//	//Matrix operator * (Matrix const& obj);
-//
-//	//Matrix operator / (float divisor);
-//
-//	//void operator = (std::vector< std::vector<float> > val);
-//
-//	//// allows value to be accessed easier
-//	//float operator () (int i, int j);
-//
-//	//// Holds values in proper structure
-//	std::vector< std::vector<float> > v;
-//
-//	float m[4][4];
-//	// Holds the values for rows and columns of this object
-//	int r;
-//	int c;
-//
-//	//float determinant(std::vector< std::vector<float> > dmatrix);
-//
-//	
-//
-//};
-
 /**********************************************
 class Vector3D
 @brief Class used to represent a vector in 3D 
@@ -125,28 +71,6 @@ public:
 	// Creates a 1x3 matrix
 	Vector3D() : Matrix(1, 3) { }
 
-	void assign(std::vector<float>& v)
-	{
-		value[0] = v;
- 	}
-
-	// overridden to assign vector coordinates as well as matrix value
-	//void Assign(std::vector< std::vector<float> > v) override
-	//{
-	//	// Check for proper dimensions
-	//	if (value.size() == v.size() && value[0].size() == v[0].size())
-	//	{
-	//		value = v;
-
-	//		&x = value[0][0];
-	//		&y = value[0][1];
-	//		&z = value[0][2];
-
-	//	}
-	//	else
-	//		throw std::invalid_argument("Maxtrices are not of same dimension!");
-	//}
-
 	// computes cross product of two vectors
 	void cross(Vector3D& line, Vector3D& normal)
 	{
@@ -156,27 +80,11 @@ public:
 		normal.z = x * line.y - y * line.x;
 	}
 
+	// Calculates the dot product between two vectors
 	float dot(Vector3D& vec)
 	{
 		return x * vec.x + y * vec.y + z * vec.z;
 	}
-
-	/*Vector3D operator / (float div) 
-	{
-		Vector3D out;
-
-		if (div != 0.0f)
-		{
-			out.x /= div;
-			out.value[0][0] /= div;
-			out.y /= div;
-			out.value[0][1] /= div;
-			out.z /= div;
-			out.value[0][2] /= div;
-		}
-
-		return out;
-	}*/
 
 	// Used to change to unit vector
 	void normalize()
@@ -188,10 +96,11 @@ public:
 		z /= normalize;
 	}
 
-	/*void operator = (std::vector<float> f)
+	// For easier assignment
+	void operator = (std::vector<float> f)
 	{
 		x = f[0]; y = f[1]; z = f[2];
-	}*/
+	}
 
 	// vector coordinates
 	float& x = value[0][0];
