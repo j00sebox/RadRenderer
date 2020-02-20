@@ -153,6 +153,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="test_test.cpp" />
+    <ClCompile Include="triangle_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GTestFramework\GTestFramework.vcxproj">

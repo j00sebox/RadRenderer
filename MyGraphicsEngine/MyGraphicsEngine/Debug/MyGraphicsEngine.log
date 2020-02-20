@@ -1,9 +1,12 @@
-﻿  MyGraphicsEngine.cpp
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,115): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,98): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,81): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,64): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,47): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine.cpp(234,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-LINK : warning LNK4076: invalid incremental status file 'Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.ilk' (which will be deleted); linking nonincrementally
-  MyGraphicsEngine.vcxproj -> Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe
+﻿  EmazingDemo.cpp
+  EmazingEngine.cpp
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,114): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,97): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,80): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,63): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,46): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(215,29): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+EmazingEngine.obj : error LNK2005: "protected: static struct std::atomic<bool> olcConsoleGameEngine::m_bAtomActive" (?m_bAtomActive@olcConsoleGameEngine@@1U?$atomic@_N@std@@A) already defined in EmazingDemo.obj
+EmazingEngine.obj : error LNK2005: "protected: static class std::condition_variable olcConsoleGameEngine::m_cvGameFinished" (?m_cvGameFinished@olcConsoleGameEngine@@1Vcondition_variable@std@@A) already defined in EmazingDemo.obj
+EmazingEngine.obj : error LNK2005: "protected: static class std::mutex olcConsoleGameEngine::m_muxGame" (?m_muxGame@olcConsoleGameEngine@@1Vmutex@std@@A) already defined in EmazingDemo.obj
+Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe : fatal error LNK1169: one or more multiply defined symbols found

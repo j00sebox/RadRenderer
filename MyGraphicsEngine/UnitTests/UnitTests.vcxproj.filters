@@ -24,5 +24,8 @@
     <ClCompile Include="..\MyGraphicsEngine\Matrix.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="triangle_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
