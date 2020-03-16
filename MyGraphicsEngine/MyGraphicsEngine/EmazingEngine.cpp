@@ -60,6 +60,57 @@ inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& opera
 
 }
 
+//inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
+//{
+//	Matrix tempVec(1, 4);
+//
+//	tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
+//
+//	Matrix res = tempVec * operation;
+//
+//	res = res / res(0, 3);
+//
+//	res.clip();
+//
+//	outVec = res;
+//
+//}
+
+// Takes the current camera position and translates it based on the user input
+inline void EmazingEngine::point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix& matrix)
+{
+	// The new forward vector aka where the camera is pointing
+	Vector3D nForward;
+	forward.subtract(point_to, nForward);
+	nForward.normalize();
+
+	// Calculate the up vector in relation to the new camera direction
+	Vector3D temp;
+	nForward.scalar_mul(temp, (up.dot(nForward))); // scalar is used to calculate how far the nUp vector is displaced
+	Vector3D nUp;
+	up.subtract(temp, nUp);
+	nUp.normalize();
+
+	// Then the vector pointing to the right of the camera is perpendicular to the 2 new ones calculated
+	Vector3D nRight;
+	nUp.cross(nForward, nRight);
+
+	// Set up camera direction matrix
+	matrix.value[0][0] = nRight.x;		matrix.value[0][1] = nRight.y;		matrix.value[0][2] = nRight.z;		matrix.value[0][3] = 0.0f;
+	matrix.value[1][0] = nUp.x;			matrix.value[1][1] = nUp.y;			matrix.value[1][2] = nUp.z;			matrix.value[1][3] = 0.0f;
+	matrix.value[2][0] = nForward.x;	matrix.value[2][1] = nForward.y;	matrix.value[2][2] = nForward.z;	matrix.value[2][3] = 0.0f;
+	matrix.value[3][0] = point_to.x;	matrix.value[3][1] = point_to.y;	matrix.value[3][2] = point_to.z;	matrix.value[3][3] = 1.0f;
+}
+
+inline Matrix EmazingEngine::look_at(Matrix& pointAt)
+{
+	// in order to give the appearance of user/camera movement
+	// the inverse of the point_at is needed for the transfoemation
+	// so that all the other points in the frame get shifted.
+	return pointAt.inverse();
+}
+
+
 bool EmazingEngine::OnUserCreate()
 {
 #ifdef CUBE_DEMO
@@ -68,7 +119,7 @@ bool EmazingEngine::OnUserCreate()
 	object = LoadOBJFile("3DTestObjects/teapot.obj");
 #endif  CUBE_DEMO
 
-	//projection_matrix.set(4, 4);
+	/* set up important variables */
 	projection_matrix = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
 
 	lighting = { 0.0f, 0.0f, -1.0f };
@@ -83,43 +134,47 @@ bool EmazingEngine::OnUserCreate()
 
 bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 {
-	// Clear screen to redraw
+	// clear screen to redraw
 	Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
 	rotate_angle += 1.0f * fElapsedTime;
 
 	if (GetKey(VK_UP).bHeld)
-		cam.y -= 8.0f * fElapsedTime;	// Travel Upwards
+		cam.y -= 8.0f * fElapsedTime;	// go up
 
 	if (GetKey(VK_DOWN).bHeld)
-		cam.y += 8.0f * fElapsedTime;	// Travel Downwards
+		cam.y += 8.0f * fElapsedTime;	// go down
 
 	if (GetKey(VK_LEFT).bHeld)
-		cam.x -= 8.0f * fElapsedTime;	// Travel Along X-Axis
+		cam.x -= 8.0f * fElapsedTime;	// go left along x-axis
 
 	if (GetKey(VK_RIGHT).bHeld)
-		cam.x += 8.0f * fElapsedTime;	// Travel Along X-Axis
+		cam.x += 8.0f * fElapsedTime;	// go right along x-axis
 
+	// update rotation matrices
 	x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
 
-	vUp = { 0.0f,1.0f,0.0f };
-	look_dir = { 0.0f,0.0f,1.0f };
+	vUp = { 0.0f, 1.0f, 0.0f };
+	look_dir = { 0.0f, 0.0f, 1.0f };
+
+	// adjust cam based on user input
 	cam.add(look_dir, forward);
 
-	Matrix cameraM = point_at(cam, forward, vUp);
+	point_at(cam, forward, vUp, cam_dir);
 
-	Matrix cameraInv = look_at(cameraM);
+	cam_inv = look_at(cam_dir);
 
+	// iterate through all triangles in the object
 	for (auto o : object)
 	{
 
-		// Rotate around z-axis
+		// rotate around z-axis
 		coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
 		coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
 		coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
 
-		// Rotate around x-axis
+		// rotate around x-axis
 		coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
 		coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
 		coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
@@ -129,12 +184,12 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 		rX.vertices[1].z += 6.0f;
 		rX.vertices[2].z += 6.0f;
 
-		// Construct line 1 of the triangle
+		// construct line 1 of the triangle
 		l1.x = rX.vertices[1].x - rX.vertices[0].x;
 		l1.y = rX.vertices[1].y - rX.vertices[0].y;
 		l1.z = rX.vertices[1].z - rX.vertices[0].z;
 
-		// Contstruct line 2 of the triangle
+		// contstruct line 2 of the triangle
 		l2.x = rX.vertices[2].x - rX.vertices[1].x;
 		l2.y = rX.vertices[2].y - rX.vertices[1].y;
 		l2.z = rX.vertices[2].z - rX.vertices[1].z;
@@ -144,7 +199,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 
 		normal.normalize();
 
-		// Calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
+		// calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
 		if ((normal.x * rX.vertices[0].x - cam.x
 			+ normal.y * rX.vertices[0].y - cam.y
 			+ normal.z * rX.vertices[0].z - cam.z) < 0)
@@ -155,9 +210,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			// The larger dot product in this case means the more lit up the triangle face will be 
 			CHAR_INFO colour = GetColour(dotProd);
 
-			coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
-			coordinate_projection(rX.vertices[1], cameraInv, viewed.vertices[1]);
-			coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);
+			coordinate_projection(rX.vertices[0], cam_inv, viewed.vertices[0]);
+			coordinate_projection(rX.vertices[1], cam_inv, viewed.vertices[1]);
+			coordinate_projection(rX.vertices[2], cam_inv, viewed.vertices[2]);
 
 			// Project all the coordinates to 2D space
 			coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
@@ -183,6 +238,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
 			pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
 
+			// Assign color and character info to the triangle
 			pro.symbol = colour.Char.UnicodeChar;
 			pro.colour = colour.Attributes;
 

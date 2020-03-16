@@ -23,8 +23,6 @@ public:
 
 	std::vector<Vector3D> vertices;
 
-	//Vector3D vertices[3];
-
 	wchar_t symbol;
 	short colour;
 };
@@ -33,7 +31,7 @@ public:
 class EmazingEngine : public olcConsoleGameEngine
 {
 public:
-	EmazingEngine() : projection_matrix(4, 4), x_rotation(4, 4), z_rotation(4, 4) {}
+	EmazingEngine() : projection_matrix(4, 4), x_rotation(4, 4), z_rotation(4, 4), cam_dir(4, 4), cam_inv(4, 4) {}
 
 	bool OnUserCreate() override;
 
@@ -43,50 +41,9 @@ public:
 	inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec);
 	
 
-	/*inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
-	{
-		Matrix tempVec(1, 4);
+	inline void point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix& pMatrix);
 
-		tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
-
-		Matrix res = tempVec * operation;
-
-		res = res / res(0, 3);
-
-		res.clip();
-
-		outVec = res;
-
-	}*/
-
-	inline Matrix point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up)
-	{
-		Vector3D nForward;
-		forward.subtract(point_to, nForward);
-		nForward.normalize();
-
-		Vector3D temp;
-		nForward.scalar_mul(temp, (up.dot(nForward)));
-		Vector3D nUp;
-		up.subtract(temp, nUp);
-		nUp.normalize();
-
-		Vector3D nRight;
-		nUp.cross(nForward, nRight);
-
-		Matrix matrix(4, 4);
-		matrix.value[0][0] = nRight.x;		matrix.value[0][1] = nRight.y;		matrix.value[0][2] = nRight.z;		matrix.value[0][3] = 0.0f;
-		matrix.value[1][0] = nUp.x;			matrix.value[1][1] = nUp.y;			matrix.value[1][2] = nUp.z;			matrix.value[1][3] = 0.0f;
-		matrix.value[2][0] = nForward.x;	matrix.value[2][1] = nForward.y;	matrix.value[2][2] = nForward.z;	matrix.value[2][3] = 0.0f;
-		matrix.value[3][0] = point_to.x;	matrix.value[3][1] = point_to.y;	matrix.value[3][2] = point_to.z;	matrix.value[3][3] = 1.0f;
-
-		return matrix;
-	}
-
-	inline Matrix look_at(Matrix& pointAt)
-	{
-		return pointAt.inverse();
-	}
+	inline Matrix look_at(Matrix& pointAt);
 
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname);
@@ -107,7 +64,7 @@ private:
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
-	Matrix projection_matrix, z_rotation, x_rotation;
+	Matrix projection_matrix, z_rotation, x_rotation, cam_dir, cam_inv;
 
 	// Projection matrices
 	Triangle pro;
