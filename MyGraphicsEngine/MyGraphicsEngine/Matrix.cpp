@@ -214,10 +214,6 @@ Matrix Matrix::operator / (float divisor)
 
 		res = result;
 	}
-	else
-	{
-		return *this;
-	}
 
 	return res;
 }

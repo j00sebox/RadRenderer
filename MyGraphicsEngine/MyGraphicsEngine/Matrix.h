@@ -96,6 +96,27 @@ public:
 		z /= normalize;
 	}
 
+	void subtract(Vector3D& inputVec, Vector3D& outVec)
+	{
+		outVec.x = x - inputVec.x; 
+		outVec.y = y - inputVec.y; 
+		outVec.z = z - inputVec.z;
+	}
+
+	void scalar_mul(Vector3D& outVec, float scalar)
+	{
+		outVec.x = scalar * x; 
+		outVec.y = scalar * y;
+		outVec.z = scalar * z;
+	}
+
+	void add(Vector3D& a, Vector3D& outVec)
+	{
+		outVec.x = x + a.x; 
+		outVec.y = y + a.y;
+		outVec.z = z + a.z;
+	}
+
 	// For easier assignment
 	void operator = (std::vector<float> f)
 	{
@@ -109,6 +130,11 @@ public:
 		{
 			value = m.value;
 		}
+	}
+
+	void operator = (Vector3D& vec)
+	{
+		x = vec.x; y = vec.y; z = vec.z;
 	}
 
 	// vector coordinates

@@ -17,34 +17,28 @@ Triangle::Triangle(std::vector< std::vector<float > > v) : vertices(3)
 
 std::vector<Triangle> cube_demo()
 {
-	return {
+	std::vector<Triangle> test_cube;
 
-		// south
-		Triangle({ {0.0f, 0.0f, 0.0f},    {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 0.0f} }),
-		Triangle({ {0.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }),
+	// south
+	test_cube.push_back(Triangle({ {0.0f, 0.0f, 0.0f},	  {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 0.0f} }));
+	test_cube.push_back(Triangle({ {0.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }));
 
-		// east                                                      
-		Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f} }),
-		Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 0.0f, 1.0f} }),
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f} }));
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 0.0f, 1.0f} }));
 
-		// north                                                     
-		Triangle({ {1.0f, 0.0f, 1.0f},    {1.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 1.0f} }),
-		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 0.0f, 1.0f} }),
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {1.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 1.0f} }));
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 0.0f, 1.0f} }));
 
-		// west                                                      
-		Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 0.0f} }),
-		Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 0.0f},    {0.0f, 0.0f, 0.0f} }),
+	test_cube.push_back(Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 0.0f} }));
+	test_cube.push_back(Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 0.0f},    {0.0f, 0.0f, 0.0f} }));
 
-		// top                                                       
-		Triangle({ {0.0f, 1.0f, 0.0f},    {0.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 1.0f} }),
-		Triangle({ {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 0.0f} }),
+	test_cube.push_back(Triangle({ {0.0f, 1.0f, 0.0f},    {0.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 1.0f} }));
+	test_cube.push_back(Triangle({ {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 0.0f} }));
 
-		// bottom                                                    
-		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f} }),
-		Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }),
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f} }));
+	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }));
 
-	};
-
+	return test_cube;
 }
 
 inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
@@ -109,13 +103,13 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
 
-	/*vUp = { 0,1,0 };
-	look_dir = { 0,0,1 };
-	cam.add(look_dir, forward);*/
+	vUp = { 0.0f,1.0f,0.0f };
+	look_dir = { 0.0f,0.0f,1.0f };
+	cam.add(look_dir, forward);
 
-	/*Matrix cameraM = point_at(cam, forward, vUp);
+	Matrix cameraM = point_at(cam, forward, vUp);
 
-	Matrix cameraInv = look_at(cameraM);*/
+	Matrix cameraInv = look_at(cameraM);
 
 	for (auto o : object)
 	{
@@ -141,9 +135,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 		l1.z = rX.vertices[1].z - rX.vertices[0].z;
 
 		// Contstruct line 2 of the triangle
-		l2.x = rX.vertices[2].x - rX.vertices[0].x;
-		l2.y = rX.vertices[2].y - rX.vertices[0].y;
-		l2.z = rX.vertices[2].z - rX.vertices[0].z;
+		l2.x = rX.vertices[2].x - rX.vertices[1].x;
+		l2.y = rX.vertices[2].y - rX.vertices[1].y;
+		l2.z = rX.vertices[2].z - rX.vertices[1].z;
 
 		// calculate normal of triangle face
 		l1.cross(l2, normal);
@@ -151,9 +145,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 		normal.normalize();
 
 		// Calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-		if ((normal.x * (rX.vertices[0].x - cam.x)
-			+ normal.y * (rX.vertices[0].y - cam.y)
-			+ normal.z * (rX.vertices[0].z - cam.z)) < 0.0f)
+		if ((normal.x * rX.vertices[0].x - cam.x
+			+ normal.y * rX.vertices[0].y - cam.y
+			+ normal.z * rX.vertices[0].z - cam.z) < 0)
 		{
 			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 			float dotProd = normal.dot(lighting);
@@ -161,14 +155,14 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			// The larger dot product in this case means the more lit up the triangle face will be 
 			CHAR_INFO colour = GetColour(dotProd);
 
-			/*coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
+			coordinate_projection(rX.vertices[0], cameraInv, viewed.vertices[0]);
 			coordinate_projection(rX.vertices[1], cameraInv, viewed.vertices[1]);
-			coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);*/
+			coordinate_projection(rX.vertices[2], cameraInv, viewed.vertices[2]);
 
 			// Project all the coordinates to 2D space
-			coordinate_projection(rX.vertices[0], projection_matrix, pro.vertices[0]);
-			coordinate_projection(rX.vertices[1], projection_matrix, pro.vertices[1]);
-			coordinate_projection(rX.vertices[2], projection_matrix, pro.vertices[2]);
+			coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
+			coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
+			coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
 
 			// Center the points and change the scale
 			pro.vertices[0].x += 1.0f;
@@ -198,7 +192,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	}
 
 	// sort triangles by their average z value
-		// higher z values mean the traingle should be rendered later
+	// higher z values mean the traingle should be rendered later
 	std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
 		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
 		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
@@ -212,8 +206,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	// render all the triangles in order now 
 	for (auto t : renderTriangles)
 	{
-		FillTriangle(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.symbol, t.colour);
+		FillTriangle(t.vertices[0](0, 0), t.vertices[0](0, 1), t.vertices[1](0, 0), t.vertices[1](0, 1), t.vertices[2](0, 0), t.vertices[2](0, 1), t.symbol, t.colour);
 	}
+
 
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
