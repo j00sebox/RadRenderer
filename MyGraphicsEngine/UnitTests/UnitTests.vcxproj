@@ -148,7 +148,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\MyGraphicsEngine\EmazingEngine.cpp" />
     <ClCompile Include="..\MyGraphicsEngine\Matrix.cpp" />
+    <ClCompile Include="..\MyGraphicsEngine\olcConsoleGameEngine.cpp" />
+    <ClCompile Include="engine_functions.cpp" />
     <ClCompile Include="matrix_functions.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>

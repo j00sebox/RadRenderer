@@ -154,15 +154,20 @@
     <ClCompile Include="EmazingDemo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="EmazingEngine.cpp" />
+    <ClCompile Include="EmazingEngine.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MyGraphicsEngine.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="olcConsoleGameEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\jarmstrong%40trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\olcConsoleGameEngine.h" />
-    <ClInclude Include="EmazingEngine.h" />
+    <ClInclude Include="EmazingEngine.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

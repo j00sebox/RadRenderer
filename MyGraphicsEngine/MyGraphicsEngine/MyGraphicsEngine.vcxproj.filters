@@ -27,6 +27,9 @@
     <ClCompile Include="EmazingEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="olcConsoleGameEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\jarmstrong%40trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\olcConsoleGameEngine.h">

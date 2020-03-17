@@ -176,7 +176,7 @@ int EmazingEngine::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triang
 
 	// determine how many traingles are needed
 	if (in_verts == 3)
-		return 1; // no new traingles are needed so just return old one
+		return 0; // no new traingles are needed
 	else if (in_verts == 2)
 	{
 		// both new traingles will have the same properties as the one being clipped
@@ -217,7 +217,7 @@ int EmazingEngine::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triang
 		return 1;
 	}
 	else if (in_verts == 0)
-		return 0; // triangle lies outside of screen so it should be discarded
+		return -1; // triangle lies outside of screen so it should be discarded
 }
 
 
@@ -351,12 +351,47 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
 
-			for (int c = 0; c < num_clipped; c++)
+			if (num_clipped > 0) // traingle has been clipped
+			{
+				for (int c = 0; c < num_clipped; c++)
+				{
+					// Project all the coordinates to 2D space
+					coordinate_projection(clipped_tris[c].vertices[0], projection_matrix, pro.vertices[0]);
+					coordinate_projection(clipped_tris[c].vertices[1], projection_matrix, pro.vertices[1]);
+					coordinate_projection(clipped_tris[c].vertices[2], projection_matrix, pro.vertices[2]);
+
+					// Center the points and change the scale
+					pro.vertices[0].x += 1.0f;
+					pro.vertices[0].y += 1.0f;
+
+					pro.vertices[1].x += 1.0f;
+					pro.vertices[1].y += 1.0f;
+
+					pro.vertices[2].x += 1.0f;
+					pro.vertices[2].y += 1.0f;
+
+					pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
+					pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
+
+					pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
+					pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
+
+					pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
+					pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
+
+					// Assign color and character info to the triangle
+					pro.symbol = colour.Char.UnicodeChar;
+					pro.colour = colour.Attributes;
+
+					renderTriangles.push_back(pro);
+				}
+			}
+			else if (num_clipped == 0) // no new triangles needed
 			{
 				// Project all the coordinates to 2D space
-				coordinate_projection(clipped_tris[c].vertices[0], projection_matrix, pro.vertices[0]);
-				coordinate_projection(clipped_tris[c].vertices[1], projection_matrix, pro.vertices[1]);
-				coordinate_projection(clipped_tris[c].vertices[2], projection_matrix, pro.vertices[2]);
+				coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -383,6 +418,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 
 				renderTriangles.push_back(pro);
 			}
+			
 		}
 
 	}
