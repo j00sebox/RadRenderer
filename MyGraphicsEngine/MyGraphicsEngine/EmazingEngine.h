@@ -11,7 +11,7 @@
 
 #include "Matrix.h"
 
-//#define CUBE_DEMO
+#define CUBE_DEMO
 
 class Triangle
 {
