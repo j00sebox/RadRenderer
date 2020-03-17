@@ -11,7 +11,7 @@
 
 #include "Matrix.h"
 
-#define CUBE_DEMO
+//#define CUBE_DEMO
 
 class Triangle
 {
@@ -64,6 +64,8 @@ private:
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
+	float facing_dir;
+
 	Matrix projection_matrix, z_rotation, x_rotation, cam_dir, cam_inv;
 
 	// Projection matrices
@@ -91,5 +93,6 @@ private:
 	Vector3D vUp;
 	Vector3D look_dir;
 	Vector3D forward;
+	Vector3D fVelocity;
 
 };

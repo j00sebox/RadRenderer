@@ -126,7 +126,10 @@ bool EmazingEngine::OnUserCreate()
 
 	lighting.normalize();
 
+	// initialize camera position vectors
 	cam = { 0.0f, 0.0f, 0.0f };
+	vUp = { 0.0f, 1.0f, 0.0f };
+	look_dir = { 0.0f, 0.0f, 1.0f };
 
 	return true;
 
@@ -137,7 +140,10 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	// clear screen to redraw
 	Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-	rotate_angle += 1.0f * fElapsedTime;
+	//rotate_angle += 1.0f * fElapsedTime;
+
+	// multiply look_dir by the speed you want to move to get the player's forward velocity
+	look_dir.scalar_mul(fVelocity, 8.0f * fElapsedTime);
 
 	if (GetKey(VK_UP).bHeld)
 		cam.y -= 8.0f * fElapsedTime;	// go up
@@ -151,12 +157,24 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	if (GetKey(VK_RIGHT).bHeld)
 		cam.x += 8.0f * fElapsedTime;	// go right along x-axis
 
+	if (GetKey(L'W').bHeld)
+		cam.add(fVelocity, cam);	    // go forwards
+
+	if (GetKey(L'S').bHeld)
+		cam.subtract(fVelocity, cam);	    // go backwards
+
+	if (GetKey(L'A').bHeld)
+		facing_dir -= 2.0f * fElapsedTime; // rotate camera left
+
+	if (GetKey(L'D').bHeld)
+		facing_dir += 2.0f * fElapsedTime; // rotate camera right
+	
+
 	// update rotation matrices
 	x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
 
-	vUp = { 0.0f, 1.0f, 0.0f };
-	look_dir = { 0.0f, 0.0f, 1.0f };
+	
 
 	// adjust cam based on user input
 	cam.add(look_dir, forward);
