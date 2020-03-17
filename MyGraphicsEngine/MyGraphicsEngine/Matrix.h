@@ -132,9 +132,11 @@ public:
 		}
 	}
 
-	void operator = (Vector3D& vec)
+	Vector3D operator = (Vector3D& const vec)
 	{
 		x = vec.x; y = vec.y; z = vec.z;
+
+		return *this;
 	}
 
 	// vector coordinates

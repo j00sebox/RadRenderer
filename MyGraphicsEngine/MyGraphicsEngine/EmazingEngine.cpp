@@ -110,6 +110,116 @@ inline Matrix EmazingEngine::look_at(Matrix& pointAt)
 	return pointAt.inverse();
 }
 
+// returns the point that the given plane and line intersect
+Vector3D& EmazingEngine::line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end)
+{
+	// always gotta normalize
+	plane_normal.normalize();
+	
+	// algorithm to check if line intersects
+	// the point where the line intersects plane can be detemined with
+	// line_begin + line*t = p0 + p1*u + p2*v 
+	float np = -point.dot(plane_normal);
+	float dotb = line_begin.dot(plane_normal);
+	float dote = line_end.dot(plane_normal);
+	float t = (-np - dotb) / (dote - dotb);
+
+	// construct line
+	Vector3D line;
+	line_end.subtract(line_begin, line);
+
+	Vector3D intersection;
+	line.scalar_mul(intersection, t);
+
+	line_begin.add(intersection, line);
+
+	return line;
+}
+
+// this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
+int EmazingEngine::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
+{
+	// make sure it's normalized
+	plane_normal.normalize();
+
+	// form the equation: x*Nx + y*Ny + z*Nz - N•P = 0
+	// where P is a point on the plane and N is a normal vector to the plane
+	// can be used to calculate distance of point from a plane
+	auto calc_distance = [&](Vector3D& tri_vertex)
+	{
+		tri_vertex.normalize();
+		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
+	}; // if 0 then vertex is on the plane, if negative then the vertex is on the outside of the plane (screen edge) else it's on the inside
+
+	// calculate distance for each vertex
+	float d0 = calc_distance(ref_tri.vertices[0]);
+	float d1 = calc_distance(ref_tri.vertices[1]);
+	float d2 = calc_distance(ref_tri.vertices[2]);
+
+	int in_verts = 0;
+	int out_verts = 0;
+
+	// this will keep track of which vertices are in vs out
+	Vector3D in_vs[3];
+	Vector3D out_vs[3];
+
+
+	// determine amount of inside and outside vertices
+	if (d0 >= 0) { in_vs[in_verts] = ref_tri.vertices[0]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[0]; out_verts++; }
+
+	if (d1 >= 0) { in_vs[in_verts] = ref_tri.vertices[1]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[1]; out_verts++; }
+
+	if (d2 >= 0) { in_vs[in_verts] = ref_tri.vertices[2]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[2]; out_verts++; }
+
+	// determine how many traingles are needed
+	if (in_verts == 3)
+		return 1; // no new traingles are needed so just return old one
+	else if (in_verts == 2)
+	{
+		// both new traingles will have the same properties as the one being clipped
+		res_tri1.colour = ref_tri.colour;
+		res_tri1.symbol = ref_tri.symbol;
+
+		res_tri2.colour = ref_tri.colour;
+		res_tri2.symbol = ref_tri.symbol;
+
+		// first new triangle contains the two in vertices
+		res_tri1.vertices[0] = in_vs[0];
+		res_tri1.vertices[1] = in_vs[1];
+
+		// second one will just contain the second vertex as it's first
+		res_tri2.vertices[0] = in_vs[1];
+
+		// the intersecting points to the plane will make up the rest of both triangles
+		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
+
+		res_tri2.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[1]);
+		res_tri2.vertices[2] = res_tri1.vertices[2]; // both new triangles share this vertex
+
+		return 2;
+	}
+	else if (in_verts == 1)
+	{
+		// new triangle will have same properties as old one
+		res_tri1.colour = ref_tri.colour;
+		res_tri1.symbol = ref_tri.symbol;
+
+		// just 1 new triangle but smaller
+		res_tri1.vertices[0] = in_vs[0];
+		
+		// 2 new vertices are made by finding the intersection to the plane ( screen edge )
+		res_tri1.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
+		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[1], in_vs[0]);
+
+		return 1;
+	}
+	else if (in_verts == 0)
+		return 0; // triangle lies outside of screen so it should be discarded
+}
+
 
 bool EmazingEngine::OnUserCreate()
 {
@@ -173,15 +283,18 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
 	y_rotation = { {cosf(facing_dir), 0, sinf(facing_dir), 0}, {0, 0, 1, 0}, {-sinf(facing_dir),  0, cosf(facing_dir), 0}, {0, 0, 0, 1} }; // this one rotates player's perspective rather than object
 
-	// set uo basis vectors
+	// set up basis vectors
 	vUp = { 0.0f, 1.0f, 0.0f };
 	look_dir = { 0.0f, 0.0f, 1.0f };
 	target = { 0.0f, 0.0f, 1.0f };
+
+	camera_plane = { 0.0f, 0.0f, 1.0f };
 
 	// adjust cam based on user input
 	coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
 	cam.add(look_dir, target);
 
+	// detemine point_at matrix for next camera position
 	point_at(cam, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
@@ -235,41 +348,47 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			coordinate_projection(rX.vertices[1], cam_inv, viewed.vertices[1]);
 			coordinate_projection(rX.vertices[2], cam_inv, viewed.vertices[2]);
 
-			// Project all the coordinates to 2D space
-			coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
-			coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
-			coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
+			// before we project the coordinates onto the screen space we need the clipped ones
+			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
 
-			// Center the points and change the scale
-			pro.vertices[0].x += 1.0f;
-			pro.vertices[0].y += 1.0f;
+			for (int c = 0; c < num_clipped; c++)
+			{
+				// Project all the coordinates to 2D space
+				coordinate_projection(clipped_tris[c].vertices[0], projection_matrix, pro.vertices[0]);
+				coordinate_projection(clipped_tris[c].vertices[1], projection_matrix, pro.vertices[1]);
+				coordinate_projection(clipped_tris[c].vertices[2], projection_matrix, pro.vertices[2]);
 
-			pro.vertices[1].x += 1.0f;
-			pro.vertices[1].y += 1.0f;
+				// Center the points and change the scale
+				pro.vertices[0].x += 1.0f;
+				pro.vertices[0].y += 1.0f;
 
-			pro.vertices[2].x += 1.0f;
-			pro.vertices[2].y += 1.0f;
+				pro.vertices[1].x += 1.0f;
+				pro.vertices[1].y += 1.0f;
 
-			pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
-			pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[2].x += 1.0f;
+				pro.vertices[2].y += 1.0f;
 
-			pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
-			pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
 
-			pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
-			pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
+				pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
 
-			// Assign color and character info to the triangle
-			pro.symbol = colour.Char.UnicodeChar;
-			pro.colour = colour.Attributes;
+				pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
+				pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
 
-			renderTriangles.push_back(pro);
+				// Assign color and character info to the triangle
+				pro.symbol = colour.Char.UnicodeChar;
+				pro.colour = colour.Attributes;
+
+				renderTriangles.push_back(pro);
+			}
 		}
 
 	}
 
 	// sort triangles by their average z value
-	// higher z values mean the traingle should be rendered later
+	// higher z values mean the traingle should be rendered later aka farther away from front of screen
 	std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
 		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
 		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;

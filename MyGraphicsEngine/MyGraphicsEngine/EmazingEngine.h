@@ -31,7 +31,7 @@ public:
 class EmazingEngine : public olcConsoleGameEngine
 {
 public:
-	EmazingEngine() : projection_matrix(4, 4), x_rotation(4, 4), z_rotation(4, 4), cam_dir(4, 4), cam_inv(4, 4) {}
+	EmazingEngine() : projection_matrix(4, 4), x_rotation(4, 4), z_rotation(4, 4), y_rotation(4, 4), cam_dir(4, 4), cam_inv(4, 4) {}
 
 	bool OnUserCreate() override;
 
@@ -40,10 +40,13 @@ public:
 	// Map 3D coordinates to 2D space
 	inline void coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec);
 	
-
 	inline void point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix& pMatrix);
 
 	inline Matrix look_at(Matrix& pointAt);
+
+	Vector3D& line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end);
+
+	int triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
 
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname);
@@ -66,16 +69,11 @@ private:
 
 	float facing_dir;
 
-	Matrix projection_matrix, z_rotation, x_rotation, cam_dir, cam_inv;
+	// 4x4 matrix object transformations
+	Matrix projection_matrix, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
 
-	// Projection matrices
-	Triangle pro;
-
-	Triangle rX;
-
-	Triangle rZ;
-
-	Triangle viewed;
+	// Projection triangles
+	Triangle pro, rX, rZ, viewed;
 
 	// Vectors to calculate the normal of triangle faces.
 	Vector3D l1;
@@ -90,9 +88,13 @@ private:
 
 	std::vector<Triangle> renderTriangles;
 
-	Vector3D vUp;
-	Vector3D look_dir;
-	Vector3D forward;
-	Vector3D fVelocity;
+	Vector3D vUp; // current up vector
+	Vector3D look_dir; // current forward vector aka where the camera is looking
+	Vector3D target; // where the camera is being told to look aka new forward vector
+	Vector3D fVelocity; // velocity of camera in forward direction
+
+	Vector3D camera_plane; 
+	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
+	int num_clipped = 0; // holds the number of triangles produced by clippinf function
 
 };
