@@ -126,11 +126,9 @@ bool EmazingEngine::OnUserCreate()
 
 	lighting.normalize();
 
-	// initialize camera position vectors
+	// initialize camera position vector
 	cam = { 0.0f, 0.0f, 0.0f };
-	vUp = { 0.0f, 1.0f, 0.0f };
-	look_dir = { 0.0f, 0.0f, 1.0f };
-
+	
 	return true;
 
 }
@@ -140,7 +138,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	// clear screen to redraw
 	Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
 
-	//rotate_angle += 1.0f * fElapsedTime;
+	rotate_angle += 1.0f * fElapsedTime;
 
 	// multiply look_dir by the speed you want to move to get the player's forward velocity
 	look_dir.scalar_mul(fVelocity, 8.0f * fElapsedTime);
@@ -161,7 +159,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 		cam.add(fVelocity, cam);	    // go forwards
 
 	if (GetKey(L'S').bHeld)
-		cam.subtract(fVelocity, cam);	    // go backwards
+		cam.subtract(fVelocity, cam);   // go backwards
 
 	if (GetKey(L'A').bHeld)
 		facing_dir -= 2.0f * fElapsedTime; // rotate camera left
@@ -173,13 +171,18 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	// update rotation matrices
 	x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
 	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
+	y_rotation = { {cosf(facing_dir), 0, sinf(facing_dir), 0}, {0, 0, 1, 0}, {-sinf(facing_dir),  0, cosf(facing_dir), 0}, {0, 0, 0, 1} }; // this one rotates player's perspective rather than object
 
-	
+	// set uo basis vectors
+	vUp = { 0.0f, 1.0f, 0.0f };
+	look_dir = { 0.0f, 0.0f, 1.0f };
+	target = { 0.0f, 0.0f, 1.0f };
 
 	// adjust cam based on user input
-	cam.add(look_dir, forward);
+	coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
+	cam.add(look_dir, target);
 
-	point_at(cam, forward, vUp, cam_dir);
+	point_at(cam, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
 
