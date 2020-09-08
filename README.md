@@ -1,2 +1,2 @@
 # EmazingEngine
-My attempt to make a 3D graphics engine for the console.
+My attempt to make a 3D graphics renderer for the console.
