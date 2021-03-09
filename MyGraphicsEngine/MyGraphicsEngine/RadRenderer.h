@@ -21,7 +21,7 @@ public:
 
 	Triangle(std::vector< std::vector<float > > v);
 
-	std::vector<Vector3D> vertices;
+	std::vector<Vector3D<float>> vertices;
 
 	wchar_t symbol;
 	short colour;
@@ -35,17 +35,14 @@ public:
 	bool OnUserCreate() override;
 
 	bool OnUserUpdate(float fElapsedTime) override;
-
-	// Map 3D coordinates to 2D space
-	//void coordinate_projection(Vector3D& vertex, Matrix4x4<float>& operation, Vector3D& outVec);
 	
-	inline void point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix4x4<float>& pMatrix4x4);
+	inline void point_at(Vector3D<float>& point_to, Vector3D<float>& forward, Vector3D<float>& up, Matrix4x4<float>& pMatrix4x4);
 
 	inline Matrix4x4<float> look_at(Matrix4x4<float>& pointAt);
 
-	Vector3D& line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end);
+	Vector3D<float>& line_plane_intersect(Vector3D<float>& point, Vector3D<float>& plane_normal, Vector3D<float>& line_begin, Vector3D<float>& line_end);
 
-	int triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
+	int triangle_clip(Vector3D<float>& point, Vector3D<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
 
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname);
@@ -75,24 +72,24 @@ private:
 	Triangle pro, rX, rZ, viewed;
 
 	// Vectors to calculate the normal of triangle faces.
-	Vector3D l1;
-	Vector3D l2;
-	Vector3D normal;
+	Vector3D<float> l1;
+	Vector3D<float> l2;
+	Vector3D<float> normal;
 
 	// Position of camera aka user's view
-	Vector3D cam;
+	Vector3D<float> cam;
 
 	// Direction that the light would be pointing in game
-	Vector3D lighting;
+	Vector3D<float> lighting;
 
 	std::vector<Triangle> renderTriangles;
 
-	Vector3D vUp; // current up vector
-	Vector3D look_dir; // current forward vector aka where the camera is looking
-	Vector3D target; // where the camera is being told to look aka new forward vector
-	Vector3D fVelocity; // velocity of camera in forward direction
+	Vector3D<float> vUp; // current up vector
+	Vector3D<float> look_dir; // current forward vector aka where the camera is looking
+	Vector3D<float> target; // where the camera is being told to look aka new forward vector
+	Vector3D<float> fVelocity; // velocity of camera in forward direction
 
-	Vector3D camera_plane; 
+	Vector3D<float> camera_plane;
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
 	int num_clipped = 0; // holds the number of triangles produced by clippinf function
 

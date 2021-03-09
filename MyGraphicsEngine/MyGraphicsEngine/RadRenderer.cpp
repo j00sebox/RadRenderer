@@ -41,41 +41,23 @@ std::vector<Triangle> cube_demo()
 	return test_cube;
 }
 
-
-
-//inline void RadRenderer::coordinate_projection(Vector3D& vertex, Matrix4x4& operation, Vector3D& outVec)
-//{
-//	Matrix4x4 tempVec(1, 4);
-//
-//	tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
-//
-//	Matrix4x4 res = tempVec * operation;
-//
-//	res = res / res(0, 3);
-//
-//	res.clip();
-//
-//	outVec = res;
-//
-//}
-
 // Takes the current camera position and translates it based on the user input
-inline void RadRenderer::point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix4x4<float>& pMatrix4x4)
+inline void RadRenderer::point_at(Vector3D<float>& point_to, Vector3D<float>& forward, Vector3D<float>& up, Matrix4x4<float>& pMatrix4x4)
 {
 	// The new forward vector aka where the camera is pointing
-	Vector3D nForward;
+	Vector3D<float> nForward;
 	forward.subtract(point_to, nForward);
 	nForward.normalize();
 
 	// Calculate the up vector in relation to the new camera direction
-	Vector3D temp;
+	Vector3D<float> temp;
 	nForward.scalar_mul(temp, (up.dot(nForward))); // scalar is used to calculate how far the nUp vector is displaced
-	Vector3D nUp;
+	Vector3D<float> nUp;
 	up.subtract(temp, nUp);
 	nUp.normalize();
 
 	// Then the vector pointing to the right of the camera is perpendicular to the 2 new ones calculated
-	Vector3D nRight;
+	Vector3D<float> nRight;
 	nUp.cross(nForward, nRight);
 
 	// Set up camera direction Matrix4x4
@@ -95,7 +77,7 @@ Matrix4x4<float> RadRenderer::look_at(Matrix4x4<float>& pointAt)
 }
 
 // returns the point that the given plane and line intersect
-Vector3D& RadRenderer::line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end)
+Vector3D<float>& RadRenderer::line_plane_intersect(Vector3D<float>& point, Vector3D<float>& plane_normal, Vector3D<float>& line_begin, Vector3D<float>& line_end)
 {
 	// always gotta normalize
 	plane_normal.normalize();
@@ -109,10 +91,10 @@ Vector3D& RadRenderer::line_plane_intersect(Vector3D& point, Vector3D& plane_nor
 	float t = (-np - dotb) / (dote - dotb);
 
 	// construct line
-	Vector3D line;
+	Vector3D<float> line;
 	line_end.subtract(line_begin, line);
 
-	Vector3D intersection;
+	Vector3D<float> intersection;
 	line.scalar_mul(intersection, t);
 
 	line_begin.add(intersection, line);
@@ -121,7 +103,7 @@ Vector3D& RadRenderer::line_plane_intersect(Vector3D& point, Vector3D& plane_nor
 }
 
 // this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
-int RadRenderer::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
+int RadRenderer::triangle_clip(Vector3D<float>& point, Vector3D<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
@@ -129,7 +111,7 @@ int RadRenderer::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle
 	// form the equation: x*Nx + y*Ny + z*Nz - N•P = 0
 	// where P is a point on the plane and N is a normal vector to the plane
 	// can be used to calculate distance of point from a plane
-	auto calc_distance = [&](Vector3D& tri_vertex)
+	auto calc_distance = [&](Vector3D<float>& tri_vertex)
 	{
 		tri_vertex.normalize();
 		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
@@ -144,8 +126,8 @@ int RadRenderer::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle
 	int out_verts = 0;
 
 	// this will keep track of which vertices are in vs out
-	Vector3D in_vs[3];
-	Vector3D out_vs[3];
+	Vector3D<float> in_vs[3];
+	Vector3D<float> out_vs[3];
 
 
 	// determine amount of inside and outside vertices
@@ -304,14 +286,14 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 	{
 
 		// rotate around z-axis
-		//coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
-		//coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
-		//coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
+		z_rotation.matmulVec(o.vertices[0], rZ.vertices[0]);
+		z_rotation.matmulVec(o.vertices[1], rZ.vertices[1]);
+		z_rotation.matmulVec(o.vertices[2], rZ.vertices[2]);
 
-		//// rotate around x-axis
-		//coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
-		//coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
-		//coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
+		// rotate around x-axis
+		x_rotation.matmulVec(rZ.vertices[0], rX.vertices[0]);
+		x_rotation.matmulVec(rZ.vertices[1], rX.vertices[1]);
+		x_rotation.matmulVec(rZ.vertices[2], rX.vertices[2]);
 
 		// move object back so it is in view of the camera
 		rX.vertices[0].z += 6.0f;
@@ -344,9 +326,10 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 			// The larger dot product in this case means the more lit up the triangle face will be 
 			CHAR_INFO colour = GetColour(dotProd);
 
-			/*coordinate_projection(rX.vertices[0], cam_inv, viewed.vertices[0]);
-			coordinate_projection(rX.vertices[1], cam_inv, viewed.vertices[1]);
-			coordinate_projection(rX.vertices[2], cam_inv, viewed.vertices[2]);*/
+
+			cam_inv.matmulVec(rX.vertices[0], viewed.vertices[0]);
+			cam_inv.matmulVec(rX.vertices[1], viewed.vertices[1]);
+			cam_inv.matmulVec(rX.vertices[2], viewed.vertices[2]);
 
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
@@ -356,9 +339,9 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 				for (int c = 0; c < num_clipped; c++)
 				{
 					// Project all the coordinates to 2D space
-					/*coordinate_projection(clipped_tris[c].vertices[0], projection_Matrix4x4, pro.vertices[0]);
-					coordinate_projection(clipped_tris[c].vertices[1], projection_Matrix4x4, pro.vertices[1]);
-					coordinate_projection(clipped_tris[c].vertices[2], projection_Matrix4x4, pro.vertices[2]);*/
+					projection_Matrix4x4.matmulVec(clipped_tris[c].vertices[0], pro.vertices[0]);
+					projection_Matrix4x4.matmulVec(clipped_tris[c].vertices[1], pro.vertices[1]);
+					projection_Matrix4x4.matmulVec(clipped_tris[c].vertices[2], pro.vertices[2]);
 
 					// Center the points and change the scale
 					pro.vertices[0].x += 1.0f;
@@ -389,9 +372,9 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 			else if (num_clipped == 0) // no new triangles needed
 			{
 				// Project all the coordinates to 2D space
-				/*coordinate_projection(viewed.vertices[0], projection_Matrix4x4, pro.vertices[0]);
-				coordinate_projection(viewed.vertices[1], projection_Matrix4x4, pro.vertices[1]);
-				coordinate_projection(viewed.vertices[2], projection_Matrix4x4, pro.vertices[2]);*/
+				projection_Matrix4x4.matmulVec(viewed.vertices[0], pro.vertices[0]);
+				projection_Matrix4x4.matmulVec(viewed.vertices[1], pro.vertices[1]);
+				projection_Matrix4x4.matmulVec(viewed.vertices[2], pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -438,7 +421,7 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 	// render all the triangles in order now 
 	for (auto t : renderTriangles)
 	{
-		//FillTriangle(t.vertices[0](0, 0), t.vertices[0](0, 1), t.vertices[1](0, 0), t.vertices[1](0, 1), t.vertices[2](0, 0), t.vertices[2](0, 1), t.symbol, t.colour);
+		FillTriangle(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.symbol, t.colour);
 	}
 
 
@@ -458,8 +441,8 @@ std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
 		std::cout << "Cannot open file!";
 	}
 
-	Vector3D vertex;
-	std::vector<Vector3D> vertices;
+	Vector3D<float> vertex;
+	std::vector<Vector3D<float>> vertices;
 
 	std::vector<Triangle> triangles;
 
