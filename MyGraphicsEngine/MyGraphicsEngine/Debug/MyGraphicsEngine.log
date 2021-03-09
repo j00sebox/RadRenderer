@@ -1,11 +1,50 @@
-﻿  EmazingEngine.cpp
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Matrix.h(135,42): warning C4227: anachronism used: qualifiers on reference are ignored
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,134): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,113): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,92): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,71): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,50): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(441,29): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(136): warning C4172: returning address of local variable or temporary: line
-Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\EmazingEngine.cpp(221): warning C4715: 'EmazingEngine::triangle_clip': not all control paths return a value
-  MyGraphicsEngine.vcxproj -> Z:\Visual Studio\jarmstrong@trojanuv.com\MyGraphicsEngine\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe
+﻿  olcConsoleGameEngine.cpp
+  RadDemo.cpp
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(73,1): warning C4227: anachronism used: qualifiers on reference are ignored
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(83): message : see reference to class template instantiation 'Vector3D<S>' being compiled
+  RadRenderer.cpp
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(73,1): warning C4227: anachronism used: qualifiers on reference are ignored
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(83): message : see reference to class template instantiation 'Vector3D<S>' being compiled
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,114): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,97): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,80): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,63): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,46): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(442,29): warning C4244: 'argument': conversion from 'S' to 'int', possible loss of data
+          with
+          [
+              S=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(165,14): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Matrix4x4.h(153): message : while compiling class template member function 'Matrix4x4<float> Matrix4x4<float>::inverse(void)'
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(94): message : see reference to function template instantiation 'Matrix4x4<float> Matrix4x4<float>::inverse(void)' being compiled
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.h(72): message : see reference to class template instantiation 'Matrix4x4<float>' being compiled
+  Generating Code...
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(120): warning C4172: returning address of local variable or temporary: line
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\RadRenderer.cpp(205): warning C4715: 'RadRenderer::triangle_clip': not all control paths return a value
+olcConsoleGameEngine.obj : error LNK2019: unresolved external symbol __imp__GetAsyncKeyState@4 referenced in function "private: void __thiscall olcConsoleGameEngine::GameThread(void)" (?GameThread@olcConsoleGameEngine@@AAEXXZ)
+C:\Users\josha\Projects\radrenderer\MyGraphicsEngine\MyGraphicsEngine\Debug\MyGraphicsEngine.exe : fatal error LNK1120: 1 unresolved externals
