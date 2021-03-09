@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Matrix4x4.cpp" />
     <ClCompile Include="olcConsoleGameEngine.cpp" />
     <ClCompile Include="RadDemo.cpp" />
     <ClCompile Include="RadRenderer.cpp" />
@@ -101,14 +100,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Z:\Visual Studio\jarmstrong%40trojanuv.com\googletest-release-1.8.0\googletest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Users\Administrator\Documents\googletest-release-1.10.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Debug\gtestd.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Release\gtest.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Release\gtest_main.lib;Z:\Visual Studio\jarmstrong@trojanuv.com\googletest-release-1.8.0\googletest\msvc\gtest\Debug\gtest_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
