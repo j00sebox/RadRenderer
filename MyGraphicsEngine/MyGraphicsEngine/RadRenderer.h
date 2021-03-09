@@ -11,17 +11,9 @@
 
 #include "Matrix4x4.h"
 
-#define CUBE_DEMO
-
-class Triangle
+struct Triangle
 {
-public:
-
-	Triangle();
-
-	Triangle(std::vector< std::vector<float > > v);
-
-	std::vector<Vector3D<float>> vertices;
+	Vector3D<float> vertices[3];
 
 	wchar_t symbol;
 	short colour;

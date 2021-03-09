@@ -17,6 +17,8 @@ public:
 	// Creates a 3D vector
 	Vector3D() : x(0), y(0), z(0) {};
 
+	Vector3D(float c[3]) : x(c[0]), y(c[1]), z(c[2]) {};
+
 	// computes cross product of two vectors
 	void cross(Vector3D& line, Vector3D& normal)
 	{
@@ -64,17 +66,9 @@ public:
 	}
 
 	// For easier assignment
-	void operator = (std::vector<float> f)
+	void operator = (std::vector<S> f)
 	{
 		x = f[0]; y = f[1]; z = f[2];
-	}
-
-
-	Vector3D operator = (Vector3D& const vec)
-	{
-		x = vec.x; y = vec.y; z = vec.z;
-
-		return *this;
 	}
 
 	// vector coordinates

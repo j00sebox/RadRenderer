@@ -1,45 +1,6 @@
 #include "RadRenderer.h"
 
-Triangle::Triangle() : vertices(3)
-{
-	std::vector<float> init{ 0.0f, 0.0f, 0.0f };
-	vertices[0] = init;
-	vertices[1] = init;
-	vertices[2] = init;
-}
-
-Triangle::Triangle(std::vector< std::vector<float > > v) : vertices(3)
-{
-	vertices[0] = v[0];
-	vertices[1] = v[1];
-	vertices[2] = v[2];
-}
-
-std::vector<Triangle> cube_demo()
-{
-	std::vector<Triangle> test_cube;
-
-	// south
-	test_cube.push_back(Triangle({ {0.0f, 0.0f, 0.0f},	  {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 0.0f} }));
-	test_cube.push_back(Triangle({ {0.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }));
-
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f} }));
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 0.0f, 1.0f} }));
-
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {1.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 1.0f} }));
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 0.0f, 1.0f} }));
-
-	test_cube.push_back(Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 1.0f},    {0.0f, 1.0f, 0.0f} }));
-	test_cube.push_back(Triangle({ {0.0f, 0.0f, 1.0f},    {0.0f, 1.0f, 0.0f},    {0.0f, 0.0f, 0.0f} }));
-
-	test_cube.push_back(Triangle({ {0.0f, 1.0f, 0.0f},    {0.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 1.0f} }));
-	test_cube.push_back(Triangle({ {0.0f, 1.0f, 0.0f},    {1.0f, 1.0f, 1.0f},    {1.0f, 1.0f, 0.0f} }));
-
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f} }));
-	test_cube.push_back(Triangle({ {1.0f, 0.0f, 1.0f},    {0.0f, 0.0f, 0.0f},    {1.0f, 0.0f, 0.0f} }));
-
-	return test_cube;
-}
+#define TEAPOT 1
 
 // Takes the current camera position and translates it based on the user input
 inline void RadRenderer::point_at(Vector3D<float>& point_to, Vector3D<float>& forward, Vector3D<float>& up, Matrix4x4<float>& pMatrix4x4)
@@ -189,11 +150,11 @@ int RadRenderer::triangle_clip(Vector3D<float>& point, Vector3D<float>& plane_no
 
 bool RadRenderer::OnUserCreate()
 {
-#ifdef CUBE_DEMO
-	object = cube_demo();
-#else
+#if TEAPOT == 1
 	object = LoadOBJFile("3DTestObjects/teapot.obj");
-#endif  CUBE_DEMO
+#else
+	object = LoadOBJFile("3DTestObjects/ship.obj");
+#endif 
 
 	/* set up important variables */
 	projection_Matrix4x4.set( 
@@ -276,7 +237,7 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 	//coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
 	cam.add(look_dir, target);
 
-	// detemine point_at Matrix4x4 for next camera position
+	// detemine point_at Matrix for next camera position
 	point_at(cam, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
@@ -419,11 +380,10 @@ bool RadRenderer::OnUserUpdate(float fElapsedTime)
 		});
 
 	// render all the triangles in order now 
-	for (auto t : renderTriangles)
+	for (const auto& t : renderTriangles)
 	{
 		FillTriangle(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.symbol, t.colour);
 	}
-
 
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
@@ -442,7 +402,7 @@ std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
 	}
 
 	Vector3D<float> vertex;
-	std::vector<Vector3D<float>> vertices;
+	std::vector< Vector3D<float> > vertices;
 
 	std::vector<Triangle> triangles;
 
@@ -462,15 +422,15 @@ std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
 		if (line[0] == 'v')
 		{
 			st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
-			vertices.push_back(vertex);
+			vertices.emplace_back(vertex);
 		}
 		// indicates traingle face data
 		else if (line[0] == 'f')
 		{
 			st >> startingChar >> i1 >> i2 >> i3;
-			/*triangles.push_back(
-				Triangle({ vertices[i1 - 1].x, vertices[i2 - 1].x, vertices[i3 - 1].x })
-			);*/
+			triangles.push_back(
+				{  vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1] }
+			);
 		}
 	}
 
