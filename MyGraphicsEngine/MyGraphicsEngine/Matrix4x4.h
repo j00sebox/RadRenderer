@@ -1,21 +1,21 @@
+#ifndef MATRIX_H_
+#define MATRIX_H_
+
 #include <vector>
 #include <cmath>
 #include <stdexcept>
-#include <numeric>
-#include <algorithm>
-#include <array>
-
 
 /**********************************************
 class Vector3D
 @brief Class used to represent a vector in 3D
 		space.
 ************************************************/
+template <typename S>
 class Vector3D
 {
 public:
 	// Creates a 3D vector
-	Vector3D() : x(0.0f), y(0.0f), z(0.0f) {};
+	Vector3D() : x(0), y(0), z(0) {};
 
 	// computes cross product of two vectors
 	void cross(Vector3D& line, Vector3D& normal)
@@ -77,7 +77,8 @@ public:
 		return *this;
 	}
 
-	float x, y, z;
+	// vector coordinates
+	S x, y, z;
 
 };
 
@@ -85,13 +86,14 @@ public:
 class Matrix4x4
 @brief Class used to represent matrices with
 overloaded operator functions for proper
-Matrix4x4 operations
+Matrix operations
 ************************************************/
 template<typename T>
 class Matrix4x4
 {
 public:
 
+	// default matrix is identity
 	T mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
 
 	Matrix4x4() {};
@@ -109,6 +111,18 @@ public:
 		mat[3][0] = m30; mat[3][1] = m31; mat[3][2] = m32; mat[3][3] = m33;
 	};
 
+	// this constructor just makes setting up the tests easier
+	Matrix4x4(std::vector< std::vector<T> > v)
+	{
+		if (v.size() != 4 || v[0].size() != 4)
+			fprintf(stderr, "Passed in vector of wrong size! Must be  4x4.");
+		else
+		{
+			for (int row = 0; row < 4; row++)
+				for (int column = 0; column < 4; column++)
+					mat[row][column] = v[row][column];
+		}
+	}
 
 	void set(
 		T m00, T m01, T m02, T m03,
@@ -122,7 +136,17 @@ public:
 		mat[3][0] = m30; mat[3][1] = m31; mat[3][2] = m32; mat[3][3] = m33;
 	};
 
-	Matrix4x4 transpose();
+	// swap rows are columns of the matrix
+	Matrix4x4<T> transpose()
+	{
+		Matrix4x4<T> result;
+
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				result.mat[i][j] = mat[j][i];
+
+		return result;
+	}
 
 	// computes the inverse of the matrix using the Gauss-Jordan elimination method
 	Matrix4x4<T> inverse()
@@ -216,24 +240,67 @@ public:
 		return inv;
 	}
 
-	Matrix4x4 operator + (Matrix4x4 const& obj);
+	// add two matrices together
+	Matrix4x4 operator + (Matrix4x4 const& obj)
+	{
+		Matrix4x4 res;
 
-	Matrix4x4 operator - (Matrix4x4 const& obj);
+		for (int row = 0; row < 4; row++)
+			for (int column = 0; column < 4; column++)
+				res.mat[row][column] = mat[row][column] + obj.mat[row][column];
 
-	// Implements the dot product between two matrices
-	Matrix4x4 operator * (Matrix4x4& obj);
+		return res;
+	}
 
-	Matrix4x4 operator / (float divisor);
+	// subtract matrix from another
+	Matrix4x4 operator - (Matrix4x4 const& obj)
+	{
+		Matrix4x4 res;
 
-	//Matrix4x4& operator = (std::vector< std::vector<float> > val);
+		for (int row = 0; row < 4; row++)
+			for (int column = 0; column < 4; column++)
+				res.mat[row][column] = mat[row][column] - obj.mat[row][column];
+		
+		return res;
+	};
 
-	void matmulVec(Vector3D& vec, Vector3D& newVec);
+	// project vector into space defined by matrix
+	void matmulVec(Vector3D<T>& vec, Vector3D<T>& newVec)
+	{
+		float w;
+
+		newVec.x = vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + mat[3][0];
+		newVec.y = vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + mat[3][1];
+		newVec.z = vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + mat[3][2];
+
+		w = vec.x * mat[0][3] + vec.y * mat[1][3] + vec.z * mat[2][3] + mat[3][3];
+
+		if (w != 0)
+		{
+			newVec.x /= w;
+			newVec.y /= w;
+			newVec.z /= w;
+		}
+	}
+
+	// take the dot product of two matrices
+	void matmulMat(Matrix4x4<T>& mat1, Matrix4x4<T>& resmat)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				resmat.mat[i][j] = mat[i][0] * mat1.mat[0][j] +
+					mat[i][1] * mat1.mat[1][j] +
+					mat[i][2] * mat1.mat[2][j] +
+					mat[i][3] * mat1.mat[3][j];
+			}
+		}
+	}
 
 	// allows value to be accessed easier
 	float operator () (int i, int j) { return mat[i][j]; };
-	
-
-	// T determinant(std::vector< std::vector<T> >& mat);
 
 };
 
+#endif
