@@ -1,4 +1,4 @@
-#include "EmazingEngine.h"
+#include "RadRenderer.h"
 
 Triangle::Triangle() : vertices(3)
 {
@@ -41,32 +41,15 @@ std::vector<Triangle> cube_demo()
 	return test_cube;
 }
 
-inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
-{
-	outVec.x = vertex.x * operation.value[0][0] + vertex.y * operation.value[1][0] + vertex.z * operation.value[2][0] + operation.value[3][0];
-	outVec.y = vertex.x * operation.value[0][1] + vertex.y * operation.value[1][1] + vertex.z * operation.value[2][1] + operation.value[3][1];
-	outVec.z = vertex.x * operation.value[0][2] + vertex.y * operation.value[1][2] + vertex.z * operation.value[2][2] + operation.value[3][2];
 
-	float leftOver = vertex.x * operation.value[0][3] + vertex.y * operation.value[1][3] + vertex.z * operation.value[2][3] + operation.value[3][3];
 
-	// Dived entire matrix by the last value to convert it back to 3D space
-	// Also satistfies dividing the terms by z
-	if (leftOver != 0.0f)
-	{
-		outVec.x /= leftOver;
-		outVec.y /= leftOver;
-		outVec.z /= leftOver;
-	}
-
-}
-
-//inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& operation, Vector3D& outVec)
+//inline void RadRenderer::coordinate_projection(Vector3D& vertex, Matrix4x4& operation, Vector3D& outVec)
 //{
-//	Matrix tempVec(1, 4);
+//	Matrix4x4 tempVec(1, 4);
 //
 //	tempVec = { { vertex.x, vertex.y, vertex.z, 1.0f } };
 //
-//	Matrix res = tempVec * operation;
+//	Matrix4x4 res = tempVec * operation;
 //
 //	res = res / res(0, 3);
 //
@@ -77,7 +60,7 @@ inline void EmazingEngine::coordinate_projection(Vector3D& vertex, Matrix& opera
 //}
 
 // Takes the current camera position and translates it based on the user input
-inline void EmazingEngine::point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix& matrix)
+inline void RadRenderer::point_at(Vector3D& point_to, Vector3D& forward, Vector3D& up, Matrix4x4<float>& pMatrix4x4)
 {
 	// The new forward vector aka where the camera is pointing
 	Vector3D nForward;
@@ -95,14 +78,15 @@ inline void EmazingEngine::point_at(Vector3D& point_to, Vector3D& forward, Vecto
 	Vector3D nRight;
 	nUp.cross(nForward, nRight);
 
-	// Set up camera direction matrix
-	matrix.value[0][0] = nRight.x;		matrix.value[0][1] = nRight.y;		matrix.value[0][2] = nRight.z;		matrix.value[0][3] = 0.0f;
-	matrix.value[1][0] = nUp.x;			matrix.value[1][1] = nUp.y;			matrix.value[1][2] = nUp.z;			matrix.value[1][3] = 0.0f;
-	matrix.value[2][0] = nForward.x;	matrix.value[2][1] = nForward.y;	matrix.value[2][2] = nForward.z;	matrix.value[2][3] = 0.0f;
-	matrix.value[3][0] = point_to.x;	matrix.value[3][1] = point_to.y;	matrix.value[3][2] = point_to.z;	matrix.value[3][3] = 1.0f;
+	// Set up camera direction Matrix4x4
+	pMatrix4x4.mat[0][0] = nRight.x;		pMatrix4x4.mat[0][1] = nRight.y;		pMatrix4x4.mat[0][2] = nRight.z;		pMatrix4x4.mat[0][3] = 0.0f;
+	pMatrix4x4.mat[1][0] = nUp.x;			pMatrix4x4.mat[1][1] = nUp.y;			pMatrix4x4.mat[1][2] = nUp.z;			pMatrix4x4.mat[1][3] = 0.0f;
+	pMatrix4x4.mat[2][0] = nForward.x;		pMatrix4x4.mat[2][1] = nForward.y;		pMatrix4x4.mat[2][2] = nForward.z;		pMatrix4x4.mat[2][3] = 0.0f;
+	pMatrix4x4.mat[3][0] = point_to.x;		pMatrix4x4.mat[3][1] = point_to.y;		pMatrix4x4.mat[3][2] = point_to.z;		pMatrix4x4.mat[3][3] = 1.0f;
 }
 
-inline Matrix EmazingEngine::look_at(Matrix& pointAt)
+
+Matrix4x4<float> RadRenderer::look_at(Matrix4x4<float>& pointAt)
 {
 	// in order to give the appearance of user/camera movement
 	// the inverse of the point_at is needed for the transfoemation
@@ -111,7 +95,7 @@ inline Matrix EmazingEngine::look_at(Matrix& pointAt)
 }
 
 // returns the point that the given plane and line intersect
-Vector3D& EmazingEngine::line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end)
+Vector3D& RadRenderer::line_plane_intersect(Vector3D& point, Vector3D& plane_normal, Vector3D& line_begin, Vector3D& line_end)
 {
 	// always gotta normalize
 	plane_normal.normalize();
@@ -137,7 +121,7 @@ Vector3D& EmazingEngine::line_plane_intersect(Vector3D& point, Vector3D& plane_n
 }
 
 // this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
-int EmazingEngine::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
+int RadRenderer::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
@@ -221,7 +205,7 @@ int EmazingEngine::triangle_clip(Vector3D& point, Vector3D& plane_normal, Triang
 }
 
 
-bool EmazingEngine::OnUserCreate()
+bool RadRenderer::OnUserCreate()
 {
 #ifdef CUBE_DEMO
 	object = cube_demo();
@@ -230,7 +214,11 @@ bool EmazingEngine::OnUserCreate()
 #endif  CUBE_DEMO
 
 	/* set up important variables */
-	projection_matrix = { { aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f }, { 0.0f, scaling_factor, 0.0f, 0.0f }, { 0.0f, 0.0f, q, 1.0f } , { 0.0f, 0.0f, -z_near * q, 0.0f } };
+	projection_Matrix4x4.set( 
+		aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
+		0.0f, scaling_factor, 0.0f, 0.0f,
+		0.0f, 0.0f, q, 1.0f,
+		0.0f, 0.0f, -z_near * q, 0.0f);
 
 	lighting = { 0.0f, 0.0f, -1.0f };
 
@@ -243,7 +231,7 @@ bool EmazingEngine::OnUserCreate()
 
 }
 
-bool EmazingEngine::OnUserUpdate(float fElapsedTime)
+bool RadRenderer::OnUserUpdate(float fElapsedTime)
 {
 	// clear screen to redraw
 	Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
@@ -279,11 +267,23 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	
 
 	// update rotation matrices
-	x_rotation = { {1, 0, 0, 0}, {0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0}, {0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0}, {0, 0, 0, 1} };
-	z_rotation = { {cosf(rotate_angle), sinf(rotate_angle), 0, 0}, {-sinf(rotate_angle), cosf(rotate_angle), 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
-	y_rotation = { {cosf(facing_dir), 0, sinf(facing_dir), 0}, {0, 0, 1, 0}, {-sinf(facing_dir),  0, cosf(facing_dir), 0}, {0, 0, 0, 1} }; // this one rotates player's perspective rather than object
+	x_rotation.set(
+		1, 0, 0, 0, 
+		0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0,
+		0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0,
+		0, 0, 0, 1);
+	z_rotation.set(
+		cosf(rotate_angle), sinf(rotate_angle), 0, 0,
+		-sinf(rotate_angle), cosf(rotate_angle), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+	y_rotation.set(
+		cosf(facing_dir), 0, sinf(facing_dir), 0,
+		0, 0, 1, 0,
+		-sinf(facing_dir),  0, cosf(facing_dir), 0,
+		0, 0, 0, 1); // this one rotates player's perspective rather than object
 
-	// set up basis vectors
+	// set up basis vectors from world origin
 	vUp = { 0.0f, 1.0f, 0.0f };
 	look_dir = { 0.0f, 0.0f, 1.0f };
 	target = { 0.0f, 0.0f, 1.0f };
@@ -291,10 +291,10 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	camera_plane = { 0.0f, 0.0f, 1.0f };
 
 	// adjust cam based on user input
-	coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
+	//coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
 	cam.add(look_dir, target);
 
-	// detemine point_at matrix for next camera position
+	// detemine point_at Matrix4x4 for next camera position
 	point_at(cam, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
@@ -304,14 +304,14 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	{
 
 		// rotate around z-axis
-		coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
-		coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
-		coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
+		//coordinate_projection(o.vertices[0], z_rotation, rZ.vertices[0]);
+		//coordinate_projection(o.vertices[1], z_rotation, rZ.vertices[1]);
+		//coordinate_projection(o.vertices[2], z_rotation, rZ.vertices[2]);
 
-		// rotate around x-axis
-		coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
-		coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
-		coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
+		//// rotate around x-axis
+		//coordinate_projection(rZ.vertices[0], x_rotation, rX.vertices[0]);
+		//coordinate_projection(rZ.vertices[1], x_rotation, rX.vertices[1]);
+		//coordinate_projection(rZ.vertices[2], x_rotation, rX.vertices[2]);
 
 		// move object back so it is in view of the camera
 		rX.vertices[0].z += 6.0f;
@@ -344,9 +344,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			// The larger dot product in this case means the more lit up the triangle face will be 
 			CHAR_INFO colour = GetColour(dotProd);
 
-			coordinate_projection(rX.vertices[0], cam_inv, viewed.vertices[0]);
+			/*coordinate_projection(rX.vertices[0], cam_inv, viewed.vertices[0]);
 			coordinate_projection(rX.vertices[1], cam_inv, viewed.vertices[1]);
-			coordinate_projection(rX.vertices[2], cam_inv, viewed.vertices[2]);
+			coordinate_projection(rX.vertices[2], cam_inv, viewed.vertices[2]);*/
 
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
@@ -356,9 +356,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 				for (int c = 0; c < num_clipped; c++)
 				{
 					// Project all the coordinates to 2D space
-					coordinate_projection(clipped_tris[c].vertices[0], projection_matrix, pro.vertices[0]);
-					coordinate_projection(clipped_tris[c].vertices[1], projection_matrix, pro.vertices[1]);
-					coordinate_projection(clipped_tris[c].vertices[2], projection_matrix, pro.vertices[2]);
+					/*coordinate_projection(clipped_tris[c].vertices[0], projection_Matrix4x4, pro.vertices[0]);
+					coordinate_projection(clipped_tris[c].vertices[1], projection_Matrix4x4, pro.vertices[1]);
+					coordinate_projection(clipped_tris[c].vertices[2], projection_Matrix4x4, pro.vertices[2]);*/
 
 					// Center the points and change the scale
 					pro.vertices[0].x += 1.0f;
@@ -389,9 +389,9 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 			else if (num_clipped == 0) // no new triangles needed
 			{
 				// Project all the coordinates to 2D space
-				coordinate_projection(viewed.vertices[0], projection_matrix, pro.vertices[0]);
-				coordinate_projection(viewed.vertices[1], projection_matrix, pro.vertices[1]);
-				coordinate_projection(viewed.vertices[2], projection_matrix, pro.vertices[2]);
+				/*coordinate_projection(viewed.vertices[0], projection_Matrix4x4, pro.vertices[0]);
+				coordinate_projection(viewed.vertices[1], projection_Matrix4x4, pro.vertices[1]);
+				coordinate_projection(viewed.vertices[2], projection_Matrix4x4, pro.vertices[2]);*/
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;
@@ -438,7 +438,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	// render all the triangles in order now 
 	for (auto t : renderTriangles)
 	{
-		FillTriangle(t.vertices[0](0, 0), t.vertices[0](0, 1), t.vertices[1](0, 0), t.vertices[1](0, 1), t.vertices[2](0, 0), t.vertices[2](0, 1), t.symbol, t.colour);
+		//FillTriangle(t.vertices[0](0, 0), t.vertices[0](0, 1), t.vertices[1](0, 0), t.vertices[1](0, 1), t.vertices[2](0, 0), t.vertices[2](0, 1), t.symbol, t.colour);
 	}
 
 
@@ -448,7 +448,7 @@ bool EmazingEngine::OnUserUpdate(float fElapsedTime)
 	return true;
 }
 
-std::vector<Triangle> EmazingEngine::LoadOBJFile(std::string fname)
+std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
 {
 	std::ifstream readFile;
 	readFile.open(fname);
@@ -485,9 +485,9 @@ std::vector<Triangle> EmazingEngine::LoadOBJFile(std::string fname)
 		else if (line[0] == 'f')
 		{
 			st >> startingChar >> i1 >> i2 >> i3;
-			triangles.push_back(
-				Triangle({ vertices[i1 - 1].value[0], vertices[i2 - 1].value[0], vertices[i3 - 1].value[0] })
-			);
+			/*triangles.push_back(
+				Triangle({ vertices[i1 - 1].x, vertices[i2 - 1].x, vertices[i3 - 1].x })
+			);*/
 		}
 	}
 
