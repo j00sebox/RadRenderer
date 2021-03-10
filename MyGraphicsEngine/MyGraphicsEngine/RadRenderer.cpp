@@ -1,6 +1,6 @@
 #include "RadRenderer.h"
 
-#define TEAPOT 1
+#define TEAPOT 0
 
 // Takes the current camera position and translates it based on the user input
 inline void RadRenderer::point_at(Vector3D<float>& point_to, Vector3D<float>& forward, Vector3D<float>& up, Matrix4x4<float>& pMatrix4x4)
