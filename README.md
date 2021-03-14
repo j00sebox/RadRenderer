@@ -2,7 +2,7 @@
 
 ## Description
 
-An implementation of a 3D renderer. Can load objects from .obj files.
+An implementation of a 3D renderer. Can load objects from .obj files. This project is built off of a project done by the OneLoneCoder called the olcConsoleGameEngine. Big thanks to him for making it publicly available to use.
 
 ## How it Works
 
