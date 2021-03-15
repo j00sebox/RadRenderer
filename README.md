@@ -13,7 +13,8 @@ An implementation of a 3D renderer. Can load objects from .obj files. This proje
 5. If it is visible it converts the object to camera space.
 6. Runs through a triangle clipping algorithm to break triangles down if apart of it is off screen.
 7. Sorts the triangles based on the z value. Triangles that are farther away in 3D space will get renderer first.
-8. Draws and colours the triangles onto the screen
+8. Rasterizes the traingles. (Convert to screen space)
+9. Draws and colours the triangles onto the screen
 
 End Result:
 
