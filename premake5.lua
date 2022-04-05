@@ -21,9 +21,6 @@ project "radrenderer"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "pch.h"
-	pchsource "PracticeEngine/src/pch.cpp"
-
 	files
 	{
 		"%{prj.name}/src/**.h",
@@ -36,20 +33,14 @@ project "radrenderer"
 	}
 
 	filter "configurations:Debug"
-		defines
-		{ 
-			"PE_DEBUG", 
-			"PE_ENABLE_ASSERTS"
-		}
+		
 		buildoptions "/MTd"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "PE_RELEASE"
 		buildoptions "/MT"
 		symbols "on"
 
 	filter "configurations:Dist"
-		defines "PE_DIST"
 		buildoptions "/MT"
 		symbols "on"

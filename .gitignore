@@ -160,3 +160,7 @@ bin-int/*
 
 # premake
 .premake/*
+
+# VS
+.vs/*
+*/.vs/*
