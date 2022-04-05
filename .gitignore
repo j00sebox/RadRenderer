@@ -153,3 +153,10 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+
+# build stuff
+bin/*
+bin-int/*
+
+# premake
+.premake/*
