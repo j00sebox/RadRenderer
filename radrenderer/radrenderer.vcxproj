@@ -122,8 +122,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Matrix4x4.h" />
     <ClInclude Include="src\RadRenderer.h" />
+    <ClInclude Include="src\math\Matrix.h" />
+    <ClInclude Include="src\math\Vector.h" />
     <ClInclude Include="src\olcConsoleGameEngine.h" />
   </ItemGroup>
   <ItemGroup>

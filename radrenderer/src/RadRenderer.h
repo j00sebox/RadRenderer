@@ -9,11 +9,12 @@
 */
 #include "olcConsoleGameEngine.h"
 
-#include "Matrix4x4.h"
+#include "math/Matrix.h"
+#include "math/Vector.h"
 
 struct Triangle
 {
-	Vector3D<float> vertices[3];
+	math::Vec3<float> vertices[3];
 
 	wchar_t symbol;
 	short colour;
@@ -28,13 +29,13 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override;
 	
-	inline void point_at(Vector3D<float>& point_to, Vector3D<float>& forward, Vector3D<float>& up, Matrix4x4<float>& pMatrix4x4);
+	inline void point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
-	inline Matrix4x4<float> look_at(Matrix4x4<float>& pointAt);
+	inline math::Mat4<float> look_at(math::Mat4<float>& pointAt);
 
-	Vector3D<float>& line_plane_intersect(Vector3D<float>& point, Vector3D<float>& plane_normal, Vector3D<float>& line_begin, Vector3D<float>& line_end);
+	math::Vec3<float>& line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
 
-	int triangle_clip(Vector3D<float>& point, Vector3D<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
+	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
 
 	// Loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> LoadOBJFile(std::string fname);
@@ -57,31 +58,31 @@ private:
 
 	float facing_dir;
 
-	// 4x4 Matrix4x4 object transformations
-	Matrix4x4<float> projection_Matrix4x4, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
+	// 4x4 Mat4 object transformations
+	math::Mat4<float> projection_Mat4, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
 
 	// Projection triangles
 	Triangle pro, rX, rZ, viewed;
 
 	// Vectors to calculate the normal of triangle faces.
-	Vector3D<float> l1;
-	Vector3D<float> l2;
-	Vector3D<float> normal;
+	math::Vec3<float> l1;
+	math::Vec3<float> l2;
+	math::Vec3<float> normal;
 
 	// Position of camera aka user's view
-	Vector3D<float> cam;
+	math::Vec3<float> cam;
 
 	// Direction that the light would be pointing in game
-	Vector3D<float> lighting;
+	math::Vec3<float> lighting;
 
 	std::vector<Triangle> renderTriangles;
 
-	Vector3D<float> vUp; // current up vector
-	Vector3D<float> look_dir; // current forward vector aka where the camera is looking
-	Vector3D<float> target; // where the camera is being told to look aka new forward vector
-	Vector3D<float> fVelocity; // velocity of camera in forward direction
+	math::Vec3<float> vUp; // current up vector
+	math::Vec3<float> look_dir; // current forward vector aka where the camera is looking
+	math::Vec3<float> target; // where the camera is being told to look aka new forward vector
+	math::Vec3<float> fVelocity; // velocity of camera in forward direction
 
-	Vector3D<float> camera_plane;
+	math::Vec3<float> camera_plane;
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
 	int num_clipped = 0; // holds the number of triangles produced by clippinf function
 
