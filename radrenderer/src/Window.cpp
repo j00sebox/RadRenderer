@@ -123,11 +123,6 @@ bool Window::process_messages()
 {
 	MSG msg = {};
 
-	MSG m = {};
-	m.message = WM_PAINT;
-
-	DispatchMessage(&m);
-
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{
 		if (msg.message == WM_QUIT)
