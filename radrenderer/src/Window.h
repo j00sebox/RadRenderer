@@ -10,7 +10,8 @@ public:
 	~Window();
 
 	bool process_messages();
-	
+	void set_pixel(int x, int y, COLORREF& color);
+
 	static inline Window* get() { return m_instance; }
 	inline HWND get_hwnd() const { return m_hwnd; }
 

@@ -3,31 +3,21 @@
 #include <stdio.h>
 
 Window* Window::m_instance = nullptr;
+
+// REMOVE LATER
 static COLORREF redColor = RGB(255, 0, 0);
 static COLORREF blueColor = RGB(0, 0, 255);
 static COLORREF greenColor = RGB(0, 255, 0);
-
-void setPixel(int x, int y, COLORREF& color = redColor)
-{
-	HWND hwnd = Window::get()->get_hwnd();
-	if (hwnd == NULL)
-	{
-		exit(0);
-	}
-	HDC hdc = GetDC(hwnd);
-	SetPixel(hdc, x, y, color);
-	ReleaseDC(hwnd, hdc);
-	return;
-}
-
 void drawLine()
 {
 	for (int i = 0; i < 300; i++)
-		setPixel(10 + i, 100, blueColor);
+		Window::get()->set_pixel(10 + i, 100, blueColor);
 }
 
 LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	HBRUSH hbrWhite, hbrGray;
+
 	switch (msg)
 	{
 		case WM_CLOSE:
@@ -38,13 +28,15 @@ LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			return 0;
 		case WM_PAINT:
 		{
+
 			if (Window::get()->get_hwnd())
 			{
 				drawLine();
 			}
-			
+	
 			return 0;
 		}
+		
 	}
 
 	return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -66,6 +58,7 @@ Window::Window()
 	wnd_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
 	wnd_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wnd_class.lpfnWndProc = window_proc;
+	wnd_class.hbrBackground = CreateSolidBrush(RGB(0, 0, 0));
 
 	if (!RegisterClass(&wnd_class))
 	{
@@ -143,4 +136,15 @@ bool Window::process_messages()
 	return true;
 }
 
+void Window::set_pixel(int x, int y, COLORREF& color)
+{
+	if (m_hwnd == NULL)
+	{
+		exit(0);
+	}
+	HDC hdc = GetDC(m_hwnd);
+	SetPixel(hdc, x, y, color);
+	ReleaseDC(m_hwnd, hdc);
+	return;
+}
 
