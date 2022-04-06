@@ -7,14 +7,16 @@ LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 class Window {
 public:
 	Window();
-	Window(const Window&) = delete;
-	Window& operator =(const Window&) = delete;
 	~Window();
 
 	bool process_messages();
-
-	static HWND s_hwnd;
+	
+	static inline Window* get() { return m_instance; }
+	inline HWND get_hwnd() const { return m_hwnd; }
 
 private:
-	HINSTANCE m_instance;
+	HINSTANCE m_hinst;
+	HWND m_hwnd;
+
+	static Window* m_instance;
 };

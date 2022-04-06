@@ -2,20 +2,21 @@
 
 #include <stdio.h>
 
-HWND Window::s_hwnd = nullptr;
+Window* Window::m_instance = nullptr;
 static COLORREF redColor = RGB(255, 0, 0);
 static COLORREF blueColor = RGB(0, 0, 255);
 static COLORREF greenColor = RGB(0, 255, 0);
 
 void setPixel(int x, int y, COLORREF& color = redColor)
 {
-	if (Window::s_hwnd == NULL)
+	HWND hwnd = Window::get()->get_hwnd();
+	if (hwnd == NULL)
 	{
 		exit(0);
 	}
-	HDC hdc = GetDC(Window::s_hwnd);
+	HDC hdc = GetDC(hwnd);
 	SetPixel(hdc, x, y, color);
-	ReleaseDC(Window::s_hwnd, hdc);
+	ReleaseDC(hwnd, hdc);
 	return;
 }
 
@@ -37,7 +38,7 @@ LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			return 0;
 		case WM_PAINT:
 		{
-			if (Window::s_hwnd)
+			if (Window::get()->get_hwnd())
 			{
 				drawLine();
 			}
@@ -50,13 +51,18 @@ LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 Window::Window()
-	: m_instance(GetModuleHandle(nullptr))
+	: m_hinst(GetModuleHandle(nullptr))
 {
+	if (m_instance)
+		__debugbreak();
+
+	m_instance = this;
+
 	const wchar_t* class_name = L"Window Class";
 
 	WNDCLASS wnd_class = {};
 	wnd_class.lpszClassName = class_name;
-	wnd_class.hInstance = m_instance;
+	wnd_class.hInstance = m_hinst;
 	wnd_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
 	wnd_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wnd_class.lpfnWndProc = window_proc;
@@ -83,7 +89,7 @@ Window::Window()
 
 	AdjustWindowRect(&rect, style, false);
 
-	s_hwnd = CreateWindowEx(
+	m_hwnd = CreateWindowEx(
 		0,
 		class_name,
 		L"Rad Renderer",
@@ -94,11 +100,11 @@ Window::Window()
 		rect.bottom - rect.top,
 		NULL,
 		NULL,
-		m_instance,
+		m_hinst,
 		NULL
 	);
 
-	if (!s_hwnd)
+	if (!m_hwnd)
 	{
 		int nResult = GetLastError();
 		MessageBox(NULL,
@@ -108,7 +114,7 @@ Window::Window()
 	} 
 	else
 	{
-		ShowWindow(s_hwnd, SW_SHOW);
+		ShowWindow(m_hwnd, SW_SHOW);
 	}
 }
 
@@ -116,7 +122,7 @@ Window::~Window()
 {
 	const wchar_t* class_name = L"Window Class";
 
-	UnregisterClass(class_name, m_instance);
+	UnregisterClass(class_name, m_hinst);
 }
 
 bool Window::process_messages()
