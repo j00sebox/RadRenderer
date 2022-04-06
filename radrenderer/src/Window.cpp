@@ -1,15 +1,49 @@
 #include "Window.h"
 
+#include <stdio.h>
+
+HWND Window::s_hwnd = nullptr;
+static COLORREF redColor = RGB(255, 0, 0);
+static COLORREF blueColor = RGB(0, 0, 255);
+static COLORREF greenColor = RGB(0, 255, 0);
+
+void setPixel(int x, int y, COLORREF& color = redColor)
+{
+	if (Window::s_hwnd == NULL)
+	{
+		exit(0);
+	}
+	HDC hdc = GetDC(Window::s_hwnd);
+	SetPixel(hdc, x, y, color);
+	ReleaseDC(Window::s_hwnd, hdc);
+	return;
+}
+
+void drawLine()
+{
+	for (int i = 0; i < 300; i++)
+		setPixel(10 + i, 100, blueColor);
+}
+
 LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
-	case WM_CLOSE:
-		DestroyWindow(hwnd);
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
+		case WM_CLOSE:
+			DestroyWindow(hwnd);
+			break;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
+		case WM_PAINT:
+		{
+			if (Window::s_hwnd)
+			{
+				drawLine();
+			}
+			
+			return 0;
+		}
 	}
 
 	return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -49,7 +83,7 @@ Window::Window()
 
 	AdjustWindowRect(&rect, style, false);
 
-	m_hwnd = CreateWindowEx(
+	s_hwnd = CreateWindowEx(
 		0,
 		class_name,
 		L"Rad Renderer",
@@ -64,7 +98,7 @@ Window::Window()
 		NULL
 	);
 
-	if (!m_hwnd)
+	if (!s_hwnd)
 	{
 		int nResult = GetLastError();
 		MessageBox(NULL,
@@ -74,7 +108,7 @@ Window::Window()
 	} 
 	else
 	{
-		ShowWindow(m_hwnd, SW_SHOW);
+		ShowWindow(s_hwnd, SW_SHOW);
 	}
 }
 
@@ -85,11 +119,14 @@ Window::~Window()
 	UnregisterClass(class_name, m_instance);
 }
 
-// GetMessage waits for message
-// Peek message checks but will continue after
 bool Window::process_messages()
 {
 	MSG msg = {};
+
+	MSG m = {};
+	m.message = WM_PAINT;
+
+	DispatchMessage(&m);
 
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{

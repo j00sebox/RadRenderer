@@ -13,7 +13,8 @@ public:
 
 	bool process_messages();
 
+	static HWND s_hwnd;
+
 private:
 	HINSTANCE m_instance;
-	HWND m_hwnd;
 };
