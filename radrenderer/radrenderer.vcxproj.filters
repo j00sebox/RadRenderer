@@ -7,6 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RadRenderer.h" />
+    <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\math\Matrix.h">
       <Filter>math</Filter>
     </ClInclude>
@@ -14,12 +15,11 @@
       <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="src\olcConsoleGameEngine.h" />
-    <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\RadDemo.cpp" />
     <ClCompile Include="src\RadRenderer.cpp" />
-    <ClCompile Include="src\olcConsoleGameEngine.cpp" />
     <ClCompile Include="src\Window.cpp" />
+    <ClCompile Include="src\olcConsoleGameEngine.cpp" />
   </ItemGroup>
 </Project>

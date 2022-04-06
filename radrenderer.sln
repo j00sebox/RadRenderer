@@ -5,17 +5,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "radrenderer", "radrenderer\
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Dist|x64 = Dist|x64
-		Release|x64 = Release|x64
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Debug|x64.ActiveCfg = Debug|x64
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Debug|x64.Build.0 = Debug|x64
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Dist|x64.ActiveCfg = Dist|x64
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Dist|x64.Build.0 = Dist|x64
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Release|x64.ActiveCfg = Release|x64
-		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Release|x64.Build.0 = Release|x64
+		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Debug|Win32.Build.0 = Debug|Win32
+		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Release|Win32.ActiveCfg = Release|Win32
+		{53C13CF3-BF76-B5E8-486B-AFBFB41FACEC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

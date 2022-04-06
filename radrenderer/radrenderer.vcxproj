@@ -1,17 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|x64">
+    <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
+    <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Dist|x64">
-      <Configuration>Dist</Configuration>
-      <Platform>x64</Platform>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -19,120 +15,97 @@
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>radrenderer</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Debug-windows-x86_64\radrenderer\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\radrenderer\</IntDir>
+    <OutDir>..\bin\Debug-windows-x86\radrenderer\</OutDir>
+    <IntDir>..\bin-int\Debug-windows-x86\radrenderer\</IntDir>
     <TargetName>radrenderer</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Release-windows-x86_64\radrenderer\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\radrenderer\</IntDir>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\bin\Release-windows-x86\radrenderer\</OutDir>
+    <IntDir>..\bin-int\Release-windows-x86\radrenderer\</IntDir>
     <TargetName>radrenderer</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Dist-windows-x86_64\radrenderer\</OutDir>
-    <IntDir>..\bin-int\Dist-windows-x86_64\radrenderer\</IntDir>
-    <TargetName>radrenderer</TargetName>
-    <TargetExt>.exe</TargetExt>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;SFML_STATIC;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\sfml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MTd %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;ws2_32.lib;sfml-audio-s-d.lib;sfml-graphics-s-d.lib;sfml-network-s-d.lib;sfml-system-s-d.lib;sfml-window-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\sfml\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;SFML_STATIC;RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\sfml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MT %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;ws2_32.lib;sfml-audio-s.lib;sfml-graphics-s.lib;sfml-network-s.lib;sfml-system-s.lib;sfml-window-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\sfml\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\RadRenderer.h" />
+    <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\math\Matrix.h" />
     <ClInclude Include="src\math\Vector.h" />
     <ClInclude Include="src\olcConsoleGameEngine.h" />
-    <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\RadDemo.cpp" />
     <ClCompile Include="src\RadRenderer.cpp" />
-    <ClCompile Include="src\olcConsoleGameEngine.cpp" />
     <ClCompile Include="src\Window.cpp" />
+    <ClCompile Include="src\olcConsoleGameEngine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

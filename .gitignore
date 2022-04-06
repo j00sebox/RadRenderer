@@ -164,3 +164,6 @@ bin-int/*
 # VS
 .vs/*
 */.vs/*
+
+# SFML
+radrenderer/vendor/sfml/*
