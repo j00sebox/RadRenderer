@@ -1,23 +1,20 @@
 #pragma once
 
-#include <Windows.h>
-
-LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 class Window {
 public:
 	Window();
 	~Window();
 
-	bool process_messages();
-	void set_pixel(int x, int y, COLORREF& color);
-
-	static inline Window* get() { return m_instance; }
-	inline HWND get_hwnd() const { return m_hwnd; }
+	void loop();
+	
+	static Window* m_instance;
 
 private:
-	HINSTANCE m_hinst;
-	HWND m_hwnd;
-
-	static Window* m_instance;
+	sf::RenderWindow m_window;
+	std::unique_ptr<sf::Uint8[]> m_frame_buffer;
+	sf::Sprite m_sprite;
+	sf::Texture m_texture;
 };
