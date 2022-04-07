@@ -1,9 +1,5 @@
 #include "RadRenderer.h"
 
-#define TEAPOT 0
-
-#include <SFML/Graphics.hpp>
-
 // Takes the current camera position and translates it based on the user input
 inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4)
 {
@@ -110,11 +106,9 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	{
 		// both new traingles will have the same properties as the one being clipped
 		res_tri1.colour = ref_tri.colour;
-		res_tri1.symbol = ref_tri.symbol;
 
 		res_tri2.colour = ref_tri.colour;
-		res_tri2.symbol = ref_tri.symbol;
-
+	
 		// first new triangle contains the two in vertices
 		res_tri1.vertices[0] = in_vs[0];
 		res_tri1.vertices[1] = in_vs[1];
@@ -134,7 +128,6 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	{
 		// new triangle will have same properties as old one
 		res_tri1.colour = ref_tri.colour;
-		res_tri1.symbol = ref_tri.symbol;
 
 		// just 1 new triangle but smaller
 		res_tri1.vertices[0] = in_vs[0];
@@ -149,249 +142,6 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 		return -1; // triangle lies outside of screen so it should be discarded
 }
 
-
-bool RadRenderer::OnUserCreate()
-{
-#if TEAPOT == 1
-	object = LoadOBJFile("3DTestObjects/teapot.obj");
-#else
-	object = LoadOBJFile("res/objs/ship.obj");
-#endif 
-
-	/* set up important variables */
-	projection_Mat4.set( 
-		aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
-		0.0f, scaling_factor, 0.0f, 0.0f,
-		0.0f, 0.0f, q, 1.0f,
-		0.0f, 0.0f, -z_near * q, 0.0f);
-
-	lighting = { 0.0f, 0.0f, -1.0f };
-
-	lighting.normalize();
-
-	// initialize camera position vector
-	cam = { 0.0f, 0.0f, 0.0f };
-	
-	return true;
-
-}
-
-bool RadRenderer::OnUserUpdate(float fElapsedTime)
-{
-	// clear screen to redraw
-	Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
-
-	rotate_angle += 1.0f * fElapsedTime;
-
-	// multiply look_dir by the speed you want to move to get the player's forward velocity
-	look_dir.scalar_mul(fVelocity, 8.0f * fElapsedTime);
-
-	if (GetKey(VK_UP).bHeld)
-		cam.y -= 8.0f * fElapsedTime;	// go up
-
-	if (GetKey(VK_DOWN).bHeld)
-		cam.y += 8.0f * fElapsedTime;	// go down
-
-	if (GetKey(VK_LEFT).bHeld)
-		cam.x -= 8.0f * fElapsedTime;	// go left along x-axis
-
-	if (GetKey(VK_RIGHT).bHeld)
-		cam.x += 8.0f * fElapsedTime;	// go right along x-axis
-
-	if (GetKey(L'W').bHeld)
-		cam.add(fVelocity, cam);	    // go forwards
-
-	if (GetKey(L'S').bHeld)
-		cam.subtract(fVelocity, cam);   // go backwards
-
-	if (GetKey(L'A').bHeld)
-		facing_dir -= 2.0f * fElapsedTime; // rotate camera left
-
-	if (GetKey(L'D').bHeld)
-		facing_dir += 2.0f * fElapsedTime; // rotate camera right
-	
-
-	// update rotation matrices
-	x_rotation.set(
-		1, 0, 0, 0, 
-		0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0,
-		0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0,
-		0, 0, 0, 1);
-	z_rotation.set(
-		cosf(rotate_angle), sinf(rotate_angle), 0, 0,
-		-sinf(rotate_angle), cosf(rotate_angle), 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1);
-	y_rotation.set(
-		cosf(facing_dir), 0, sinf(facing_dir), 0,
-		0, 0, 1, 0,
-		-sinf(facing_dir),  0, cosf(facing_dir), 0,
-		0, 0, 0, 1); // this one rotates player's perspective rather than object
-
-	// set up basis vectors from world origin
-	vUp = { 0.0f, 1.0f, 0.0f };
-	look_dir = { 0.0f, 0.0f, 1.0f };
-	target = { 0.0f, 0.0f, 1.0f };
-
-	camera_plane = { 0.0f, 0.0f, 1.0f };
-
-	// adjust cam based on user input
-	//coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
-	cam.add(look_dir, target);
-
-	// detemine point_at Matrix for next camera position
-	point_at(cam, target, vUp, cam_dir);
-
-	cam_inv = look_at(cam_dir);
-
-	// iterate through all triangles in the object
-	for (auto o : object)
-	{
-
-		// rotate around z-axis
-		z_rotation.matmulVec(o.vertices[0], rZ.vertices[0]);
-		z_rotation.matmulVec(o.vertices[1], rZ.vertices[1]);
-		z_rotation.matmulVec(o.vertices[2], rZ.vertices[2]);
-
-		// rotate around x-axis
-		x_rotation.matmulVec(rZ.vertices[0], rX.vertices[0]);
-		x_rotation.matmulVec(rZ.vertices[1], rX.vertices[1]);
-		x_rotation.matmulVec(rZ.vertices[2], rX.vertices[2]);
-
-		// move object back so it is in view of the camera
-		rX.vertices[0].z += 6.0f;
-		rX.vertices[1].z += 6.0f;
-		rX.vertices[2].z += 6.0f;
-
-		// construct line 1 of the triangle
-		l1.x = rX.vertices[1].x - rX.vertices[0].x;
-		l1.y = rX.vertices[1].y - rX.vertices[0].y;
-		l1.z = rX.vertices[1].z - rX.vertices[0].z;
-
-		// contstruct line 2 of the triangle
-		l2.x = rX.vertices[2].x - rX.vertices[1].x;
-		l2.y = rX.vertices[2].y - rX.vertices[1].y;
-		l2.z = rX.vertices[2].z - rX.vertices[1].z;
-
-		// calculate normal of triangle face
-		l1.cross(l2, normal);
-
-		normal.normalize();
-
-		// calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-		if ((normal.x * rX.vertices[0].x - cam.x
-			+ normal.y * rX.vertices[0].y - cam.y
-			+ normal.z * rX.vertices[0].z - cam.z) < 0)
-		{
-			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
-			float dotProd = normal.dot(lighting);
-
-			// The larger dot product in this case means the more lit up the triangle face will be 
-			CHAR_INFO colour = GetColour(dotProd);
-
-			cam_inv.matmulVec(rX.vertices[0], viewed.vertices[0]);
-			cam_inv.matmulVec(rX.vertices[1], viewed.vertices[1]);
-			cam_inv.matmulVec(rX.vertices[2], viewed.vertices[2]);
-
-			// before we project the coordinates onto the screen space we need the clipped ones
-			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
-
-			if (num_clipped > 0) // traingle has been clipped
-			{
-				for (int c = 0; c < num_clipped; c++)
-				{
-					// Project all the coordinates to 2D space
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[0], pro.vertices[0]);
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[1], pro.vertices[1]);
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[2], pro.vertices[2]);
-
-					// Center the points and change the scale
-					pro.vertices[0].x += 1.0f;
-					pro.vertices[0].y += 1.0f;
-
-					pro.vertices[1].x += 1.0f;
-					pro.vertices[1].y += 1.0f;
-
-					pro.vertices[2].x += 1.0f;
-					pro.vertices[2].y += 1.0f;
-
-					pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
-					pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
-
-					pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
-					pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
-
-					pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
-					pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
-
-					// Assign color and character info to the triangle
-					pro.symbol = colour.Char.UnicodeChar;
-					pro.colour = colour.Attributes;
-
-					renderTriangles.push_back(pro);
-				}
-			}
-			else if (num_clipped == 0) // no new triangles needed
-			{
-				// Project all the coordinates to 2D space
-				projection_Mat4.matmulVec(viewed.vertices[0], pro.vertices[0]);
-				projection_Mat4.matmulVec(viewed.vertices[1], pro.vertices[1]);
-				projection_Mat4.matmulVec(viewed.vertices[2], pro.vertices[2]);
-
-				// Center the points and change the scale
-				pro.vertices[0].x += 1.0f;
-				pro.vertices[0].y += 1.0f;
-
-				pro.vertices[1].x += 1.0f;
-				pro.vertices[1].y += 1.0f;
-
-				pro.vertices[2].x += 1.0f;
-				pro.vertices[2].y += 1.0f;
-
-				pro.vertices[0].x *= 0.5f * (float)ScreenWidth();
-				pro.vertices[0].y *= 0.5f * (float)ScreenHeight();
-
-				pro.vertices[1].x *= 0.5f * (float)ScreenWidth();
-				pro.vertices[1].y *= 0.5f * (float)ScreenHeight();
-
-				pro.vertices[2].x *= 0.5f * (float)ScreenWidth();
-				pro.vertices[2].y *= 0.5f * (float)ScreenHeight();
-
-				// Assign color and character info to the triangle
-				pro.symbol = colour.Char.UnicodeChar;
-				pro.colour = colour.Attributes;
-
-				renderTriangles.push_back(pro);
-			}
-			
-		}
-
-	}
-
-	// sort triangles by their average z value
-	// higher z values mean the traingle should be rendered later aka farther away from front of screen
-	std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
-		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
-		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
-
-		if (avg_z1 > avg_z2)
-			return true;
-		else
-			return false;
-		});
-
-	// render all the triangles in order now 
-	for (const auto& t : renderTriangles)
-	{
-		FillTriangle(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.symbol, t.colour);
-	}
-
-	// vector needs to be empty for next redraw
-	renderTriangles.clear();
-
-	return true;
-}
-
 Pixel* RadRenderer::update(float elapsed_time)
 {
 	// clear screen to redraw
@@ -401,31 +151,6 @@ Pixel* RadRenderer::update(float elapsed_time)
 
 	// multiply look_dir by the speed you want to move to get the player's forward velocity
 	look_dir.scalar_mul(fVelocity, 8.0f * elapsed_time);
-
-	//if (GetKey(VK_UP).bHeld)
-	//	cam.y -= 8.0f * fElapsedTime;	// go up
-
-	//if (GetKey(VK_DOWN).bHeld)
-	//	cam.y += 8.0f * fElapsedTime;	// go down
-
-	//if (GetKey(VK_LEFT).bHeld)
-	//	cam.x -= 8.0f * fElapsedTime;	// go left along x-axis
-
-	//if (GetKey(VK_RIGHT).bHeld)
-	//	cam.x += 8.0f * fElapsedTime;	// go right along x-axis
-
-	//if (GetKey(L'W').bHeld)
-	//	cam.add(fVelocity, cam);	    // go forwards
-
-	//if (GetKey(L'S').bHeld)
-	//	cam.subtract(fVelocity, cam);   // go backwards
-
-	//if (GetKey(L'A').bHeld)
-	//	facing_dir -= 2.0f * fElapsedTime; // rotate camera left
-
-	//if (GetKey(L'D').bHeld)
-	//	facing_dir += 2.0f * fElapsedTime; // rotate camera right
-
 
 	// update rotation matrices
 	x_rotation.set(
@@ -503,7 +228,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 			float dotProd = normal.dot(lighting);
 
 			// The larger dot product in this case means the more lit up the triangle face will be 
-			CHAR_INFO colour = GetColour(dotProd);
+			//CHAR_INFO colour = GetColour(dotProd);
 
 			cam_inv.matmulVec(rX.vertices[0], viewed.vertices[0]);
 			cam_inv.matmulVec(rX.vertices[1], viewed.vertices[1]);
@@ -540,9 +265,8 @@ Pixel* RadRenderer::update(float elapsed_time)
 					pro.vertices[2].x *= 0.5f * (float)m_screen_width;
 					pro.vertices[2].y *= 0.5f * (float)m_screen_height;
 
-					// Assign color and character info to the triangle
-					pro.symbol = colour.Char.UnicodeChar;
-					pro.colour = colour.Attributes;
+					// Assign color to the triangle
+					pro.colour = 255;
 
 					renderTriangles.push_back(pro);
 				}
@@ -573,9 +297,8 @@ Pixel* RadRenderer::update(float elapsed_time)
 				pro.vertices[2].x *= 0.5f * (float)m_screen_width;
 				pro.vertices[2].y *= 0.5f * (float)m_screen_height;
 
-				// Assign color and character info to the triangle
-				pro.symbol = colour.Char.UnicodeChar;
-				pro.colour = colour.Attributes;
+				// Assign color to the triangle
+				pro.colour = 255;
 
 				renderTriangles.push_back(pro);
 			}
@@ -599,7 +322,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// render all the triangles in order now 
 	for (const auto& t : renderTriangles)
 	{
-		//FillTriangle(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.symbol, t.colour);
+		rasterize(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.colour);
 	}
 
 	// vector needs to be empty for next redraw
@@ -608,16 +331,11 @@ Pixel* RadRenderer::update(float elapsed_time)
 	return m_frame_buffer;
 }
 
-//void RadRenderer::set_pixel(int x, int y, short c, short col)
-//{
-//	if (x >= 0 && x < 264 && y >= 0 && y < 250)
-//	{
-//		m_bufScreen[y * 264 + x].Char.UnicodeChar = c;
-//		m_bufScreen[y * 264 + x] = col;
-//	}
-//}
+void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, short col)
+{
+}
 
-std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
+std::vector<Triangle> RadRenderer::load_obj_file(std::string fname)
 {
 	std::ifstream readFile;
 	readFile.open(fname);
@@ -628,7 +346,7 @@ std::vector<Triangle> RadRenderer::LoadOBJFile(std::string fname)
 	}
 
 	math::Vec3<float> vertex;
-	std::vector< math::Vec3<float> > vertices;
+	std::vector<math::Vec3<float>> vertices;
 
 	std::vector<Triangle> triangles;
 

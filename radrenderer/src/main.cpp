@@ -2,7 +2,7 @@
 
 int main()
 {
-	Window window(264, 250);
+	Window window(1280, 720);
 
 	window.loop();
 

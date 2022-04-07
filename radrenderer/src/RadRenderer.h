@@ -16,7 +16,6 @@ struct Triangle
 {
 	math::Vec3<float> vertices[3];
 
-	wchar_t symbol;
 	short colour;
 };
 
@@ -25,14 +24,14 @@ struct Pixel
 	std::uint8_t r, g, b, a;
 };
 
-class RadRenderer : public olcConsoleGameEngine
+class RadRenderer
 {
 public:
 	RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
 		: m_screen_width(screen_width), m_screen_height(screen_height), 
 		m_frame_buffer(new Pixel[buffer_size])
 	{
-		object = LoadOBJFile("res/objs/ship.obj");
+		object = load_obj_file("res/objs/ship.obj");
 
 		/* set up important variables */
 		projection_Mat4.set(
@@ -54,11 +53,9 @@ public:
 		delete[] m_frame_buffer;
 	}
 
-	bool OnUserCreate() override;
-
-	bool OnUserUpdate(float fElapsedTime) override;
-
 	Pixel* update(float elapsed_time);
+
+	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, short col);
 	
 	inline void point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
@@ -68,8 +65,8 @@ public:
 
 	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
 
-	// Loads vertex and face data from txt file realting to obj file
-	std::vector<Triangle> LoadOBJFile(std::string fname);
+	// loads vertex and face data from txt file realting to obj file
+	std::vector<Triangle> load_obj_file(std::string fname);
 	
 
 private:
@@ -83,7 +80,7 @@ private:
 	float thetaRAD = theta / 180.0f * 3.14159f;
 
 	float scaling_factor = 1.0f / tanf(thetaRAD * 0.5f); // amount needed to scale coordinates based on the fov
-	float aspect_ratio = (float)ScreenHeight() / (float)ScreenWidth();
+	float aspect_ratio = m_screen_height / m_screen_width;
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
