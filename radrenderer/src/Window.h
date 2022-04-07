@@ -5,10 +5,12 @@
 
 class Window {
 public:
-	Window();
+	Window(unsigned int width, unsigned int height);
 	~Window();
 
 	void loop();
+
+	static inline Window* get() { return m_instance; }
 	
 	static Window* m_instance;
 
@@ -17,4 +19,6 @@ private:
 	std::unique_ptr<sf::Uint8[]> m_frame_buffer;
 	sf::Sprite m_sprite;
 	sf::Texture m_texture;
+	
+	unsigned int m_width, m_height;
 };

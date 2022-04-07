@@ -8,7 +8,7 @@ int main()
 	/*if (demo.ConstructConsole(264, 250, 4, 4))
 		demo.Start();*/
 
-	Window window;
+	Window window(264, 250);
 
 	window.loop();
 

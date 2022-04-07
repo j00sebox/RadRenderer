@@ -2,17 +2,23 @@
 
 Window* Window::m_instance = nullptr;
 
-Window::Window()
+Window::Window(unsigned int width, unsigned int height)
+    : m_width(width), m_height(height)
 {
-    m_window.create(sf::VideoMode(264, 250), "My window", sf::Style::Default);
+    if (m_instance)
+        __debugbreak();
 
-    m_texture.create(264, 250);
+    m_instance = this;
+
+    m_window.create(sf::VideoMode(width, height), "My window", sf::Style::Default);
+
+    m_texture.create(width, height);
 
     m_sprite.setTexture(m_texture);
 
-    m_frame_buffer.reset(new sf::Uint8[264 * 250 * 4]);
+    m_frame_buffer.reset(new sf::Uint8[width * height * 4]);
 
-    for (int i = 0; i < 264 * 250 * 4; i += 4)
+    for (int i = 0; i < width * height * 4; i += 4)
     {
         m_frame_buffer[i] = 255;
         m_frame_buffer[i + 1] = 0;
