@@ -20,14 +20,45 @@ struct Triangle
 	short colour;
 };
 
+struct Pixel
+{
+	std::uint8_t r, g, b, a;
+};
+
 class RadRenderer : public olcConsoleGameEngine
 {
 public:
-	RadRenderer() {}
+	RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
+		: m_screen_width(screen_width), m_screen_height(screen_height), 
+		m_frame_buffer(new Pixel[buffer_size])
+	{
+		object = LoadOBJFile("res/objs/ship.obj");
+
+		/* set up important variables */
+		projection_Mat4.set(
+			aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
+			0.0f, scaling_factor, 0.0f, 0.0f,
+			0.0f, 0.0f, q, 1.0f,
+			0.0f, 0.0f, -z_near * q, 0.0f);
+
+		lighting = { 0.0f, 0.0f, -1.0f };
+
+		lighting.normalize();
+
+		// initialize camera position vector
+		cam = { 0.0f, 0.0f, 0.0f };
+	}
+
+	~RadRenderer() 
+	{
+		delete[] m_frame_buffer;
+	}
 
 	bool OnUserCreate() override;
 
 	bool OnUserUpdate(float fElapsedTime) override;
+
+	Pixel* update(float elapsed_time);
 	
 	inline void point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
@@ -85,5 +116,8 @@ private:
 	math::Vec3<float> camera_plane;
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
 	int num_clipped = 0; // holds the number of triangles produced by clippinf function
+
+	unsigned int m_screen_width, m_screen_height;
+	Pixel* m_frame_buffer;
 
 };
