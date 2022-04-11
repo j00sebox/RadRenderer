@@ -1,150 +1,35 @@
 #include "RadRenderer.h"
 
-// Takes the current camera position and translates it based on the user input
-inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4)
+
+
+RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
+
+	: m_screen_width(screen_width), m_screen_height(screen_height),
+	m_buffer_size(buffer_size)
 {
-	// The new forward vector aka where the camera is pointing
-	math::Vec3<float> nForward;
-	forward.subtract(point_to, nForward);
-	nForward.normalize();
+	clear_frame_buffer();
 
-	// Calculate the up vector in relation to the new camera direction
-	math::Vec3<float> temp;
-	nForward.scalar_mul(temp, (up.dot(nForward))); // scalar is used to calculate how far the nUp vector is displaced
-	math::Vec3<float> nUp;
-	up.subtract(temp, nUp);
-	nUp.normalize();
+	object = load_obj_file("res/objs/ship.obj");
 
-	// Then the vector pointing to the right of the camera is perpendicular to the 2 new ones calculated
-	math::Vec3<float> nRight;
-	nUp.cross(nForward, nRight);
+	/* set up important variables */
+	projection_Mat4.set(
+		aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
+		0.0f, scaling_factor, 0.0f, 0.0f,
+		0.0f, 0.0f, q, 1.0f,
+		0.0f, 0.0f, -z_near * q, 0.0f);
 
-	// Set up camera direction Mat4
-	pMat4.mat[0][0] = nRight.x;			pMat4.mat[0][1] = nRight.y;			pMat4.mat[0][2] = nRight.z;			pMat4.mat[0][3] = 0.0f;
-	pMat4.mat[1][0] = nUp.x;			pMat4.mat[1][1] = nUp.y;			pMat4.mat[1][2] = nUp.z;			pMat4.mat[1][3] = 0.0f;
-	pMat4.mat[2][0] = nForward.x;		pMat4.mat[2][1] = nForward.y;		pMat4.mat[2][2] = nForward.z;		pMat4.mat[2][3] = 0.0f;
-	pMat4.mat[3][0] = point_to.x;		pMat4.mat[3][1] = point_to.y;		pMat4.mat[3][2] = point_to.z;		pMat4.mat[3][3] = 1.0f;
-}
+	lighting = { 0.0f, 0.0f, -1.0f };
 
+	lighting.normalize();
 
-math::Mat4<float> RadRenderer::look_at(math::Mat4<float>& pointAt)
-{
-	// in order to give the appearance of user/camera movement
-	// the inverse of the point_at is needed for the transfoemation
-	// so that all the other points in the frame get shifted.
-	return pointAt.inverse();
-}
-
-// returns the point that the given plane and line intersect
-math::Vec3<float>& RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
-{
-	// always gotta normalize
-	plane_normal.normalize();
-	
-	// algorithm to check if line intersects
-	// the point where the line intersects plane can be detemined with
-	// line_begin + line*t = p0 + p1*u + p2*v 
-	float np = -point.dot(plane_normal);
-	float dotb = line_begin.dot(plane_normal);
-	float dote = line_end.dot(plane_normal);
-	float t = (-np - dotb) / (dote - dotb);
-
-	// construct line
-	math::Vec3<float> line;
-	line_end.subtract(line_begin, line);
-
-	math::Vec3<float> intersection;
-	line.scalar_mul(intersection, t);
-
-	line_begin.add(intersection, line);
-
-	return line;
-}
-
-// this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
-int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
-{
-	// make sure it's normalized
-	plane_normal.normalize();
-
-	// form the equation: x*Nx + y*Ny + z*Nz - N•P = 0
-	// where P is a point on the plane and N is a normal vector to the plane
-	// can be used to calculate distance of point from a plane
-	auto calc_distance = [&](math::Vec3<float>& tri_vertex)
-	{
-		tri_vertex.normalize();
-		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
-	}; // if 0 then vertex is on the plane, if negative then the vertex is on the outside of the plane (screen edge) else it's on the inside
-
-	// calculate distance for each vertex
-	float d0 = calc_distance(ref_tri.vertices[0]);
-	float d1 = calc_distance(ref_tri.vertices[1]);
-	float d2 = calc_distance(ref_tri.vertices[2]);
-
-	int in_verts = 0;
-	int out_verts = 0;
-
-	// this will keep track of which vertices are in vs out
-	math::Vec3<float> in_vs[3];
-	math::Vec3<float> out_vs[3];
-
-	// determine amount of inside and outside vertices
-	if (d0 >= 0) { in_vs[in_verts] = ref_tri.vertices[0]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[0]; out_verts++; }
-
-	if (d1 >= 0) { in_vs[in_verts] = ref_tri.vertices[1]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[1]; out_verts++; }
-
-	if (d2 >= 0) { in_vs[in_verts] = ref_tri.vertices[2]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[2]; out_verts++; }
-
-	// determine how many traingles are needed
-	if (in_verts == 3)
-		return 0; // no new traingles are needed
-	else if (in_verts == 2)
-	{
-		// both new traingles will have the same properties as the one being clipped
-		res_tri1.colour = ref_tri.colour;
-
-		res_tri2.colour = ref_tri.colour;
-	
-		// first new triangle contains the two in vertices
-		res_tri1.vertices[0] = in_vs[0];
-		res_tri1.vertices[1] = in_vs[1];
-
-		// second one will just contain the second vertex as it's first
-		res_tri2.vertices[0] = in_vs[1];
-
-		// the intersecting points to the plane will make up the rest of both triangles
-		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
-
-		res_tri2.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[1]);
-		res_tri2.vertices[2] = res_tri1.vertices[2]; // both new triangles share this vertex
-
-		return 2;
-	}
-	else if (in_verts == 1)
-	{
-		// new triangle will have same properties as old one
-		res_tri1.colour = ref_tri.colour;
-
-		// just 1 new triangle but smaller
-		res_tri1.vertices[0] = in_vs[0];
-		
-		// 2 new vertices are made by finding the intersection to the plane ( screen edge )
-		res_tri1.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
-		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[1], in_vs[0]);
-
-		return 1;
-	}
-	else if (in_verts == 0)
-		return -1; // triangle lies outside of screen so it should be discarded
+	// initialize camera position vector
+	cam = { 0.0f, 0.0f, 0.0f };
 }
 
 Pixel* RadRenderer::update(float elapsed_time)
 {
 	// clear screen to redraw
-	//Fill(0, 0, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_BLACK);
+	clear_frame_buffer();
 
 	rotate_angle += 1.0f * elapsed_time;
 
@@ -327,7 +212,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
 
-	return m_frame_buffer;
+	return m_frame_buffer.get();
 }
 
 void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col)
@@ -471,8 +356,154 @@ void RadRenderer::set_pixel(int x, int y, Pixel col)
 {
 	if (x >= 0 && x < m_screen_width && y >= 0 && y < m_screen_height)
 	{
-		m_frame_buffer[y * m_screen_width + x] = col;
+		m_frame_buffer.get()[y * m_screen_width + x] = col;
 	}
+}
+
+void RadRenderer::clear_frame_buffer()
+{
+	m_frame_buffer.reset(new Pixel[m_buffer_size]);
+}
+
+// Takes the current camera position and translates it based on the user input
+inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4)
+{
+	// The new forward vector aka where the camera is pointing
+	math::Vec3<float> nForward;
+	forward.subtract(point_to, nForward);
+	nForward.normalize();
+
+	// Calculate the up vector in relation to the new camera direction
+	math::Vec3<float> temp;
+	nForward.scalar_mul(temp, (up.dot(nForward))); // scalar is used to calculate how far the nUp vector is displaced
+	math::Vec3<float> nUp;
+	up.subtract(temp, nUp);
+	nUp.normalize();
+
+	// Then the vector pointing to the right of the camera is perpendicular to the 2 new ones calculated
+	math::Vec3<float> nRight;
+	nUp.cross(nForward, nRight);
+
+	// Set up camera direction Mat4
+	pMat4.mat[0][0] = nRight.x;			pMat4.mat[0][1] = nRight.y;			pMat4.mat[0][2] = nRight.z;			pMat4.mat[0][3] = 0.0f;
+	pMat4.mat[1][0] = nUp.x;			pMat4.mat[1][1] = nUp.y;			pMat4.mat[1][2] = nUp.z;			pMat4.mat[1][3] = 0.0f;
+	pMat4.mat[2][0] = nForward.x;		pMat4.mat[2][1] = nForward.y;		pMat4.mat[2][2] = nForward.z;		pMat4.mat[2][3] = 0.0f;
+	pMat4.mat[3][0] = point_to.x;		pMat4.mat[3][1] = point_to.y;		pMat4.mat[3][2] = point_to.z;		pMat4.mat[3][3] = 1.0f;
+}
+
+
+math::Mat4<float> RadRenderer::look_at(math::Mat4<float>& pointAt)
+{
+	// in order to give the appearance of user/camera movement
+	// the inverse of the point_at is needed for the transfoemation
+	// so that all the other points in the frame get shifted.
+	return pointAt.inverse();
+}
+
+// returns the point that the given plane and line intersect
+math::Vec3<float>& RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
+{
+	// always gotta normalize
+	plane_normal.normalize();
+
+	// algorithm to check if line intersects
+	// the point where the line intersects plane can be detemined with
+	// line_begin + line*t = p0 + p1*u + p2*v 
+	float np = -point.dot(plane_normal);
+	float dotb = line_begin.dot(plane_normal);
+	float dote = line_end.dot(plane_normal);
+	float t = (-np - dotb) / (dote - dotb);
+
+	// construct line
+	math::Vec3<float> line;
+	line_end.subtract(line_begin, line);
+
+	math::Vec3<float> intersection;
+	line.scalar_mul(intersection, t);
+
+	line_begin.add(intersection, line);
+
+	return line;
+}
+
+// this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
+int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
+{
+	// make sure it's normalized
+	plane_normal.normalize();
+
+	// form the equation: x*Nx + y*Ny + z*Nz - N•P = 0
+	// where P is a point on the plane and N is a normal vector to the plane
+	// can be used to calculate distance of point from a plane
+	auto calc_distance = [&](math::Vec3<float>& tri_vertex)
+	{
+		tri_vertex.normalize();
+		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
+	}; // if 0 then vertex is on the plane, if negative then the vertex is on the outside of the plane (screen edge) else it's on the inside
+
+	// calculate distance for each vertex
+	float d0 = calc_distance(ref_tri.vertices[0]);
+	float d1 = calc_distance(ref_tri.vertices[1]);
+	float d2 = calc_distance(ref_tri.vertices[2]);
+
+	int in_verts = 0;
+	int out_verts = 0;
+
+	// this will keep track of which vertices are in vs out
+	math::Vec3<float> in_vs[3];
+	math::Vec3<float> out_vs[3];
+
+	// determine amount of inside and outside vertices
+	if (d0 >= 0) { in_vs[in_verts] = ref_tri.vertices[0]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[0]; out_verts++; }
+
+	if (d1 >= 0) { in_vs[in_verts] = ref_tri.vertices[1]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[1]; out_verts++; }
+
+	if (d2 >= 0) { in_vs[in_verts] = ref_tri.vertices[2]; in_verts++; }
+	else { out_vs[out_verts] = ref_tri.vertices[2]; out_verts++; }
+
+	// determine how many traingles are needed
+	if (in_verts == 3)
+		return 0; // no new traingles are needed
+	else if (in_verts == 2)
+	{
+		// both new traingles will have the same properties as the one being clipped
+		res_tri1.colour = ref_tri.colour;
+
+		res_tri2.colour = ref_tri.colour;
+
+		// first new triangle contains the two in vertices
+		res_tri1.vertices[0] = in_vs[0];
+		res_tri1.vertices[1] = in_vs[1];
+
+		// second one will just contain the second vertex as it's first
+		res_tri2.vertices[0] = in_vs[1];
+
+		// the intersecting points to the plane will make up the rest of both triangles
+		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
+
+		res_tri2.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[1]);
+		res_tri2.vertices[2] = res_tri1.vertices[2]; // both new triangles share this vertex
+
+		return 2;
+	}
+	else if (in_verts == 1)
+	{
+		// new triangle will have same properties as old one
+		res_tri1.colour = ref_tri.colour;
+
+		// just 1 new triangle but smaller
+		res_tri1.vertices[0] = in_vs[0];
+
+		// 2 new vertices are made by finding the intersection to the plane ( screen edge )
+		res_tri1.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
+		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[1], in_vs[0]);
+
+		return 1;
+	}
+	else if (in_verts == 0)
+		return -1; // triangle lies outside of screen so it should be discarded
 }
 
 std::vector<Triangle> RadRenderer::load_obj_file(std::string fname)

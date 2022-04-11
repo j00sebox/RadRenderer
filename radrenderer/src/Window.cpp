@@ -44,6 +44,7 @@ void Window::loop()
 
         m_window.draw(m_sprite);
         m_window.display();
+        m_window.clear();
     }
 
 }

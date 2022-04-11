@@ -27,37 +27,17 @@ struct Triangle
 class RadRenderer
 {
 public:
-	RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
-		: m_screen_width(screen_width), m_screen_height(screen_height), 
-		m_frame_buffer(new Pixel[buffer_size])
-	{
-		object = load_obj_file("res/objs/ship.obj");
+	RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size);
 
-		/* set up important variables */
-		projection_Mat4.set(
-			aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
-			0.0f, scaling_factor, 0.0f, 0.0f,
-			0.0f, 0.0f, q, 1.0f,
-			0.0f, 0.0f, -z_near * q, 0.0f);
-
-		lighting = { 0.0f, 0.0f, -1.0f };
-
-		lighting.normalize();
-
-		// initialize camera position vector
-		cam = { 0.0f, 0.0f, 0.0f };
-	}
-
-	~RadRenderer() 
-	{
-		delete[] m_frame_buffer;
-	}
+	~RadRenderer() {}
 
 	Pixel* update(float elapsed_time);
 
 	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
 
 	void set_pixel(int x, int y, Pixel col);
+
+	void clear_frame_buffer();
 	
 	inline void point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
@@ -116,7 +96,7 @@ private:
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
 	int num_clipped = 0; // holds the number of triangles produced by clippinf function
 
-	unsigned int m_screen_width, m_screen_height;
-	Pixel* m_frame_buffer;
+	unsigned int m_screen_width, m_screen_height, m_buffer_size;
+	std::unique_ptr<Pixel> m_frame_buffer;
 
 };
