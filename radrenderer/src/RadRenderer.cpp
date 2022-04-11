@@ -3,7 +3,8 @@
 RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
 
 	: m_screen_width(screen_width), m_screen_height(screen_height),
-	m_buffer_size(buffer_size)
+	m_buffer_size(buffer_size),
+	rotate_angle(0.f)
 {
 	clear_frame_buffer();
 
@@ -29,7 +30,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	rotate_angle = 0;
+	rotate_angle += 1.0f * elapsed_time * 0.001f;
 
 	// multiply look_dir by the speed you want to move to get the player's forward velocity
 	look_dir.scalar_mul(fVelocity, 8.0f * elapsed_time);
