@@ -96,6 +96,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\RadRenderer.h" />
+    <ClInclude Include="src\RendererSettings.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\math\Matrix.h" />
     <ClInclude Include="src\math\Vector.h" />

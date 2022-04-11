@@ -2,29 +2,44 @@
 
 #include <iostream>
 
-RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
+#define DEG_TO_RAD(x) ( x / 180.0f * 3.14159f  )
+
+RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs)
 
 	: m_screen_width(screen_width), m_screen_height(screen_height),
-	m_buffer_size(buffer_size),
+	m_buffer_size(screen_width * screen_height),
+	m_near(rs.near), m_far(rs.far),
+	m_fov(rs.fov),
 	rotate_angle(0.f)
 {
 	clear_frame_buffer();
 
 	object = load_obj_file("res/objs/ship.obj");
 
-	/* set up important variables */
-	projection_Mat4.set(
+	float m_fovRAD = DEG_TO_RAD(m_fov);
+	float scaling_factor = 1.0f / tanf(m_fovRAD * 0.5f);
+	float aspect_ratio = (float)m_screen_height / (float)m_screen_width;
+
+	float q = m_far / (m_far - m_near);
+
+	// create projection matrix
+	m_projection.set(
 		aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
 		0.0f, scaling_factor, 0.0f, 0.0f,
-		0.0f, 0.0f, q, 1.0f,
-		0.0f, 0.0f, -z_near * q, 0.0f);
+		0.0f, 0.0f, q, -1.0f,
+		0.0f, 0.0f, 2 * m_near * q, 0.0f);
 
 	lighting = { 0.0f, 0.0f, -1.0f };
 
 	lighting.normalize();
 
-	// initialize camera position vector
-	cam = { 0.0f, 0.0f, 0.0f };
+	// set up basis vectors from world origin
+	vUp = { 0.0f, 1.0f, 0.0f };
+	look_dir = { 0.0f, 0.0f, 1.0f };
+	target = { 0.0f, 0.0f, 1.0f };
+	camera_plane = { 0.0f, 0.0f, 1.0f };
+
+	m_camera = { 0.0f, 0.0f, 0.0f };
 }
 
 Pixel* RadRenderer::update(float elapsed_time)
@@ -54,19 +69,14 @@ Pixel* RadRenderer::update(float elapsed_time)
 		-sinf(facing_dir), 0, cosf(facing_dir), 0,
 		0, 0, 0, 1); // this one rotates player's perspective rather than object
 
-	// set up basis vectors from world origin
-	vUp = { 0.0f, 1.0f, 0.0f };
-	look_dir = { 0.0f, 0.0f, 1.0f };
-	target = { 0.0f, 0.0f, 1.0f };
-
-	camera_plane = { 0.0f, 0.0f, 1.0f };
+	
 
 	// adjust cam based on user input
 	//coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
-	cam.add(look_dir, target);
+	m_camera.add(look_dir, target);
 
 	// detemine point_at Matrix for next camera position
-	point_at(cam, target, vUp, cam_dir);
+	point_at(m_camera, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
 
@@ -105,9 +115,9 @@ Pixel* RadRenderer::update(float elapsed_time)
 		normal.normalize();
 
 		// calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-		if ((normal.x * rX.vertices[0].x - cam.x
-			+ normal.y * rX.vertices[0].y - cam.y
-			+ normal.z * rX.vertices[0].z - cam.z) < 0)
+		if ((normal.x * rX.vertices[0].x - m_camera.x
+			+ normal.y * rX.vertices[0].y - m_camera.y
+			+ normal.z * rX.vertices[0].z - m_camera.z) < 0)
 		{
 			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 			float lum = normal.dot(lighting);
@@ -125,9 +135,9 @@ Pixel* RadRenderer::update(float elapsed_time)
 				for (int c = 0; c < num_clipped; c++)
 				{
 					// Project all the coordinates to 2D space
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[0], pro.vertices[0]);
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[1], pro.vertices[1]);
-					projection_Mat4.matmulVec(clipped_tris[c].vertices[2], pro.vertices[2]);
+					m_projection.matmulVec(clipped_tris[c].vertices[0], pro.vertices[0]);
+					m_projection.matmulVec(clipped_tris[c].vertices[1], pro.vertices[1]);
+					m_projection.matmulVec(clipped_tris[c].vertices[2], pro.vertices[2]);
 
 					// Center the points and change the scale
 					pro.vertices[0].x += 1.0f;
@@ -157,9 +167,9 @@ Pixel* RadRenderer::update(float elapsed_time)
 			else if (num_clipped == 0) // no new triangles needed
 			{
 				// Project all the coordinates to 2D space
-				projection_Mat4.matmulVec(viewed.vertices[0], pro.vertices[0]);
-				projection_Mat4.matmulVec(viewed.vertices[1], pro.vertices[1]);
-				projection_Mat4.matmulVec(viewed.vertices[2], pro.vertices[2]);
+				m_projection.matmulVec(viewed.vertices[0], pro.vertices[0]);
+				m_projection.matmulVec(viewed.vertices[1], pro.vertices[1]);
+				m_projection.matmulVec(viewed.vertices[2], pro.vertices[2]);
 
 				// Center the points and change the scale
 				pro.vertices[0].x += 1.0f;

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <strstream>
 
+#include "RendererSettings.h"
+
 #include "math/Matrix.h"
 #include "math/Vector.h"
 
@@ -21,7 +23,7 @@ struct Triangle
 class RadRenderer
 {
 public:
-	RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size);
+	RadRenderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs = { 0.1f, 1000.f, 80.f });
 
 	~RadRenderer() {}
 
@@ -52,22 +54,14 @@ public:
 private:
 	std::vector<Triangle> object;
 
-	float z_far = 1000.0f; // represents the distance from the theoretical distance in the screen to the users face
-	float z_near = 0.1f; // represents the distance from the users face to the screen
-	float q = z_far / (z_far - z_near);
-
-	float theta = 90.0f; // the field of view for the player
-	float thetaRAD = theta / 180.0f * 3.14159f;
-
-	float scaling_factor = 1.0f / tanf(thetaRAD * 0.5f); // amount needed to scale coordinates based on the fov
-	float aspect_ratio = m_screen_height / m_screen_width;
+	float m_far, m_near, m_fov; 
 
 	float rotate_angle; // perodically changing to give the appearance that the object is rotating
 
 	float facing_dir;
 
 	// 4x4 Mat4 object transformations
-	math::Mat4<float> projection_Mat4, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
+	math::Mat4<float> m_projection, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
 
 	// Projection triangles
 	Triangle pro, rX, rZ, viewed;
@@ -77,8 +71,7 @@ private:
 	math::Vec3<float> l2;
 	math::Vec3<float> normal;
 
-	// Position of camera aka user's view
-	math::Vec3<float> cam;
+	math::Vec3<float> m_camera;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;

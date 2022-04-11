@@ -1,12 +1,14 @@
 #include "Window.h"
 
+#include "RendererSettings.h"
+
 #include <iostream>
 #include <string>
 
 Window* Window::m_instance = nullptr;
 
 Window::Window(unsigned int width, unsigned int height)
-    : m_width(width), m_height(height), m_renderer(width, height, width*height)
+    : m_width(width), m_height(height), m_renderer(width, height)
 {
     if (m_instance)
         __debugbreak();

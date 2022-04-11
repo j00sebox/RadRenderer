@@ -14,6 +14,7 @@
     <ClInclude Include="src\math\Vector.h">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="src\RendererSettings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
