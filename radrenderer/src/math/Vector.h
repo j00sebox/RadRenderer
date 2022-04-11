@@ -2,6 +2,53 @@
 
 namespace math {
 
+	template <typename T>
+	class Vec2
+	{
+	public:
+		Vec2() : x(0), y(0) {}
+
+		Vec2(T _x, T _y) : x(_x), y(_y) {}
+
+		float cross(Vec2& line)
+		{
+			return (x * line.y) - (y * line.x);
+		}
+
+		float dot(Vec2& vec)
+		{
+			return x * vec.x + y * vec.y;
+		}
+
+		void normalize()
+		{
+			float normalize = sqrtf(pow(x, 2) + pow(y, 2));
+
+			x /= normalize;
+			y /= normalize;
+		}
+
+		void subtract(Vec2& inputVec, Vec2& outVec)
+		{
+			outVec.x = x - inputVec.x;
+			outVec.y = y - inputVec.y;
+		}
+
+		void scalar_mul(Vec2& outVec, float scalar)
+		{
+			outVec.x = scalar * x;
+			outVec.y = scalar * y;
+		}
+
+		void add(Vec2& a, Vec2& outVec)
+		{
+			outVec.x = x + a.x;
+			outVec.y = y + a.y;
+		}
+
+		T x, y;
+	};
+
 	/**********************************************
 	class Vec3
 	@brief Class used to represent a vector in 3D
@@ -11,9 +58,9 @@ namespace math {
 	class Vec3
 	{
 	public:
-		Vec3() : x(0), y(0), z(0) {};
+		Vec3() : x(0), y(0), z(0) {}
 
-		Vec3(float c[3]) : x(c[0]), y(c[1]), z(c[2]) {};
+		Vec3(float c[3]) : x(c[0]), y(c[1]), z(c[2]) {}
 
 		void cross(Vec3& line, Vec3& normal)
 		{

@@ -220,11 +220,11 @@ void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixe
 	{
 		for (int x = 0; x < m_screen_width; x++)
 		{
-			float px = x + 0.5f;
-			float py = y + 0.5f;
-			if (edge_function(x1, y1, x2, y2, px, py) &&
-				edge_function(x2, y2, x3, y3, px, py) &&
-				edge_function(x3, y3, x1, y1, px, py))
+			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
+
+			if (edge_function(x1, y1, x2, y2, p) &&
+				edge_function(x2, y2, x3, y3, p) &&
+				edge_function(x3, y3, x1, y1, p))
 			{
 				set_pixel(x, y, col);
 			}
@@ -232,9 +232,9 @@ void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixe
 	}
 }
 
-bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, int x3, int y3)
+bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p)
 {
-	int res = (x3 - x1) * (y2 - y1) - (y3 - y1) * (x2 - x1);
+	int res = (p.x - x1) * (y2 - y1) - (p.y - y1) * (x2 - x1);
 	return (res > 0);
 }
 

@@ -29,7 +29,7 @@ public:
 
 	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
 
-	bool edge_function(int x1, int y1, int x2, int y2, int x3, int y3);
+	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
 
 	Pixel get_colour(float lum);
 
