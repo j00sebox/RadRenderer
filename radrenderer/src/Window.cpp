@@ -17,6 +17,8 @@ Window::Window(unsigned int width, unsigned int height)
     m_texture.create(width, height);
 
     m_sprite.setTexture(m_texture);
+
+    m_window.setVerticalSyncEnabled(true);
 }
 
 Window::~Window()
