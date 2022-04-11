@@ -1,7 +1,5 @@
 #include "RadRenderer.h"
 
-
-
 RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, unsigned int buffer_size)
 
 	: m_screen_width(screen_width), m_screen_height(screen_height),
@@ -31,7 +29,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	rotate_angle += 1.0f * elapsed_time;
+	rotate_angle = 0;
 
 	// multiply look_dir by the speed you want to move to get the player's forward velocity
 	look_dir.scalar_mul(fVelocity, 8.0f * elapsed_time);
@@ -109,10 +107,8 @@ Pixel* RadRenderer::update(float elapsed_time)
 			+ normal.z * rX.vertices[0].z - cam.z) < 0)
 		{
 			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
-			float dotProd = normal.dot(lighting);
-
-			// The larger dot product in this case means the more lit up the triangle face will be 
-			//CHAR_INFO colour = GetColour(dotProd);
+			float lum = normal.dot(lighting);
+			Pixel colour = get_colour(lum);
 
 			cam_inv.matmulVec(rX.vertices[0], viewed.vertices[0]);
 			cam_inv.matmulVec(rX.vertices[1], viewed.vertices[1]);
@@ -150,7 +146,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 					pro.vertices[2].y *= 0.5f * (float)m_screen_height;
 
 					// Assign color to the triangle
-					pro.colour = { 255, 255, 255, 255 };
+					pro.colour = colour;
 
 					renderTriangles.push_back(pro);
 				}
@@ -182,7 +178,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 				pro.vertices[2].y *= 0.5f * (float)m_screen_height;
 
 				// Assign color to the triangle
-				pro.colour = { 255, 255, 255, 255 };
+				pro.colour = colour;
 
 				renderTriangles.push_back(pro);
 			}
@@ -350,6 +346,12 @@ next:
 		y += 1;
 		if (y > y3) return;
 	}
+}
+
+Pixel RadRenderer::get_colour(float lum)
+{
+	Pixel p = { 255 * lum, 255 * lum, 255 * lum, 255 };
+	return p;
 }
 
 void RadRenderer::set_pixel(int x, int y, Pixel col)

@@ -35,6 +35,8 @@ public:
 
 	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
 
+	Pixel get_colour(float lum);
+
 	void set_pixel(int x, int y, Pixel col);
 
 	void clear_frame_buffer();
