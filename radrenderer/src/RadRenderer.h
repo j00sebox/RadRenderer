@@ -12,16 +12,16 @@
 #include "math/Matrix.h"
 #include "math/Vector.h"
 
+struct Pixel
+{
+	std::uint8_t r, g, b, a;
+};
+
 struct Triangle
 {
 	math::Vec3<float> vertices[3];
 
-	short colour;
-};
-
-struct Pixel
-{
-	std::uint8_t r, g, b, a;
+	Pixel colour;
 };
 
 class RadRenderer
@@ -55,7 +55,9 @@ public:
 
 	Pixel* update(float elapsed_time);
 
-	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, short col);
+	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
+
+	void set_pixel(int x, int y, Pixel col);
 	
 	inline void point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
