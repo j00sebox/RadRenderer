@@ -21,6 +21,8 @@ public:
 private:
 	RadRenderer m_renderer;
 	sf::RenderWindow m_window;
+	sf::Text m_fps;
+	sf::Font m_font;
 	sf::Sprite m_sprite;
 	sf::Texture m_texture;
 	sf::Clock m_clock;
