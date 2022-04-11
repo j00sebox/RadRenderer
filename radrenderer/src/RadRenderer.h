@@ -29,6 +29,7 @@ public:
 
 	Pixel* update(float elapsed_time);
 
+protected:
 	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, const Pixel& col);
 
 	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
@@ -50,6 +51,7 @@ public:
 	// loads vertex and face data from txt file realting to obj file
 	std::vector<Triangle> load_obj_file(std::string fname);
 	
+	inline void transform_tri(Triangle& tri, const math::Mat4<float>& transform);
 
 private:
 	std::vector<Triangle> object;
@@ -60,11 +62,8 @@ private:
 
 	float facing_dir;
 
-	// 4x4 Mat4 object transformations
+	// transforms
 	math::Mat4<float> m_projection, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
-
-	// Projection triangles
-	Triangle pro, rX, rZ, viewed;
 
 	// Vectors to calculate the normal of triangle faces.
 	math::Vec3<float> l1;

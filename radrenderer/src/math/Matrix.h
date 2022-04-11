@@ -188,26 +188,30 @@ namespace math {
 			return res;
 		};
 
-		void matmulVec(Vec3<T>& vec, Vec3<T>& newVec)
+		void mat_mul_vec(Vec3<T>& vec) const
 		{
 			float w;
 
-			newVec.x = vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + mat[3][0];
-			newVec.y = vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + mat[3][1];
-			newVec.z = vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + mat[3][2];
+			Vec3<T> new_vec;
+
+			new_vec.x = vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + mat[3][0];
+			new_vec.y = vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + mat[3][1];
+			new_vec.z = vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + mat[3][2];
 
 			w = vec.x * mat[0][3] + vec.y * mat[1][3] + vec.z * mat[2][3] + mat[3][3];
 
 			if (w != 0)
 			{
-				newVec.x /= w;
-				newVec.y /= w;
-				newVec.z /= w;
+				new_vec.x /= w;
+				new_vec.y /= w;
+				new_vec.z /= w;
 			}
+
+			vec = std::move(new_vec);
 		}
 
 		// take the dot product of two matrices
-		void matmulMat(Mat4<T>& mat1, Mat4<T>& resmat)
+		void mat_mul_mat(Mat4<T>& mat1, Mat4<T>& resmat)
 		{
 			for (int i = 0; i < 4; i++)
 			{

@@ -69,13 +69,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 		-sinf(facing_dir), 0, cosf(facing_dir), 0,
 		0, 0, 0, 1); // this one rotates player's perspective rather than object
 
-	
-
-	// adjust cam based on user input
-	//coordinate_projection(target, y_rotation, look_dir); // rotate the previous target vector around the y-axis
-	m_camera.add(look_dir, target);
-
-	// detemine point_at Matrix for next camera position
+	// camera transform
 	point_at(m_camera, target, vUp, cam_dir);
 
 	cam_inv = look_at(cam_dir);
@@ -83,31 +77,26 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// iterate through all triangles in the object
 	for (auto o : object)
 	{
-
 		// rotate around z-axis
-		z_rotation.matmulVec(o.vertices[0], rZ.vertices[0]);
-		z_rotation.matmulVec(o.vertices[1], rZ.vertices[1]);
-		z_rotation.matmulVec(o.vertices[2], rZ.vertices[2]);
+		transform_tri(o, z_rotation);
 
 		// rotate around x-axis
-		x_rotation.matmulVec(rZ.vertices[0], rX.vertices[0]);
-		x_rotation.matmulVec(rZ.vertices[1], rX.vertices[1]);
-		x_rotation.matmulVec(rZ.vertices[2], rX.vertices[2]);
+		transform_tri(o, x_rotation);
 
 		// move object back so it is in view of the camera
-		rX.vertices[0].z += 6.0f;
-		rX.vertices[1].z += 6.0f;
-		rX.vertices[2].z += 6.0f;
+		o.vertices[0].z += 6.0f;
+		o.vertices[1].z += 6.0f;
+		o.vertices[2].z += 6.0f;
 
 		// construct line 1 of the triangle
-		l1.x = rX.vertices[1].x - rX.vertices[0].x;
-		l1.y = rX.vertices[1].y - rX.vertices[0].y;
-		l1.z = rX.vertices[1].z - rX.vertices[0].z;
+		l1.x = o.vertices[1].x - o.vertices[0].x;
+		l1.y = o.vertices[1].y - o.vertices[0].y;
+		l1.z = o.vertices[1].z - o.vertices[0].z;
 
 		// contstruct line 2 of the triangle
-		l2.x = rX.vertices[2].x - rX.vertices[1].x;
-		l2.y = rX.vertices[2].y - rX.vertices[1].y;
-		l2.z = rX.vertices[2].z - rX.vertices[1].z;
+		l2.x = o.vertices[2].x - o.vertices[1].x;
+		l2.y = o.vertices[2].y - o.vertices[1].y;
+		l2.z = o.vertices[2].z - o.vertices[1].z;
 
 		// calculate normal of triangle face
 		l1.cross(l2, normal);
@@ -115,85 +104,78 @@ Pixel* RadRenderer::update(float elapsed_time)
 		normal.normalize();
 
 		// calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-		if ((normal.x * rX.vertices[0].x - m_camera.x
-			+ normal.y * rX.vertices[0].y - m_camera.y
-			+ normal.z * rX.vertices[0].z - m_camera.z) < 0)
+		if ((normal.x * o.vertices[0].x - m_camera.x
+			+ normal.y * o.vertices[0].y - m_camera.y
+			+ normal.z * o.vertices[0].z - m_camera.z) < 0)
 		{
 			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 			float lum = normal.dot(lighting);
 			Pixel colour = get_colour(lum);
 
-			cam_inv.matmulVec(rX.vertices[0], viewed.vertices[0]);
-			cam_inv.matmulVec(rX.vertices[1], viewed.vertices[1]);
-			cam_inv.matmulVec(rX.vertices[2], viewed.vertices[2]);
+			transform_tri(o, cam_inv);
 
 			// before we project the coordinates onto the screen space we need the clipped ones
-			num_clipped = triangle_clip(camera_plane, camera_plane, viewed, clipped_tris[0], clipped_tris[1]);
+			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
 
 			if (num_clipped > 0) // traingle has been clipped
 			{
 				for (int c = 0; c < num_clipped; c++)
 				{
-					// Project all the coordinates to 2D space
-					m_projection.matmulVec(clipped_tris[c].vertices[0], pro.vertices[0]);
-					m_projection.matmulVec(clipped_tris[c].vertices[1], pro.vertices[1]);
-					m_projection.matmulVec(clipped_tris[c].vertices[2], pro.vertices[2]);
+					// Convert all coordinates to projection space
+					transform_tri(clipped_tris[c], m_projection);
 
 					// Center the points and change the scale
-					pro.vertices[0].x += 1.0f;
-					pro.vertices[0].y += 1.0f;
+					clipped_tris[c].vertices[0].x += 1.0f;
+					clipped_tris[c].vertices[0].y += 1.0f;
 
-					pro.vertices[1].x += 1.0f;
-					pro.vertices[1].y += 1.0f;
+					clipped_tris[c].vertices[1].x += 1.0f;
+					clipped_tris[c].vertices[1].y += 1.0f;
 
-					pro.vertices[2].x += 1.0f;
-					pro.vertices[2].y += 1.0f;
+					clipped_tris[c].vertices[2].x += 1.0f;
+					clipped_tris[c].vertices[2].y += 1.0f;
 
-					pro.vertices[0].x *= 0.5f * (float)m_screen_width;
-					pro.vertices[0].y *= 0.5f * (float)m_screen_height;
+					clipped_tris[c].vertices[0].x *= 0.5f * (float)m_screen_width;
+					clipped_tris[c].vertices[0].y *= 0.5f * (float)m_screen_height;
 
-					pro.vertices[1].x *= 0.5f * (float)m_screen_width;
-					pro.vertices[1].y *= 0.5f * (float)m_screen_height;
+					clipped_tris[c].vertices[1].x *= 0.5f * (float)m_screen_width;
+					clipped_tris[c].vertices[1].y *= 0.5f * (float)m_screen_height;
 
-					pro.vertices[2].x *= 0.5f * (float)m_screen_width;
-					pro.vertices[2].y *= 0.5f * (float)m_screen_height;
+					clipped_tris[c].vertices[2].x *= 0.5f * (float)m_screen_width;
+					clipped_tris[c].vertices[2].y *= 0.5f * (float)m_screen_height;
 
 					// Assign color to the triangle
-					pro.colour = colour;
+					clipped_tris[c].colour = colour;
 
-					renderTriangles.push_back(pro);
+					renderTriangles.push_back(clipped_tris[c]);
 				}
 			}
 			else if (num_clipped == 0) // no new triangles needed
 			{
-				// Project all the coordinates to 2D space
-				m_projection.matmulVec(viewed.vertices[0], pro.vertices[0]);
-				m_projection.matmulVec(viewed.vertices[1], pro.vertices[1]);
-				m_projection.matmulVec(viewed.vertices[2], pro.vertices[2]);
+				transform_tri(o, m_projection);
 
 				// Center the points and change the scale
-				pro.vertices[0].x += 1.0f;
-				pro.vertices[0].y += 1.0f;
+				o.vertices[0].x += 1.0f;
+				o.vertices[0].y += 1.0f;
 
-				pro.vertices[1].x += 1.0f;
-				pro.vertices[1].y += 1.0f;
+				o.vertices[1].x += 1.0f;
+				o.vertices[1].y += 1.0f;
 
-				pro.vertices[2].x += 1.0f;
-				pro.vertices[2].y += 1.0f;
+				o.vertices[2].x += 1.0f;
+				o.vertices[2].y += 1.0f;
 
-				pro.vertices[0].x *= 0.5f * (float)m_screen_width;
-				pro.vertices[0].y *= 0.5f * (float)m_screen_height;
+				o.vertices[0].x *= 0.5f * (float)m_screen_width;
+				o.vertices[0].y *= 0.5f * (float)m_screen_height;
 
-				pro.vertices[1].x *= 0.5f * (float)m_screen_width;
-				pro.vertices[1].y *= 0.5f * (float)m_screen_height;
+				o.vertices[1].x *= 0.5f * (float)m_screen_width;
+				o.vertices[1].y *= 0.5f * (float)m_screen_height;
 
-				pro.vertices[2].x *= 0.5f * (float)m_screen_width;
-				pro.vertices[2].y *= 0.5f * (float)m_screen_height;
+				o.vertices[2].x *= 0.5f * (float)m_screen_width;
+				o.vertices[2].y *= 0.5f * (float)m_screen_height;
 
 				// Assign color to the triangle
-				pro.colour = colour;
+				o.colour = colour;
 
-				renderTriangles.push_back(pro);
+				renderTriangles.push_back(o);
 			}
 
 		}
@@ -467,4 +449,11 @@ std::vector<Triangle> RadRenderer::load_obj_file(std::string fname)
 	}
 
 	return triangles;
+}
+
+void RadRenderer::transform_tri(Triangle& tri, const math::Mat4<float>& transform)
+{
+	transform.mat_mul_vec(tri.vertices[0]);
+	transform.mat_mul_vec(tri.vertices[1]);
+	transform.mat_mul_vec(tri.vertices[2]);
 }
