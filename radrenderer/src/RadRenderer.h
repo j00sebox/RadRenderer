@@ -27,13 +27,13 @@ public:
 
 	Pixel* update(float elapsed_time);
 
-	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
+	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, const Pixel& col);
 
 	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
 
 	Pixel get_colour(float lum);
 
-	void set_pixel(int x, int y, Pixel col);
+	void set_pixel(int x, int y, const Pixel& col);
 
 	void clear_frame_buffer();
 	

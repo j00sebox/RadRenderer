@@ -214,11 +214,26 @@ Pixel* RadRenderer::update(float elapsed_time)
 	return m_frame_buffer.get();
 }
 
-void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col)
+void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, const Pixel& col)
 {
-	for (int y = 0; y < m_screen_height; y++)
+	int min_x, max_x;
+	int min_y, max_y;
+
+	min_x = std::min(x1, x2);
+	min_x = std::min(min_x, x3);
+
+	max_x = std::max(x1, x2);
+	max_x = std::max(max_x, x3);
+
+	min_y = std::min(y1, y2);
+	min_y = std::min(min_y, y3);
+
+	max_y = std::max(y1, y2);
+	max_y = std::max(max_y, y3);
+
+	for (int y = min_y; y < max_y; y++)
 	{
-		for (int x = 0; x < m_screen_width; x++)
+		for (int x = min_x; x < max_x; x++)
 		{
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
@@ -244,7 +259,7 @@ Pixel RadRenderer::get_colour(float lum)
 	return p;
 }
 
-void RadRenderer::set_pixel(int x, int y, Pixel col)
+void RadRenderer::set_pixel(int x, int y, const Pixel& col)
 {
 	if (x >= 0 && x < m_screen_width && y >= 0 && y < m_screen_height)
 	{
