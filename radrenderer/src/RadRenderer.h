@@ -3,12 +3,6 @@
 #include <fstream>
 #include <strstream>
 
-/*
- - Library provided from https://github.com/OneLoneCoder
- - Used to draw shapes to the console
-*/
-#include "olcConsoleGameEngine.h"
-
 #include "math/Matrix.h"
 #include "math/Vector.h"
 
@@ -34,6 +28,8 @@ public:
 	Pixel* update(float elapsed_time);
 
 	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, Pixel col);
+
+	bool edge_function(int x1, int y1, int x2, int y2, int x3, int y3);
 
 	Pixel get_colour(float lum);
 

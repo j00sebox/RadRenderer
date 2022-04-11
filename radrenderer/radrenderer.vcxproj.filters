@@ -14,12 +14,10 @@
     <ClInclude Include="src\math\Vector.h">
       <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="src\olcConsoleGameEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\RadRenderer.cpp" />
     <ClCompile Include="src\Window.cpp" />
-    <ClCompile Include="src\olcConsoleGameEngine.cpp" />
   </ItemGroup>
 </Project>
