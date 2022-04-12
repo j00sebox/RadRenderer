@@ -13,15 +13,17 @@ public:
 	Pixel* update(float elapsed_time);
 
 protected:
-	void rasterize(int x1, int y1, int x2, int y2, int x3, int y3, const Pixel& col);
+	void rasterize(const Triangle& t);
 
-	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
+	bool edge_function(float x1, float y1, float x2, float y2, const math::Vec2<float>& p);
 
 	Pixel get_colour(float lum);
 
 	void set_pixel(int x, int y, const Pixel& col);
 
 	void clear_frame_buffer();
+	
+	void clear_depth_buffer();
 	
 	inline void point_at(const math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
@@ -66,5 +68,5 @@ private:
 
 	unsigned int m_screen_width, m_screen_height, m_buffer_size;
 	std::unique_ptr<Pixel> m_frame_buffer;
-
+	std::vector<float> m_depth_buffer;
 };

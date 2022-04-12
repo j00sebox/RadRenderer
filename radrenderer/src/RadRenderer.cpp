@@ -12,6 +12,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
 	m_object(Object("res/objs/teapot.obj")),
+	m_depth_buffer(m_buffer_size, -9999),
 	rotate_angle(0.f)
 {
 	clear_frame_buffer();
@@ -47,7 +48,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	//rotate_angle += 1.0f * elapsed_time * 0.001f;
+	rotate_angle += 1.0f * elapsed_time * 0.001f;
 
 	// update rotation matrices
 	x_rotation.set(
@@ -174,64 +175,65 @@ Pixel* RadRenderer::update(float elapsed_time)
 
 	}
 
-	// sort triangles by their average z value
-	std::sort(renderTriangles.begin(), renderTriangles.end(), [](const Triangle& tri1, const Triangle& tri2) {
-		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
-		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
-
-		if (avg_z1 > avg_z2)
-			return true;
-		else
-			return false;
-		});
-
-	// painter's algo
 	for (const auto& t : renderTriangles)
 	{
-		rasterize(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.colour);
+		rasterize(t);
 	}
 
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
+	clear_depth_buffer();
 
 	return m_frame_buffer.get();
 }
 
-void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, const Pixel& col)
+void RadRenderer::rasterize(const Triangle& t)
 {
 	int min_x, max_x;
 	int min_y, max_y;
 
 	// bounding box
-	min_x = std::min(x1, x2);
-	min_x = std::min(min_x, x3);
+	min_x = std::min(t.vertices[0].x, t.vertices[1].x);
+	min_x = std::min(min_x, (int)t.vertices[2].x);
 
-	max_x = std::max(x1, x2);
-	max_x = std::max(max_x, x3);
+	max_x = std::max(t.vertices[0].x, t.vertices[1].x);
+	max_x = std::max(max_x, (int)t.vertices[2].x);
 
-	min_y = std::min(y1, y2);
-	min_y = std::min(min_y, y3);
+	min_y = std::min(t.vertices[0].y, t.vertices[1].y);
+	min_y = std::min(min_y, (int)t.vertices[2].y);
 
-	max_y = std::max(y1, y2);
-	max_y = std::max(max_y, y3);
+	max_y = std::max(t.vertices[0].y, t.vertices[1].y);
+	max_y = std::max(max_y, (int)t.vertices[2].y);
 
 	for (int y = min_y; y < max_y; y++)
 	{
 		for (int x = min_x; x < max_x; x++)
 		{
+			
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
-			if (edge_function(x1, y1, x2, y2, p) &&
-				edge_function(x2, y2, x3, y3, p) &&
-				edge_function(x3, y3, x1, y1, p))
+			if (edge_function(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, p) &&
+				edge_function(t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, p) &&
+				edge_function(t.vertices[2].x, t.vertices[2].y, t.vertices[0].x, t.vertices[0].y, p))
 			{
-				set_pixel(x, y, col);
+				float avg_z = (t.vertices[0].z + t.vertices[1].z + t.vertices[2].z) / 3.0f;
+
+				if (x >= 0 && x < m_screen_width && y >= 0 && y < m_screen_height)
+				{
+					if (avg_z > m_depth_buffer[y * m_screen_width + x])
+					{
+						set_pixel(x, y, t.colour);
+
+						m_depth_buffer[y * m_screen_width + x] = avg_z;
+					}
+				}
 			}
+			
 		}
 	}
 }
 
-bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p)
+bool RadRenderer::edge_function(float x1, float y1, float x2, float y2, const math::Vec2<float>& p)
 {
 	int res = (p.x - x1) * (y2 - y1) - (p.y - y1) * (x2 - x1);
 	return (res > 0);
@@ -254,6 +256,12 @@ void RadRenderer::set_pixel(int x, int y, const Pixel& col)
 void RadRenderer::clear_frame_buffer()
 {
 	m_frame_buffer.reset(new Pixel[m_buffer_size]);
+}
+
+void RadRenderer::clear_depth_buffer()
+{
+	for (auto& f : m_depth_buffer)
+		f = -9999;
 }
 
 // Takes the current camera position and translates it based on the user input
