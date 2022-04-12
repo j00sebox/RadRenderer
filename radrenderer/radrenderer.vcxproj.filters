@@ -6,7 +6,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\RadRenderer.h" />
+    <ClInclude Include="src\RendererSettings.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\math\Matrix.h">
       <Filter>math</Filter>
@@ -14,13 +16,13 @@
     <ClInclude Include="src\math\Vector.h">
       <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="src\RendererSettings.h" />
-    <ClInclude Include="src\Object.h" />
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\RadRenderer.cpp" />
     <ClCompile Include="src\Window.cpp" />
-    <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pch.cpp" />
   </ItemGroup>
 </Project>

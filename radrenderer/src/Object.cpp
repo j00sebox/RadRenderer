@@ -1,8 +1,5 @@
+#include "pch.h"
 #include "Object.h"
-
-#include <fstream>
-#include <strstream>
-#include <iostream>
 
 Object::Object(const std::string& fname)
 {

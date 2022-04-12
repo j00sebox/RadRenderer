@@ -1,7 +1,5 @@
+#include "pch.h"
 #include "RadRenderer.h"
-
-#include <iostream>
-#include <algorithm>
 
 #define DEG_TO_RAD(x) ( x / 180.0f * 3.14159f  )
 

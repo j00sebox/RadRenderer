@@ -1,13 +1,8 @@
+#include "pch.h"
+
 #include "Window.h"
 
 #include "RendererSettings.h"
-
-#include <iostream>
-#include <string>
-
-#ifdef PLATFORM_LINUX
-#include <signal.h>
-#endif
 
 Window* Window::m_instance = nullptr;
 
@@ -49,10 +44,7 @@ Window::Window(unsigned int width, unsigned int height)
 
 }
 
-Window::~Window()
-{
-
-}
+Window::~Window() {}
 
 void Window::loop()
 {
