@@ -1,6 +1,7 @@
 #include "RadRenderer.h"
 
 #include <iostream>
+#include <algorithm>
 
 #define DEG_TO_RAD(x) ( x / 180.0f * 3.14159f  )
 
@@ -10,11 +11,10 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
+	m_object(Object("res/objs/ship.obj")),
 	rotate_angle(0.f)
 {
 	clear_frame_buffer();
-
-	object = load_obj_file("res/objs/ship.obj");
 
 	float m_fovRAD = DEG_TO_RAD(m_fov);
 	float scaling_factor = 1.0f / tanf(m_fovRAD * 0.5f);
@@ -75,7 +75,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	cam_inv = look_at(cam_dir);
 
 	// iterate through all triangles in the object
-	for (auto o : object)
+	for (auto o : m_object)
 	{
 		// rotate around z-axis
 		transform_tri(o, z_rotation);
@@ -108,7 +108,6 @@ Pixel* RadRenderer::update(float elapsed_time)
 			+ normal.y * o.vertices[0].y - m_camera.y
 			+ normal.z * o.vertices[0].z - m_camera.z) < 0)
 		{
-			// Dot product is used to determine how direct the light is hitting the traingle to determine what shade it should be
 			float lum = normal.dot(lighting);
 			Pixel colour = get_colour(lum);
 
@@ -117,7 +116,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
 
-			if (num_clipped > 0) // traingle has been clipped
+			if (num_clipped > 0)
 			{
 				for (int c = 0; c < num_clipped; c++)
 				{
@@ -143,13 +142,12 @@ Pixel* RadRenderer::update(float elapsed_time)
 					clipped_tris[c].vertices[2].x *= 0.5f * (float)m_screen_width;
 					clipped_tris[c].vertices[2].y *= 0.5f * (float)m_screen_height;
 
-					// Assign color to the triangle
 					clipped_tris[c].colour = colour;
 
 					renderTriangles.push_back(clipped_tris[c]);
 				}
 			}
-			else if (num_clipped == 0) // no new triangles needed
+			else if (num_clipped == 0)
 			{
 				transform_tri(o, m_projection);
 
@@ -172,7 +170,6 @@ Pixel* RadRenderer::update(float elapsed_time)
 				o.vertices[2].x *= 0.5f * (float)m_screen_width;
 				o.vertices[2].y *= 0.5f * (float)m_screen_height;
 
-				// Assign color to the triangle
 				o.colour = colour;
 
 				renderTriangles.push_back(o);
@@ -183,7 +180,6 @@ Pixel* RadRenderer::update(float elapsed_time)
 	}
 
 	// sort triangles by their average z value
-	// higher z values mean the traingle should be rendered later aka farther away from front of screen
 	std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
 		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
 		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
@@ -194,7 +190,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 			return false;
 		});
 
-	// render all the triangles in order now 
+	// painter's algo
 	for (const auto& t : renderTriangles)
 	{
 		rasterize(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, t.colour);
@@ -211,6 +207,7 @@ void RadRenderer::rasterize(int x1, int y1, int x2, int y2, int x3, int y3, cons
 	int min_x, max_x;
 	int min_y, max_y;
 
+	// bounding box
 	min_x = std::min(x1, x2);
 	min_x = std::min(min_x, x3);
 
@@ -247,7 +244,7 @@ bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, const math::Vec2
 
 Pixel RadRenderer::get_colour(float lum)
 {
-	Pixel p = { 255 * lum, 255 * lum, 255 * lum, 255 };
+	Pixel p = { (std::uint8_t)(255 * lum), (std::uint8_t)(255 * lum), (std::uint8_t)(255 * lum), 255 };
 	return p;
 }
 
@@ -293,9 +290,7 @@ inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>
 
 math::Mat4<float> RadRenderer::look_at(math::Mat4<float>& pointAt)
 {
-	// in order to give the appearance of user/camera movement
-	// the inverse of the point_at is needed for the transfoemation
-	// so that all the other points in the frame get shifted.
+	// inverse of camera transform
 	return pointAt.inverse();
 }
 
@@ -403,52 +398,6 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	}
 	else if (in_verts == 0)
 		return -1; // triangle lies outside of screen so it should be discarded
-}
-
-std::vector<Triangle> RadRenderer::load_obj_file(std::string fname)
-{
-	std::ifstream readFile;
-	readFile.open(fname);
-
-	if (!readFile.is_open())
-	{
-		std::cout << "Cannot open file!";
-	}
-
-	math::Vec3<float> vertex;
-	std::vector<math::Vec3<float>> vertices;
-
-	std::vector<Triangle> triangles;
-
-	std::string line;
-
-	char startingChar; // Stores the starting character of the line
-
-	int i1, i2, i3; // indexes of the vertices
-
-	// iterate through all lines in file
-	while (std::getline(readFile, line))
-	{
-		std::strstream st;
-		st << line;
-
-		// indicates vertex data
-		if (line[0] == 'v')
-		{
-			st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
-			vertices.emplace_back(vertex);
-		}
-		// indicates traingle face data
-		else if (line[0] == 'f')
-		{
-			st >> startingChar >> i1 >> i2 >> i3;
-			triangles.push_back(
-				{  vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1] }
-			);
-		}
-	}
-
-	return triangles;
 }
 
 void RadRenderer::transform_tri(Triangle& tri, const math::Mat4<float>& transform)

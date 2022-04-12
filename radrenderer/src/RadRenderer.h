@@ -1,24 +1,7 @@
-#include <algorithm>
-#include <string>
-#include <fstream>
-#include <strstream>
-
 #include "RendererSettings.h"
+#include "Object.h"
 
-#include "math/Matrix.h"
-#include "math/Vector.h"
-
-struct Pixel
-{
-	std::uint8_t r, g, b, a;
-};
-
-struct Triangle
-{
-	math::Vec3<float> vertices[3];
-
-	Pixel colour;
-};
+#include <memory>
 
 class RadRenderer
 {
@@ -47,14 +30,11 @@ protected:
 	math::Vec3<float>& line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
 
 	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
-
-	// loads vertex and face data from txt file realting to obj file
-	std::vector<Triangle> load_obj_file(std::string fname);
 	
 	inline void transform_tri(Triangle& tri, const math::Mat4<float>& transform);
 
 private:
-	std::vector<Triangle> object;
+	Object m_object;
 
 	float m_far, m_near, m_fov; 
 
@@ -84,7 +64,7 @@ private:
 
 	math::Vec3<float> camera_plane;
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
-	int num_clipped = 0; // holds the number of triangles produced by clippinf function
+	int num_clipped = 0; // holds the number of clipped triangles
 
 	unsigned int m_screen_width, m_screen_height, m_buffer_size;
 	std::unique_ptr<Pixel> m_frame_buffer;
