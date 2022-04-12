@@ -18,4 +18,10 @@ End Result:
 
 ![Teapot](/screenshots/teapot.PNG)
 
+## Things I Want To Do
+
+- Add depth buffer
+- Implement Gouraud shading
+- SIMD math operations
+- Textures
 
