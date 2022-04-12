@@ -16,14 +16,8 @@ namespace math {
 	class Mat4
 	{
 	public:
+		Mat4() { }
 
-		// default matrix is identity
-		T mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
-
-		Mat4() {};
-
-		// work around since you can't assign arrays after intialize
-		// seems beter than using std::array
 		Mat4(T m00, T m01, T m02, T m03,
 			T m10, T m11, T m12, T m13,
 			T m20, T m21, T m22, T m23,
@@ -73,7 +67,7 @@ namespace math {
 		}
 
 		// computes the inverse of the matrix using the Gauss-Jordan elimination method
-		Mat4<T> inverse()
+		inline Mat4<T> inverse()
 		{
 			// a copy of the original matrix is needed to perform the neccessary operations on
 			Mat4 orig(*this);
@@ -188,7 +182,7 @@ namespace math {
 			return res;
 		};
 
-		void mat_mul_vec(Vec3<T>& vec) const
+		inline void mat_mul_vec(Vec3<T>& vec) const
 		{
 			float w;
 
@@ -226,8 +220,11 @@ namespace math {
 		}
 
 		// allows value to be accessed easier
-		float operator () (int i, int j) { return mat[i][j]; };
+		inline T& operator () (int i, int j) { return mat[i][j]; };
 
+	private:
+		// default matrix is identity
+		T mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
 	};
 
 }

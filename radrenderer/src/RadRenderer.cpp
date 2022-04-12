@@ -49,9 +49,6 @@ Pixel* RadRenderer::update(float elapsed_time)
 
 	rotate_angle += 1.0f * elapsed_time * 0.001f;
 
-	// multiply look_dir by the speed you want to move to get the player's forward velocity
-	look_dir.scalar_mul(fVelocity, 8.0f * elapsed_time);
-
 	// update rotation matrices
 	x_rotation.set(
 		1, 0, 0, 0,
@@ -67,12 +64,12 @@ Pixel* RadRenderer::update(float elapsed_time)
 		cosf(facing_dir), 0, sinf(facing_dir), 0,
 		0, 0, 1, 0,
 		-sinf(facing_dir), 0, cosf(facing_dir), 0,
-		0, 0, 0, 1); // this one rotates player's perspective rather than object
+		0, 0, 0, 1); 
 
 	// camera transform
 	point_at(m_camera, target, vUp, cam_dir);
 
-	cam_inv = look_at(cam_dir);
+	cam_inv = cam_dir.inverse();
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
@@ -180,7 +177,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	}
 
 	// sort triangles by their average z value
-	std::sort(renderTriangles.begin(), renderTriangles.end(), [](Triangle& tri1, Triangle& tri2) {
+	std::sort(renderTriangles.begin(), renderTriangles.end(), [](const Triangle& tri1, const Triangle& tri2) {
 		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
 		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
 
@@ -262,7 +259,7 @@ void RadRenderer::clear_frame_buffer()
 }
 
 // Takes the current camera position and translates it based on the user input
-inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4)
+inline void RadRenderer::point_at(const math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& mat)
 {
 	// The new forward vector aka where the camera is pointing
 	math::Vec3<float> nForward;
@@ -281,27 +278,18 @@ inline void RadRenderer::point_at(math::Vec3<float>& point_to, math::Vec3<float>
 	nUp.cross(nForward, nRight);
 
 	// Set up camera direction Mat4
-	pMat4.mat[0][0] = nRight.x;			pMat4.mat[0][1] = nRight.y;			pMat4.mat[0][2] = nRight.z;			pMat4.mat[0][3] = 0.0f;
-	pMat4.mat[1][0] = nUp.x;			pMat4.mat[1][1] = nUp.y;			pMat4.mat[1][2] = nUp.z;			pMat4.mat[1][3] = 0.0f;
-	pMat4.mat[2][0] = nForward.x;		pMat4.mat[2][1] = nForward.y;		pMat4.mat[2][2] = nForward.z;		pMat4.mat[2][3] = 0.0f;
-	pMat4.mat[3][0] = point_to.x;		pMat4.mat[3][1] = point_to.y;		pMat4.mat[3][2] = point_to.z;		pMat4.mat[3][3] = 1.0f;
-}
-
-
-math::Mat4<float> RadRenderer::look_at(math::Mat4<float>& pointAt)
-{
-	// inverse of camera transform
-	return pointAt.inverse();
+	mat(0, 0) = nRight.x;		mat(0, 1) = nRight.y;		mat(0, 2) = nRight.z;		mat(0, 3) = 0.0f;
+	mat(1, 0) = nUp.x;			mat(1, 1) = nUp.y;			mat(1, 2) = nUp.z;			mat(1, 3) = 0.0f;
+	mat(2, 0) = nForward.x;		mat(2, 1) = nForward.y;		mat(2, 2) = nForward.z;		mat(2, 3) = 0.0f;
+	mat(3, 0) = point_to.x;		mat(3, 1) = point_to.y;		mat(3, 2) = point_to.z;		mat(3, 3) = 1.0f;
 }
 
 // returns the point that the given plane and line intersect
-math::Vec3<float>& RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
+math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
 {
 	// always gotta normalize
 	plane_normal.normalize();
 
-	// algorithm to check if line intersects
-	// the point where the line intersects plane can be detemined with
 	// line_begin + line*t = p0 + p1*u + p2*v 
 	float np = -point.dot(plane_normal);
 	float dotb = line_begin.dot(plane_normal);
@@ -320,20 +308,18 @@ math::Vec3<float>& RadRenderer::line_plane_intersect(math::Vec3<float>& point, m
 	return line;
 }
 
-// this returns the resulting number of traingles after a clip but will sotre those triangles in the res_tri parameters
+// this returns the resulting number of traingles after a clip but will sort those triangles in the res_tri parameters
 int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
 
-	// form the equation: x*Nx + y*Ny + z*Nz - N•P = 0
-	// where P is a point on the plane and N is a normal vector to the plane
-	// can be used to calculate distance of point from a plane
+	// from the equation: x*Nx + y*Ny + z*Nz - N•P = 0
 	auto calc_distance = [&](math::Vec3<float>& tri_vertex)
 	{
 		tri_vertex.normalize();
 		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
-	}; // if 0 then vertex is on the plane, if negative then the vertex is on the outside of the plane (screen edge) else it's on the inside
+	}; 
 
 	// calculate distance for each vertex
 	float d0 = calc_distance(ref_tri.vertices[0]);

@@ -62,19 +62,19 @@ namespace math {
 
 		Vec3(float c[3]) : x(c[0]), y(c[1]), z(c[2]) {}
 
-		void cross(Vec3& line, Vec3& normal)
+		inline void cross(Vec3& line, Vec3& normal)
 		{
 			normal.x = y * line.z - z * line.y;
 			normal.y = z * line.x - x * line.z;
 			normal.z = x * line.y - y * line.x;
 		}
 
-		float dot(Vec3& vec)
+		inline float dot(Vec3& vec)
 		{
 			return x * vec.x + y * vec.y + z * vec.z;
 		}
 
-		void normalize()
+		inline void normalize()
 		{
 			float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
@@ -83,28 +83,28 @@ namespace math {
 			z /= normalize;
 		}
 
-		void subtract(Vec3& inputVec, Vec3& outVec)
+		inline void subtract(const Vec3& inputVec, Vec3& outVec) const
 		{
 			outVec.x = x - inputVec.x;
 			outVec.y = y - inputVec.y;
 			outVec.z = z - inputVec.z;
 		}
 
-		void scalar_mul(Vec3& outVec, float scalar)
+		inline void scalar_mul(Vec3& outVec, float scalar) const
 		{
 			outVec.x = scalar * x;
 			outVec.y = scalar * y;
 			outVec.z = scalar * z;
 		}
 
-		void add(Vec3& a, Vec3& outVec)
+		inline void add(const Vec3& a, Vec3& outVec) const
 		{
 			outVec.x = x + a.x;
 			outVec.y = y + a.y;
 			outVec.z = z + a.z;
 		}
 
-		void operator = (std::vector<T> f)
+		inline void operator = (const std::vector<T>& f)
 		{
 			x = f[0]; y = f[1]; z = f[2];
 		}
