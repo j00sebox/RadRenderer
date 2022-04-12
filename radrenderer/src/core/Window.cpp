@@ -71,8 +71,6 @@ void Window::loop()
 
             if (event.type == sf::Event::MouseMoved)
             {
-                printf("x: %i, y: %i\n", event.mouseMove.x, event.mouseMove.y);
-
                 if (mouse_down)
                 {
                     int x = event.mouseMove.x;

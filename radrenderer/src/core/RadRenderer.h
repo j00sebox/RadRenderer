@@ -16,11 +16,13 @@ public:
 protected:
 	void rasterize(const Triangle& t);
 
-	bool edge_function(float x1, float y1, float x2, float y2, const math::Vec2<float>& p);
+	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
 
 	Pixel get_colour(float lum);
 
 	void set_pixel(int x, int y, const Pixel& col);
+
+	std::pair<int, int> imagesp_to_screensp(float x, float y);
 
 	void clear_frame_buffer();
 	
@@ -65,6 +67,7 @@ private:
 	int num_clipped = 0; // holds the number of clipped triangles
 
 	unsigned int m_screen_width, m_screen_height, m_buffer_size;
+	int m_half_width, m_half_height; // caching these for later
 	std::unique_ptr<Pixel> m_frame_buffer;
 	std::vector<float> m_depth_buffer;
 };

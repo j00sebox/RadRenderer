@@ -6,6 +6,7 @@
 RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs)
 
 	: m_screen_width(screen_width), m_screen_height(screen_height),
+	m_half_width(screen_width/2), m_half_height(screen_height / 2),
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
@@ -110,25 +111,6 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 					// Convert all coordinates to projection space
 					transform_tri(clipped_tris[c], m_projection);
 
-					// Center the points and change the scale
-					clipped_tris[c].vertices[0].x += 1.0f;
-					clipped_tris[c].vertices[0].y += 1.0f;
-
-					clipped_tris[c].vertices[1].x += 1.0f;
-					clipped_tris[c].vertices[1].y += 1.0f;
-
-					clipped_tris[c].vertices[2].x += 1.0f;
-					clipped_tris[c].vertices[2].y += 1.0f;
-
-					clipped_tris[c].vertices[0].x *= 0.5f * (float)m_screen_width;
-					clipped_tris[c].vertices[0].y *= 0.5f * (float)m_screen_height;
-
-					clipped_tris[c].vertices[1].x *= 0.5f * (float)m_screen_width;
-					clipped_tris[c].vertices[1].y *= 0.5f * (float)m_screen_height;
-
-					clipped_tris[c].vertices[2].x *= 0.5f * (float)m_screen_width;
-					clipped_tris[c].vertices[2].y *= 0.5f * (float)m_screen_height;
-
 					clipped_tris[c].colour = colour;
 
 					renderTriangles.push_back(clipped_tris[c]);
@@ -138,32 +120,11 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 			{
 				transform_tri(o, m_projection);
 
-				// Center the points and change the scale
-				o.vertices[0].x += 1.0f;
-				o.vertices[0].y += 1.0f;
-
-				o.vertices[1].x += 1.0f;
-				o.vertices[1].y += 1.0f;
-
-				o.vertices[2].x += 1.0f;
-				o.vertices[2].y += 1.0f;
-
-				o.vertices[0].x *= 0.5f * (float)m_screen_width;
-				o.vertices[0].y *= 0.5f * (float)m_screen_height;
-
-				o.vertices[1].x *= 0.5f * (float)m_screen_width;
-				o.vertices[1].y *= 0.5f * (float)m_screen_height;
-
-				o.vertices[2].x *= 0.5f * (float)m_screen_width;
-				o.vertices[2].y *= 0.5f * (float)m_screen_height;
-
 				o.colour = colour;
 
 				renderTriangles.push_back(o);
 			}
-
 		}
-
 	}
 
 	for (const auto& t : renderTriangles)
@@ -173,7 +134,7 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
-	clear_depth_buffer();
+	//clear_depth_buffer();
 
 	return m_frame_buffer.get();
 }
@@ -183,48 +144,40 @@ void RadRenderer::rasterize(const Triangle& t)
 	int min_x, max_x;
 	int min_y, max_y;
 
+	math::Vec2<int> v0 = { imagesp_to_screensp(std::clamp(t.vertices[0].x, -1.f, 1.f), std::clamp(t.vertices[0].y, -1.f, 1.f)) };
+	math::Vec2<int> v1 = { imagesp_to_screensp(std::clamp(t.vertices[1].x, -1.f, 1.f), std::clamp(t.vertices[1].y, -1.f, 1.f)) };
+	math::Vec2<int> v2 = { imagesp_to_screensp(std::clamp(t.vertices[2].x, -1.f, 1.f), std::clamp(t.vertices[2].y, -1.f, 1.f)) };
+
 	// bounding box
-	min_x = std::min(t.vertices[0].x, t.vertices[1].x);
-	min_x = std::min(min_x, (int)t.vertices[2].x);
+	min_x = std::min(v0.x, v1.x);
+	min_x = std::min(min_x, v2.x);
 
-	max_x = std::max(t.vertices[0].x, t.vertices[1].x);
-	max_x = std::max(max_x, (int)t.vertices[2].x);
+	max_x = std::max(v0.x, v1.x);
+	max_x = std::max(max_x, v2.x);
 
-	min_y = std::min(t.vertices[0].y, t.vertices[1].y);
-	min_y = std::min(min_y, (int)t.vertices[2].y);
+	min_y = std::min(v0.y, v1.y);
+	min_y = std::min(min_y, v2.y);
 
-	max_y = std::max(t.vertices[0].y, t.vertices[1].y);
-	max_y = std::max(max_y, (int)t.vertices[2].y);
+	max_y = std::max(v0.y, v1.y);
+	max_y = std::max(max_y, v2.y);
 
 	for (int y = min_y; y < max_y; y++)
 	{
 		for (int x = min_x; x < max_x; x++)
 		{
-
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
-			if (edge_function(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, p) &&
-				edge_function(t.vertices[1].x, t.vertices[1].y, t.vertices[2].x, t.vertices[2].y, p) &&
-				edge_function(t.vertices[2].x, t.vertices[2].y, t.vertices[0].x, t.vertices[0].y, p))
+			if (edge_function(v0.x, v0.y, v1.x, v1.y, p) &&
+				edge_function(v1.x, v1.y, v2.x, v2.y, p) &&
+				edge_function(v2.x, v2.y, v0.x, v0.y, p))
 			{
-				float avg_z = (t.vertices[0].z + t.vertices[1].z + t.vertices[2].z) / 3.0f;
-
-				if (x >= 0 && x < m_screen_width && y >= 0 && y < m_screen_height)
-				{
-					if (avg_z > m_depth_buffer[y * m_screen_width + x])
-					{
-						set_pixel(x, y, t.colour);
-
-						m_depth_buffer[y * m_screen_width + x] = avg_z;
-					}
-				}
+				set_pixel(x, y, t.colour);	
 			}
-
 		}
 	}
 }
 
-bool RadRenderer::edge_function(float x1, float y1, float x2, float y2, const math::Vec2<float>& p)
+bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p)
 {
 	int res = (p.x - x1) * (y2 - y1) - (p.y - y1) * (x2 - x1);
 	return (res > 0);
@@ -238,10 +191,15 @@ Pixel RadRenderer::get_colour(float lum)
 
 void RadRenderer::set_pixel(int x, int y, const Pixel& col)
 {
-	if (x >= 0 && x < m_screen_width && y >= 0 && y < m_screen_height)
-	{
-		m_frame_buffer.get()[y * m_screen_width + x] = col;
-	}
+	m_frame_buffer.get()[y * m_screen_width + x] = col;
+}
+
+std::pair<int, int> RadRenderer::imagesp_to_screensp(float x, float y)
+{
+	x = m_half_width * x + m_half_width;
+	y = m_half_height * y + m_half_height;
+
+	return { (int)x, (int)y };
 }
 
 void RadRenderer::clear_frame_buffer()

@@ -10,6 +10,12 @@ namespace math {
 
 		Vec2(T _x, T _y) : x(_x), y(_y) {}
 
+		Vec2(std::pair<T, T> pair)
+		{
+			x = pair.first;
+			y = pair.second;
+		}
+
 		float cross(Vec2& line)
 		{
 			return (x * line.y) - (y * line.x);
