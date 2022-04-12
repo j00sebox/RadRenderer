@@ -15,11 +15,11 @@ Window::Window(unsigned int width, unsigned int height)
     : m_width(width), m_height(height), m_renderer(width, height)
 {
     if (m_instance)
-    #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
         __debugbreak();
-    #else
+#elif PLATFORM_LINUX
         raise(SIGTRAP);
-    #endif
+#endif
 
     m_instance = this;
 
@@ -31,13 +31,17 @@ Window::Window(unsigned int width, unsigned int height)
 
     m_window.setVerticalSyncEnabled(true);
 
+#ifdef PLATFORM_WINDOWS
+    if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
+#elif PLATFORM_LINUX
     if (!m_font.loadFromFile("./radrenderer/res/fonts/arial_narrow_7.ttf"))
+#endif
     {
-      #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
           __debugbreak();
-      #else
-          raise(SIGTRAP);
-      #endif
+#elif PLATFORM_LINUX
+        raise(SIGTRAP);
+#endif
     }
 
     m_fps = sf::Text("0", m_font, 25);
