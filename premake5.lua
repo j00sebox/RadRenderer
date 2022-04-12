@@ -1,5 +1,4 @@
 workspace "radrenderer"
-	architecture "x86"
 	startproject "radrenderer"
 
 	configurations
@@ -24,36 +23,48 @@ project "radrenderer"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp"
 	}
-	
+
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vendor/sfml/include"
-	}
-
-	libdirs { "%{prj.name}/vendor/sfml/lib" }
-
-	links 
-	{ 
-		"opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "openal32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
+		architecture "x86"
 		systemversion "latest"
 
 		defines { "PLATFORM_WINDOWS", "SFML_STATIC" }
-		filter "configurations:Debug"
-		
 
-	filter "configurations:Debug"
+		includedirs
+		{
+			"%{prj.name}/vendor/sfml/include"
+		}
+
+		libdirs { "%{prj.name}/vendor/sfml/lib" }
+
+		links
+		{
+			"opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "openal32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib"
+		}
+
+	filter "system:linux"
+		architecture "x64"
+		systemversion "latest"
+
+		defines { "PLATFORM_LINUX" }
+
+		libdirs { "/usr/lib/x86_64-linux-gnu/" }
+
+		links { "sfml-graphics", "sfml-window", "sfml-system" }
+
+	filter { "system:windows", "configurations:Debug" }
 		defines "DEBUG"
 		runtime "Debug"
 		symbols "On"
 
 		links { "sfml-audio-s-d.lib", "sfml-graphics-s-d.lib", "sfml-network-s-d.lib", "sfml-system-s-d.lib", "sfml-window-s-d.lib" }
 
-	  filter "configurations:Release"
+	filter { "system:windows", "configurations:Release" }
 		defines "RELEASE"
 		runtime "Release"
 		optimize "On"

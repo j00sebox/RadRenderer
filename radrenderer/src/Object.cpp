@@ -12,11 +12,11 @@ Object::Object(const std::string& fname)
 std::vector<Triangle> Object::load_obj_file(const std::string& fname)
 {
 	std::ifstream readFile;
-	readFile.open(fname);
+	readFile.open(fname, std::ifstream::in);
 
 	if (!readFile.is_open())
 	{
-		std::cout << "Cannot open file!";
+		std::cout << "Cannot open file!\n";
 	}
 
 	math::Vec3<float> vertex;
@@ -48,7 +48,7 @@ std::vector<Triangle> Object::load_obj_file(const std::string& fname)
 			st >> startingChar >> i1 >> i2 >> i3;
 			triangles.push_back(
 				{ vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1] }
-			); 
+			);
 		}
 	}
 

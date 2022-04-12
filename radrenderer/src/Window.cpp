@@ -5,13 +5,21 @@
 #include <iostream>
 #include <string>
 
+#ifdef PLATFORM_LINUX
+#include <signal.h>
+#endif
+
 Window* Window::m_instance = nullptr;
 
 Window::Window(unsigned int width, unsigned int height)
     : m_width(width), m_height(height), m_renderer(width, height)
 {
     if (m_instance)
+    #ifdef PLATFORM_WINDOWS
         __debugbreak();
+    #else
+        raise(SIGTRAP);
+    #endif
 
     m_instance = this;
 
@@ -23,18 +31,23 @@ Window::Window(unsigned int width, unsigned int height)
 
     m_window.setVerticalSyncEnabled(true);
 
-    if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
+    if (!m_font.loadFromFile("./radrenderer/res/fonts/arial_narrow_7.ttf"))
     {
-        __debugbreak();
+      #ifdef PLATFORM_WINDOWS
+          __debugbreak();
+      #else
+          raise(SIGTRAP);
+      #endif
     }
 
     m_fps = sf::Text("0", m_font, 25);
     m_fps.setFillColor(sf::Color::Red);
+
 }
 
 Window::~Window()
 {
-    
+
 }
 
 void Window::loop()

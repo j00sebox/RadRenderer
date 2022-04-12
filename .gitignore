@@ -167,3 +167,7 @@ bin-int/*
 
 # SFML
 radrenderer/vendor/sfml/*
+
+# Makefiles
+*/Makefile
+Makefile

@@ -57,7 +57,7 @@ namespace math {
 		// swap rows are columns of the matrix
 		Mat4<T> transpose()
 		{
-			Matrix4x4<T> result;
+			Mat4<T> result;
 
 			for (int i = 0; i < 4; i++)
 				for (int j = 0; j < 4; j++)
@@ -156,9 +156,9 @@ namespace math {
 		}
 
 		// add two matrices together
-		Mat4 operator + (Mat4 const& obj)
+		Mat4<T> operator + (Mat4<T> const& obj)
 		{
-			Mat4 res;
+			Mat4<T> res;
 
 			for (int row = 0; row < 4; row++)
 				for (int column = 0; column < 4; column++)
@@ -168,9 +168,9 @@ namespace math {
 		}
 
 		// subtract matrix from another
-		Mat4 operator - (Mat4 const& obj)
+		Mat4<T> operator - (Mat4<T> const& obj)
 		{
-			Mat4 res;
+			Mat4<T> res;
 
 			for (int row = 0; row < 4; row++)
 				for (int column = 0; column < 4; column++)

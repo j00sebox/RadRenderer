@@ -11,7 +11,11 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
+#ifdef PLATFORM_LINUX
+	m_object(Object("./radrenderer/res/objs/teapot.obj")),
+#elif PLATFORM_WINDOWS
 	m_object(Object("res/objs/teapot.obj")),
+#endif
 	m_depth_buffer(m_buffer_size, -9999),
 	rotate_angle(0.f)
 {
@@ -65,7 +69,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 		cosf(facing_dir), 0, sinf(facing_dir), 0,
 		0, 0, 1, 0,
 		-sinf(facing_dir), 0, cosf(facing_dir), 0,
-		0, 0, 0, 1); 
+		0, 0, 0, 1);
 
 	// camera transform
 	point_at(m_camera, target, vUp, cam_dir);
@@ -209,7 +213,7 @@ void RadRenderer::rasterize(const Triangle& t)
 	{
 		for (int x = min_x; x < max_x; x++)
 		{
-			
+
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
 			if (edge_function(t.vertices[0].x, t.vertices[0].y, t.vertices[1].x, t.vertices[1].y, p) &&
@@ -228,7 +232,7 @@ void RadRenderer::rasterize(const Triangle& t)
 					}
 				}
 			}
-			
+
 		}
 	}
 }
@@ -296,7 +300,7 @@ math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, ma
 	// always gotta normalize
 	plane_normal.normalize();
 
-	// line_begin + line*t = p0 + p1*u + p2*v 
+	// line_begin + line*t = p0 + p1*u + p2*v
 	float np = -point.dot(plane_normal);
 	float dotb = line_begin.dot(plane_normal);
 	float dote = line_end.dot(plane_normal);
@@ -320,12 +324,12 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	// make sure it's normalized
 	plane_normal.normalize();
 
-	// from the equation: x*Nx + y*Ny + z*Nz - N•P = 0
+	// from the equation: x*Nx + y*Ny + z*Nz - Nï¿½P = 0
 	auto calc_distance = [&](math::Vec3<float>& tri_vertex)
 	{
 		tri_vertex.normalize();
 		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
-	}; 
+	};
 
 	// calculate distance for each vertex
 	float d0 = calc_distance(ref_tri.vertices[0]);
