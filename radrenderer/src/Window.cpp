@@ -48,6 +48,12 @@ Window::~Window() {}
 
 void Window::loop()
 {
+    bool mouse_down = false;
+    int prev_x, prev_y;
+
+    float rotate_x = 0.f;
+    float rotate_y = 0.f;
+
     while (m_window.isOpen())
     {
         // events
@@ -56,11 +62,62 @@ void Window::loop()
         {
             if (event.type == sf::Event::Closed)
                 m_window.close();
+
+            if (event.type == sf::Event::MouseButtonPressed)
+                mouse_down = true;
+
+            if (event.type == sf::Event::MouseButtonReleased)
+                mouse_down = false;
+
+            if (event.type == sf::Event::MouseMoved)
+            {
+                printf("x: %i, y: %i\n", event.mouseMove.x, event.mouseMove.y);
+
+                if (mouse_down)
+                {
+                    int x = event.mouseMove.x;
+                    int y = event.mouseMove.y;
+
+                    if ((x - prev_x) > 2)
+                    {
+                        rotate_y = -1.f;
+                    }
+                    else if ((x - prev_x) < -2)
+                    {
+                        rotate_y = 1.f;
+                    }
+                    else
+                    {
+                        rotate_y = 0.f;
+                    }
+
+                    if ((y - prev_y) > 2)
+                    {
+                        rotate_x = -1.f;
+                    }
+                    else if ((y - prev_y) < -2)
+                    {
+                        rotate_x = 1.f;
+                    }
+                    else
+                    {
+                        rotate_x = 0.f;
+                    }
+                }
+
+                prev_x = event.mouseMove.x;
+                prev_y = event.mouseMove.y;
+            }
+            else
+            {
+                rotate_x = 0.f;
+                rotate_y = 0.f;
+            }
         }
 
         sf::Time elapsed = m_clock.restart();
 
-        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.update(elapsed.asMilliseconds()));
+        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.update(elapsed.asMilliseconds(), rotate_x, rotate_y));
 
         float fps = 1.f / elapsed.asSeconds();
 

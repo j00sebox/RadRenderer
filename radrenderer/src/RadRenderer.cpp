@@ -15,7 +15,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_object(Object("res/objs/teapot.obj")),
 #endif
 	m_depth_buffer(m_buffer_size, -9999),
-	rotate_angle(0.f)
+	m_rotate_angle_x(0.f), m_rotate_angle_y(0.f)
 {
 	clear_frame_buffer();
 
@@ -45,28 +45,29 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_camera = { 0.0f, 0.0f, 0.0f };
 }
 
-Pixel* RadRenderer::update(float elapsed_time)
+Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 {
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	rotate_angle += 1.0f * elapsed_time * 0.001f;
+	m_rotate_angle_x += rotate_x * elapsed_time * 0.001f;
+	m_rotate_angle_y += rotate_y * elapsed_time * 0.001f;
 
 	// update rotation matrices
 	x_rotation.set(
 		1, 0, 0, 0,
-		0, cosf(rotate_angle * 0.5f), sinf(rotate_angle * 0.5f), 0,
-		0, -sinf(rotate_angle * 0.5f), cosf(rotate_angle * 0.5f), 0,
+		0, cosf(m_rotate_angle_x), sinf(m_rotate_angle_x), 0,
+		0, -sinf(m_rotate_angle_x), cosf(m_rotate_angle_x), 0,
 		0, 0, 0, 1);
-	z_rotation.set(
+	/*z_rotation.set(
 		cosf(rotate_angle), sinf(rotate_angle), 0, 0,
 		-sinf(rotate_angle), cosf(rotate_angle), 0, 0,
 		0, 0, 1, 0,
-		0, 0, 0, 1);
+		0, 0, 0, 1);*/
 	y_rotation.set(
-		cosf(facing_dir), 0, sinf(facing_dir), 0,
-		0, 0, 1, 0,
-		-sinf(facing_dir), 0, cosf(facing_dir), 0,
+		cosf(m_rotate_angle_y), 0, sinf(m_rotate_angle_y), 0,
+		0, 1, 0, 0,
+		-sinf(m_rotate_angle_y), 0, cosf(m_rotate_angle_y), 0,
 		0, 0, 0, 1);
 
 	// camera transform
@@ -78,10 +79,13 @@ Pixel* RadRenderer::update(float elapsed_time)
 	for (auto o : m_object)
 	{
 		// rotate around z-axis
-		transform_tri(o, z_rotation);
+		//transform_tri(o, z_rotation);
 
 		// rotate around x-axis
 		transform_tri(o, x_rotation);
+
+		// rotate around y-axis
+		transform_tri(o, y_rotation);
 
 		// move object back so it is in view of the camera
 		o.vertices[0].z += 6.0f;

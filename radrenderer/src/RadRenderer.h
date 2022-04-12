@@ -10,7 +10,7 @@ public:
 
 	~RadRenderer() {}
 
-	Pixel* update(float elapsed_time);
+	Pixel* update(float elapsed_time, float rotate_x, float rotate_y);
 
 protected:
 	void rasterize(const Triangle& t);
@@ -38,7 +38,7 @@ private:
 
 	float m_far, m_near, m_fov; 
 
-	float rotate_angle; // perodically changing to give the appearance that the object is rotating
+	float m_rotate_angle_x, m_rotate_angle_y;
 
 	float facing_dir;
 
