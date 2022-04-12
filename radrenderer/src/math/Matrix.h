@@ -69,9 +69,6 @@ namespace math {
 		// computes the inverse of the matrix using the Gauss-Jordan elimination method
 		inline Mat4<T> inverse()
 		{
-			// a copy of the original matrix is needed to perform the neccessary operations on
-			Mat4 orig(*this);
-
 			// an identity matrix is needed to keep track of all the operations done on the original matrix
 			// this ends up becoming the inverse
 			Mat4 inv;
@@ -80,7 +77,7 @@ namespace math {
 			for (int i = 0; i < 4; i++)
 			{
 				// pivot points are the elements on the diagonal
-				int pivot = orig.mat[i][i];
+				int pivot = mat[i][i];
 
 				// if a pivot is 0 it must be swapped with another row that is a value other than 0
 				if (pivot == 0)
@@ -91,14 +88,14 @@ namespace math {
 					// check all elements in the column for the largest absolute value
 					for (int j = 0; j < 4; j++)
 					{
-						if (std::abs(orig.mat[j][i]) > std::abs(orig.mat[bestOption][i]))
+						if (std::abs(mat[j][i]) > std::abs(mat[bestOption][i]))
 						{
 							bestOption = j;
 						}
 					}
 
 					// if all the elements in the column are 0 then this matrix is Singular
-					if (orig.mat[i][bestOption] == 0)
+					if (mat[i][bestOption] == 0)
 					{
 						fprintf(stderr, "Matrix has no inverse!\n");
 					}
@@ -108,9 +105,9 @@ namespace math {
 
 						for (int j = 0; j < 4; j++)
 						{
-							temp = orig.mat[i][j];
-							orig.mat[i][j] = orig.mat[bestOption][j];
-							orig.mat[bestOption][j] = temp;
+							temp = mat[i][j];
+							mat[i][j] = mat[bestOption][j];
+							mat[bestOption][j] = temp;
 
 							temp = inv.mat[i][j];
 							inv.mat[i][j] = inv.mat[bestOption][j];
@@ -126,13 +123,13 @@ namespace math {
 				{
 					if (i != j)
 					{
-						T q = orig.mat[j][i] / orig.mat[i][i];
+						T q = mat[j][i] / mat[i][i];
 
 						if (q != 0)
 						{
 							for (int k = 0; k < 4; k++)
 							{
-								orig.mat[j][k] -= q * orig.mat[i][k];
+								mat[j][k] -= q * mat[i][k];
 								inv.mat[j][k] -= q * inv.mat[i][k];
 							}
 						}
@@ -145,11 +142,11 @@ namespace math {
 			for (int i = 0; i < 4; i++)
 			{
 
-				if (orig.mat[i][i] != 1)
+				if (mat[i][i] != 1)
 				{
 					for (int j = 0; j < 4; j++)
 					{
-						inv.mat[i][j] /= orig.mat[i][i];
+						inv.mat[i][j] /= mat[i][i];
 					}
 				}
 			}

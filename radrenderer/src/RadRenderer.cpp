@@ -100,10 +100,8 @@ Pixel* RadRenderer::update(float elapsed_time)
 
 		normal.normalize();
 
-		// calculate the angle betwwen the normal and the camera projection to determine if the triangle is visible
-		if ((normal.x * o.vertices[0].x - m_camera.x
-			+ normal.y * o.vertices[0].y - m_camera.y
-			+ normal.z * o.vertices[0].z - m_camera.z) < 0)
+		// check if triangle is visible
+		if ( look_dir.dot(normal) < 0 )
 		{
 			float lum = normal.dot(lighting);
 			Pixel colour = get_colour(lum);
