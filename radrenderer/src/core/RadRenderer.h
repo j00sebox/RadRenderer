@@ -1,5 +1,6 @@
 #include "RendererSettings.h"
 #include "Object.h"
+#include "Camera.h"
 
 #include <memory>
 
@@ -36,21 +37,18 @@ protected:
 private:
 	Object m_object;
 
+	std::unique_ptr<Camera> m_camera;
+
 	float m_far, m_near, m_fov; 
-
-	float m_rotate_angle_x, m_rotate_angle_y;
-
-	float facing_dir;
+	float m_cam_angle_x, m_cam_angle_y, m_cam_angle_z;
 
 	// transforms
-	math::Mat4<float> m_projection, z_rotation, x_rotation, y_rotation, cam_dir, cam_inv;
+	math::Mat4<float> m_projection, cam_dir, cam_inv;
 
 	// Vectors to calculate the normal of triangle faces.
 	math::Vec3<float> l1;
 	math::Vec3<float> l2;
 	math::Vec3<float> normal;
-
-	math::Vec3<float> m_camera;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;

@@ -15,7 +15,8 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_object(Object("res/objs/teapot.obj")),
 #endif
 	m_depth_buffer(m_buffer_size, -9999),
-	m_rotate_angle_x(0.f), m_rotate_angle_y(0.f)
+	m_cam_angle_x(0.f), m_cam_angle_y(0.f), m_cam_angle_z(0.f),
+	m_camera(new Camera())
 {
 	clear_frame_buffer();
 
@@ -41,8 +42,6 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	look_dir = { 0.0f, 0.0f, 1.0f };
 	target = { 0.0f, 0.0f, 1.0f };
 	camera_plane = { 0.0f, 0.0f, 1.0f };
-
-	m_camera = { 0.0f, 0.0f, 0.0f };
 }
 
 Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
@@ -50,28 +49,14 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	m_rotate_angle_x += rotate_x * elapsed_time * 0.001f;
-	m_rotate_angle_y += rotate_y * elapsed_time * 0.001f;
+	m_cam_angle_x += rotate_x * elapsed_time * 0.001f;
+	m_cam_angle_y += rotate_y * elapsed_time * 0.001f;
 
-	// update rotation matrices
-	x_rotation.set(
-		1, 0, 0, 0,
-		0, cosf(m_rotate_angle_x), sinf(m_rotate_angle_x), 0,
-		0, -sinf(m_rotate_angle_x), cosf(m_rotate_angle_x), 0,
-		0, 0, 0, 1);
-	/*z_rotation.set(
-		cosf(rotate_angle), sinf(rotate_angle), 0, 0,
-		-sinf(rotate_angle), cosf(rotate_angle), 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1);*/
-	y_rotation.set(
-		cosf(m_rotate_angle_y), 0, sinf(m_rotate_angle_y), 0,
-		0, 1, 0, 0,
-		-sinf(m_rotate_angle_y), 0, cosf(m_rotate_angle_y), 0,
-		0, 0, 0, 1);
+	m_camera->set_rot_x(m_cam_angle_x);
+	m_camera->set_rot_y(m_cam_angle_y);
 
 	// camera transform
-	point_at(m_camera, target, vUp, cam_dir);
+	point_at(m_camera->get_pos(), target, vUp, cam_dir);
 
 	cam_inv = cam_dir.inverse();
 
@@ -82,10 +67,10 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 		//transform_tri(o, z_rotation);
 
 		// rotate around x-axis
-		transform_tri(o, x_rotation);
+		transform_tri(o, m_camera->get_rot_x());
 
 		// rotate around y-axis
-		transform_tri(o, y_rotation);
+		transform_tri(o, m_camera->get_rot_y());
 
 		// move object back so it is in view of the camera
 		o.vertices[0].z += 6.0f;

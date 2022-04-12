@@ -29,6 +29,7 @@ project "radrenderer"
 	includedirs
 	{
 		"%{prj.name}/src",
+		"%{prj.name}/src/core"
 	}
 
 	filter "system:windows"

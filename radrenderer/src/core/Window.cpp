@@ -78,11 +78,11 @@ void Window::loop()
                     int x = event.mouseMove.x;
                     int y = event.mouseMove.y;
 
-                    if ((x - prev_x) > 2)
+                    if ((x - prev_x) > 1)
                     {
                         rotate_y = -1.f;
                     }
-                    else if ((x - prev_x) < -2)
+                    else if ((x - prev_x) < -1)
                     {
                         rotate_y = 1.f;
                     }
@@ -91,11 +91,11 @@ void Window::loop()
                         rotate_y = 0.f;
                     }
 
-                    if ((y - prev_y) > 2)
+                    if ((y - prev_y) > 1)
                     {
                         rotate_x = -1.f;
                     }
-                    else if ((y - prev_y) < -2)
+                    else if ((y - prev_y) < -1)
                     {
                         rotate_x = 1.f;
                     }
