@@ -18,7 +18,7 @@ struct Pixel
 struct Triangle
 {
 	math::Vec3<float> vertices[3];
-
+	math::Vec3<float> normal;
 	Pixel colour;
 };
 

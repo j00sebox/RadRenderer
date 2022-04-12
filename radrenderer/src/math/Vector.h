@@ -66,7 +66,9 @@ namespace math {
 	public:
 		Vec3() : x(0), y(0), z(0) {}
 
-		Vec3(float c[3]) : x(c[0]), y(c[1]), z(c[2]) {}
+		Vec3(T v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
+
+		Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
 
 		inline void cross(Vec3& line, Vec3& normal)
 		{

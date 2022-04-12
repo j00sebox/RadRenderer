@@ -78,25 +78,10 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 		o.vertices[1].z += 6.0f;
 		o.vertices[2].z += 6.0f;
 
-		// construct line 1 of the triangle
-		l1.x = o.vertices[1].x - o.vertices[0].x;
-		l1.y = o.vertices[1].y - o.vertices[0].y;
-		l1.z = o.vertices[1].z - o.vertices[0].z;
-
-		// contstruct line 2 of the triangle
-		l2.x = o.vertices[2].x - o.vertices[1].x;
-		l2.y = o.vertices[2].y - o.vertices[1].y;
-		l2.z = o.vertices[2].z - o.vertices[1].z;
-
-		// calculate normal of triangle face
-		l1.cross(l2, normal);
-
-		normal.normalize();
-
 		// check if triangle is visible
-		if ( look_dir.dot(normal) < 0 )
+		if ( is_visible(o) )
 		{
-			float lum = normal.dot(lighting);
+			float lum = o.normal.dot(lighting);
 			Pixel colour = get_colour(lum);
 
 			transform_tri(o, cam_inv);
@@ -126,6 +111,16 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 			}
 		}
 	}
+
+	std::sort(renderTriangles.begin(), renderTriangles.end(), [](const Triangle& tri1, const Triangle& tri2) {
+		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
+		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
+
+		if (avg_z1 > avg_z2)
+			return true;
+		else
+			return false;
+		});
 
 	for (const auto& t : renderTriangles)
 	{
@@ -341,9 +336,33 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 		return -1; // triangle lies outside of screen so it should be discarded
 }
 
-void RadRenderer::transform_tri(Triangle& tri, const math::Mat4<float>& transform)
+void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
 {
-	transform.mat_mul_vec(tri.vertices[0]);
-	transform.mat_mul_vec(tri.vertices[1]);
-	transform.mat_mul_vec(tri.vertices[2]);
+	transform.mat_mul_vec(t.vertices[0]);
+	transform.mat_mul_vec(t.vertices[1]);
+	transform.mat_mul_vec(t.vertices[2]);
+}
+
+inline bool RadRenderer::is_visible(Triangle& t)
+{
+	// construct line 1 of the triangle
+	math::Vec3<float> l1 = { 
+		t.vertices[1].x - t.vertices[0].x,
+		t.vertices[1].y - t.vertices[0].y,
+		t.vertices[1].z - t.vertices[0].z
+	};
+
+	// contstruct line 2 of the triangle
+	math::Vec3<float> l2 = {
+		t.vertices[2].x - t.vertices[1].x,
+		t.vertices[2].y - t.vertices[1].y,
+		t.vertices[2].z - t.vertices[1].z
+	};
+
+	// calculate normal of triangle face
+	l1.cross(l2, t.normal);
+
+	t.normal.normalize();
+
+	return (look_dir.dot(t.normal) < 0);
 }

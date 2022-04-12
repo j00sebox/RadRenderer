@@ -34,7 +34,9 @@ protected:
 
 	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
 	
-	inline void transform_tri(Triangle& tri, const math::Mat4<float>& transform);
+	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
+
+	inline bool is_visible(Triangle& t);
 
 private:
 	Object m_object;
@@ -46,11 +48,6 @@ private:
 
 	// transforms
 	math::Mat4<float> m_projection, cam_dir, cam_inv;
-
-	// Vectors to calculate the normal of triangle faces.
-	math::Vec3<float> l1;
-	math::Vec3<float> l2;
-	math::Vec3<float> normal;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;
