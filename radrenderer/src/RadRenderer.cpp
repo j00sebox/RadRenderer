@@ -11,7 +11,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
-	m_object(Object("res/objs/ship.obj")),
+	m_object(Object("res/objs/teapot.obj")),
 	rotate_angle(0.f)
 {
 	clear_frame_buffer();
@@ -47,7 +47,7 @@ Pixel* RadRenderer::update(float elapsed_time)
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	rotate_angle += 1.0f * elapsed_time * 0.001f;
+	//rotate_angle += 1.0f * elapsed_time * 0.001f;
 
 	// update rotation matrices
 	x_rotation.set(
