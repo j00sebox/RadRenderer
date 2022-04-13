@@ -29,6 +29,17 @@ public:
 
 	Object(const std::string& fname);
 
+	void translate(float x, float y, float z);
+
+	void rotate_x(float rx);
+	void rotate_y(float ry);
+	void rotate_z(float rz);
+
+	const math::Mat4<float>& get_rotation() const { return m_rotation; }
+	const math::Mat4<float>& get_translation() const { return m_translation; }
+
+	void reset_transform();
+
 	inline std::vector<Triangle>::iterator begin() { return m_tris.begin(); }
 	inline std::vector<Triangle>::iterator end() { return m_tris.end(); }
 	inline std::vector<Triangle>::const_iterator begin() const { return m_tris.begin(); }
@@ -36,7 +47,9 @@ public:
 
 private:
 	// loads vertex and face data from txt file realting to obj file
-	std::vector<Triangle> load_obj_file(const std::string& fname);
+	void load_obj_file(const std::string& fname);
 
 	std::vector<Triangle> m_tris;
+	math::Mat4<float> m_rotation;
+	math::Mat4<float> m_translation;
 };

@@ -216,6 +216,15 @@ namespace math {
 			}
 		}
 
+		void clear()
+		{
+			set( 	1, 0, 0, 0,
+						0, 1, 0, 0,
+						0, 0, 1, 0,
+						0, 0, 0, 1
+					);
+		}
+
 		// allows value to be accessed easier
 		inline T& operator () (int i, int j) { return mat[i][j]; };
 

@@ -20,30 +20,30 @@ const math::Vec3<float>& Camera::get_pos() const
 void Camera::set_rot_x(float rx)
 {
 	m_rotation_x.set(
-		1,	0,			0,			0,
-		0,	cosf(rx),	sinf(rx),	0,
+		1,	0,					0,				0,
+		0,	cosf(rx),		sinf(rx),	0,
 		0,	-sinf(rx),	cosf(rx),	0,
-		0,	0,			0,			1
+		0,	0,					0,				1
 	);
 }
 
 void Camera::set_rot_y(float ry)
 {
 	m_rotation_y.set(
-		cosf(ry),	0,	sinf(ry),	0,
-		0,			1,	0,			0,
+		cosf(ry),		0,	sinf(ry),	0,
+		0,					1,	0,				0,
 		-sinf(ry),  0,	cosf(ry),	0,
-		0,			0,	0,			1
+		0,					0,	0,				1
 	);
 }
 
 void Camera::set_rot_z(float rz)
 {
 	m_rotation_z.set(
-		cosf(rz),	sinf(rz),	0, 0,
+		cosf(rz),		sinf(rz),	0, 0,
 		-sinf(rz),	cosf(rz),	0, 0,
-		0,			0,			1, 0,
-		0,			0,			0, 1
+		0,					0,				1, 0,
+		0,					0,				0, 1
 	);
 }
 

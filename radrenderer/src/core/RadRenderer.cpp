@@ -60,12 +60,18 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	m_camera->set_rot_x(m_cam_angle_x);
 	m_camera->set_rot_y(m_cam_angle_y);
 
+	// m_object.rotate_x(m_cam_angle_x);
+	// m_object.rotate_y(m_cam_angle_y);
+
+	//m_object.translate(0, 0, 6.f);
+
+	//m_object_transform = m_object.get_rotation(); //.mat_mul_mat(m_object.get_translation_transform(), m_object_transform);
+
 	// camera transform
 	point_at(m_camera->get_pos(), target, vUp, cam_dir);
+	m_view = cam_dir.inverse();
 
 	m_camera->get_rot_x().mat_mul_mat(m_camera->get_rot_y(), m_object_transform);
-
-	m_view = cam_dir.inverse();
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
@@ -130,6 +136,9 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
 	//clear_depth_buffer();
+
+	// clears the rotation and translation matrices
+	m_object.reset_transform();
 
 	return m_frame_buffer.get();
 }
