@@ -75,8 +75,10 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 		// convert to camera space
 		transform_tri(o, m_view);
 
+		calculate_normal(o);
+
 		// check if triangle is visible
-		if ( is_visible(o) )
+		if ((look_dir.dot(o.normal) < 0))
 		{
 			float lum = o.normal.dot(lighting);
 			Pixel colour = get_colour(lum);
@@ -339,7 +341,7 @@ void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
 	transform.mat_mul_vec(t.vertices[2]);
 }
 
-inline bool RadRenderer::is_visible(Triangle& t)
+inline void RadRenderer::calculate_normal(Triangle& t)
 {
 	// construct line 1 of the triangle
 	math::Vec3<float> l1 = {
@@ -359,6 +361,4 @@ inline bool RadRenderer::is_visible(Triangle& t)
 	l1.cross(l2, t.normal);
 
 	t.normal.normalize();
-
-	return (look_dir.dot(t.normal) < 0);
 }

@@ -228,7 +228,7 @@ namespace math {
 		// allows value to be accessed easier
 		inline T& operator () (int i, int j) { return mat[i][j]; };
 
-		inline Mat4<T>&& operator * (const Mat4<T>& other_mat) const
+		inline Mat4<T> operator * (const Mat4<T>& other_mat) const
 		{
 			Mat4<T> res_mat;
 			for (int i = 0; i < 4; i++)
@@ -243,10 +243,10 @@ namespace math {
 				}
 			}
 
-			return std::move(res_mat);
+			return res_mat;
 		}
 
-		inline Mat4<T>&& operator * (Mat4<T>&& other_mat) const
+		inline Mat4<T> operator * (Mat4<T>&& other_mat) const
 		{
 			Mat4<T> res_mat;
 			for (int i = 0; i < 4; i++)
@@ -261,7 +261,7 @@ namespace math {
 				}
 			}
 
-			return std::move(res_mat);
+			return res_mat;
 		}
 
 	private:

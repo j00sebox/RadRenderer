@@ -36,7 +36,7 @@ protected:
 
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
 
-	inline bool is_visible(Triangle& t);
+	inline void calculate_normal(Triangle& t);
 
 private:
 	Object m_object;
