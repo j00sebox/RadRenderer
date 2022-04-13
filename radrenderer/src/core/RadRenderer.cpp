@@ -57,31 +57,20 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	m_cam_movement += cam_forward * elapsed_time * 0.001f;
 
 	m_camera->set_pos(math::Vec3<float>(0.f, 0.f, m_cam_movement));
-	m_camera->set_rot_x(m_cam_angle_x);
-	m_camera->set_rot_y(m_cam_angle_y);
 
-	// m_object.rotate_x(m_cam_angle_x);
-	// m_object.rotate_y(m_cam_angle_y);
+	 m_object.rotate_x(m_cam_angle_x);
+	 m_object.rotate_y(m_cam_angle_y);
 
-	//m_object.translate(0, 0, 6.f);
-
-	//m_object_transform = m_object.get_rotation(); //.mat_mul_mat(m_object.get_translation_transform(), m_object_transform);
+	 m_object.translate(0, -2.f, 6.f);
 
 	// camera transform
 	point_at(m_camera->get_pos(), target, vUp, cam_dir);
 	m_view = cam_dir.inverse();
 
-	m_camera->get_rot_x().mat_mul_mat(m_camera->get_rot_y(), m_object_transform);
-
 	// iterate through all triangles in the object
 	for (auto o : m_object)
 	{
-		transform_tri(o, m_object_transform);
-
-		// move object back so it is in view of the camera
-		o.vertices[0].z += 6.0f;
-		o.vertices[1].z += 6.0f;
-		o.vertices[2].z += 6.0f;
+		transform_tri(o, m_object.get_transform());
 
 		// convert to camera space
 		transform_tri(o, m_view);
@@ -137,7 +126,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	renderTriangles.clear();
 	//clear_depth_buffer();
 
-	// clears the rotation and translation matrices
 	m_object.reset_transform();
 
 	return m_frame_buffer.get();

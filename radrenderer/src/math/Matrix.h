@@ -219,14 +219,50 @@ namespace math {
 		void clear()
 		{
 			set( 	1, 0, 0, 0,
-						0, 1, 0, 0,
-						0, 0, 1, 0,
-						0, 0, 0, 1
-					);
+					0, 1, 0, 0,
+					0, 0, 1, 0,
+					0, 0, 0, 1
+				);
 		}
 
 		// allows value to be accessed easier
 		inline T& operator () (int i, int j) { return mat[i][j]; };
+
+		inline Mat4<T>&& operator * (const Mat4<T>& other_mat) const
+		{
+			Mat4<T> res_mat;
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					res_mat(i, j) =
+						mat[i][0] * other_mat.mat[0][j] +
+						mat[i][1] * other_mat.mat[1][j] +
+						mat[i][2] * other_mat.mat[2][j] +
+						mat[i][3] * other_mat.mat[3][j];
+				}
+			}
+
+			return std::move(res_mat);
+		}
+
+		inline Mat4<T>&& operator * (Mat4<T>&& other_mat) const
+		{
+			Mat4<T> res_mat;
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					res_mat(i, j) =
+						mat[i][0] * other_mat.mat[0][j] +
+						mat[i][1] * other_mat.mat[1][j] +
+						mat[i][2] * other_mat.mat[2][j] +
+						mat[i][3] * other_mat.mat[3][j];
+				}
+			}
+
+			return std::move(res_mat);
+		}
 
 	private:
 		// default matrix is identity

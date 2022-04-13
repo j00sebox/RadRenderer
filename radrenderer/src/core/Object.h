@@ -35,9 +35,7 @@ public:
 	void rotate_y(float ry);
 	void rotate_z(float rz);
 
-	const math::Mat4<float>& get_rotation() const { return m_rotation; }
-	const math::Mat4<float>& get_translation() const { return m_translation; }
-
+	const math::Mat4<float>& get_transform() const { return m_transform; }
 	void reset_transform();
 
 	inline std::vector<Triangle>::iterator begin() { return m_tris.begin(); }
@@ -50,6 +48,5 @@ private:
 	void load_obj_file(const std::string& fname);
 
 	std::vector<Triangle> m_tris;
-	math::Mat4<float> m_rotation;
-	math::Mat4<float> m_translation;
+	math::Mat4<float> m_transform;
 };

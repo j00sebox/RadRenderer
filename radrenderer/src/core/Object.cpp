@@ -8,52 +8,55 @@ Object::Object(const std::string& fname)
 
 void Object::translate(float x, float y, float z)
 {
-	m_translation.mat_mul_mat( {
-		1, 0, 0, x,
-		0, 1, 0, y,
-		0, 0, 1, z,
-		0, 0, 0, 1
-	},
-	m_translation);
+	m_transform = m_transform *
+
+		math::Mat4<float>({
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			x, y, z, 1
+		});
 }
 
 void Object::rotate_x(float rx)
 {
-	m_rotation.mat_mul_mat( {
-		1,	0,					0,				0 ,
-		0,	cosf(rx),		sinf(rx),	0 ,
-	  0,	-sinf(rx),	cosf(rx),	0,
-		0,	0,					0,				1
-	},
-	m_rotation );
+	m_transform = m_transform *
+
+		math::Mat4<float>({
+			1, 0,			0,			0,
+			0, cosf(rx),	sinf(rx),	0,
+			0, -sinf(rx),	cosf(rx),	0,
+			0, 0,			0,			1
+		});
 }
 
 void Object::rotate_y(float ry)
 {
-	m_rotation.mat_mul_mat( {
-		cosf(ry),		0,	sinf(ry),	0,
-		0,					1,	0,				0,
-		-sinf(ry),  0,	cosf(ry),	0,
-		0,					0,	0,				1
-	},
-	m_rotation );
+	m_transform = m_transform *
+
+		math::Mat4<float>({
+			cosf(ry),	0, sinf(ry),	0,
+			0,			1, 0,			0,
+			-sinf(ry),	0, cosf(ry),	0,
+			0,			0, 0,			1
+		});
 }
 
 void Object::rotate_z(float rz)
 {
-	m_rotation.mat_mul_mat( {
-		cosf(rz),		sinf(rz),	0, 0,
-		-sinf(rz),	cosf(rz),	0, 0,
-		0,					0,				1, 0,
-		0,					0,				0, 1
-	},
-	m_rotation );
+	m_transform = m_transform *
+
+		math::Mat4<float>({
+			cosf(rz),	sinf(rz),	0, 0,
+			-sinf(rz),	cosf(rz),	0, 0,
+			0,			0,			1, 0,
+			0,			0,			0, 1
+		});
 }
 
 void Object::reset_transform()
 {
-	m_rotation.clear();
-	m_translation.clear();
+	m_transform.clear();
 }
 
 void Object::load_obj_file(const std::string& fname)
