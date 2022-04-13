@@ -201,14 +201,14 @@ namespace math {
 			vec = std::move(new_vec);
 		}
 
-		// take the dot product of two matrices
-		void mat_mul_mat(Mat4<T>& mat1, Mat4<T>& resmat)
+		void mat_mul_mat(const Mat4<T>& mat1, Mat4<T>& resmat) const
 		{
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
 				{
-					resmat.mat[i][j] = mat[i][0] * mat1.mat[0][j] +
+					resmat(i, j) =
+						mat[i][0] * mat1.mat[0][j] +
 						mat[i][1] * mat1.mat[1][j] +
 						mat[i][2] * mat1.mat[2][j] +
 						mat[i][3] * mat1.mat[3][j];

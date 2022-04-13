@@ -25,15 +25,15 @@ protected:
 	std::pair<int, int> imagesp_to_screensp(float x, float y);
 
 	void clear_frame_buffer();
-	
+
 	void clear_depth_buffer();
-	
+
 	inline void point_at(const math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
 
 	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
 
 	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
-	
+
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
 
 	inline bool is_visible(Triangle& t);
@@ -43,12 +43,12 @@ private:
 
 	std::unique_ptr<Camera> m_camera;
 
-	float m_far, m_near, m_fov; 
+	float m_far, m_near, m_fov;
 	float m_cam_angle_x, m_cam_angle_y, m_cam_angle_z;
 	float m_cam_movement;
 
 	// transforms
-	math::Mat4<float> m_projection, cam_dir, cam_inv;
+	math::Mat4<float> m_view, m_projection, cam_dir, cam_inv;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;

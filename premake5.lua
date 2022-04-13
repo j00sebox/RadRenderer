@@ -16,6 +16,7 @@ project "radrenderer"
 	cppdialect "C++17"
 
 	pchheader "pch.h"
+	pchsource "radrenderer/src/pch.cpp"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -35,8 +36,6 @@ project "radrenderer"
 	filter "system:windows"
 		architecture "x86"
 		systemversion "latest"
-
-		pchsource "radrenderer/src/pch.cpp"
 
 		defines { "PLATFORM_WINDOWS", "SFML_STATIC" }
 

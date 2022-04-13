@@ -171,3 +171,5 @@ radrenderer/vendor/sfml/*
 # Makefiles
 */Makefile
 Makefile
+
+run.sh

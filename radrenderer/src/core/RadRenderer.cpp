@@ -65,17 +65,14 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 
 	cam_inv = cam_dir.inverse();
 
+	m_camera->get_rot_x().mat_mul_mat(m_camera->get_rot_y(), m_view);
+	m_view.mat_mul_mat(cam_inv, m_view);
+
 	// iterate through all triangles in the object
 	for (auto o : m_object)
 	{
-		// rotate around z-axis
-		//transform_tri(o, z_rotation);
-
-		// rotate around x-axis
-		transform_tri(o, m_camera->get_rot_x());
-
-		// rotate around y-axis
-		transform_tri(o, m_camera->get_rot_y());
+		// convert to camera space
+		transform_tri(o, m_view);
 
 		// move object back so it is in view of the camera
 		o.vertices[0].z += 6.0f;
@@ -87,8 +84,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 		{
 			float lum = o.normal.dot(lighting);
 			Pixel colour = get_colour(lum);
-
-			transform_tri(o, cam_inv);
 
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
@@ -170,7 +165,7 @@ void RadRenderer::rasterize(const Triangle& t)
 				edge_function(v1.x, v1.y, v2.x, v2.y, p) &&
 				edge_function(v2.x, v2.y, v0.x, v0.y, p))
 			{
-				set_pixel(x, y, t.colour);	
+				set_pixel(x, y, t.colour);
 			}
 		}
 	}
@@ -230,9 +225,9 @@ inline void RadRenderer::point_at(const math::Vec3<float>& point_to, math::Vec3<
 	math::Vec3<float> nRight;
 	nUp.cross(nForward, nRight);
 
-	// Set up camera direction Mat4
-	mat(0, 0) = nRight.x;		mat(0, 1) = nRight.y;		mat(0, 2) = nRight.z;		mat(0, 3) = 0.0f;
-	mat(1, 0) = nUp.x;			mat(1, 1) = nUp.y;			mat(1, 2) = nUp.z;			mat(1, 3) = 0.0f;
+	// Set up camera direction matrix
+	mat(0, 0) = nRight.x;			mat(0, 1) = nRight.y;			mat(0, 2) = nRight.z;			mat(0, 3) = 0.0f;
+	mat(1, 0) = nUp.x;				mat(1, 1) = nUp.y;				mat(1, 2) = nUp.z;				mat(1, 3) = 0.0f;
 	mat(2, 0) = nForward.x;		mat(2, 1) = nForward.y;		mat(2, 2) = nForward.z;		mat(2, 3) = 0.0f;
 	mat(3, 0) = point_to.x;		mat(3, 1) = point_to.y;		mat(3, 2) = point_to.z;		mat(3, 3) = 1.0f;
 }
@@ -349,7 +344,7 @@ void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
 inline bool RadRenderer::is_visible(Triangle& t)
 {
 	// construct line 1 of the triangle
-	math::Vec3<float> l1 = { 
+	math::Vec3<float> l1 = {
 		t.vertices[1].x - t.vertices[0].x,
 		t.vertices[1].y - t.vertices[0].y,
 		t.vertices[1].z - t.vertices[0].z
