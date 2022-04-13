@@ -63,21 +63,22 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// camera transform
 	point_at(m_camera->get_pos(), target, vUp, cam_dir);
 
-	cam_inv = cam_dir.inverse();
+	m_camera->get_rot_x().mat_mul_mat(m_camera->get_rot_y(), m_object_transform);
 
-	m_camera->get_rot_x().mat_mul_mat(m_camera->get_rot_y(), m_view);
-	m_view.mat_mul_mat(cam_inv, m_view);
+	m_view = cam_dir.inverse();
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
 	{
-		// convert to camera space
-		transform_tri(o, m_view);
+		transform_tri(o, m_object_transform);
 
 		// move object back so it is in view of the camera
 		o.vertices[0].z += 6.0f;
 		o.vertices[1].z += 6.0f;
 		o.vertices[2].z += 6.0f;
+
+		// convert to camera space
+		transform_tri(o, m_view);
 
 		// check if triangle is visible
 		if ( is_visible(o) )
