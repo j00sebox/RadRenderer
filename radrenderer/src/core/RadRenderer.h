@@ -16,7 +16,7 @@ public:
 protected:
 	void rasterize(const Triangle& t);
 
-	bool edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p);
+	float edge_function(float x0, float y0, float x1, float y1, float x2, float y2);
 
 	Pixel get_colour(float lum);
 
@@ -48,7 +48,7 @@ private:
 	float m_cam_movement;
 
 	// transforms
-	math::Mat4<float> m_view, m_projection, cam_dir, cam_inv;
+	math::Mat4<float> m_view, m_perspective, m_orthogonal, cam_dir, cam_inv;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;

@@ -23,17 +23,25 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	clear_frame_buffer();
 
 	float m_fovRAD = DEG_TO_RAD(m_fov);
-	float scaling_factor = 1.0f / tanf(m_fovRAD * 0.5f);
+	float scaling_factor = 1.0f / tanf(m_fov * 0.5f);
 	float aspect_ratio = (float)m_screen_height / (float)m_screen_width;
 
 	float q = m_far / (m_far - m_near);
 
 	// create projection matrix
-	m_projection.set(
-		aspect_ratio * scaling_factor, 0.0f, 0.0f, 0.0f,
-		0.0f, scaling_factor, 0.0f, 0.0f,
-		0.0f, 0.0f, q, -1.0f,
-		0.0f, 0.0f, 2 * m_near * q, 0.0f);
+	m_perspective.set(
+		aspect_ratio * scaling_factor,	0.f,			0.f,			0.f,
+		0.f,							scaling_factor, 0.f,			0.f,
+		0.f,							0.f,			q,				1.f,
+		0.f,							0.f,			-m_near * q,	0.f
+	);
+
+	m_orthogonal.set(
+		1.f,	0.f,	0.f,						0.f,
+		0.f,	1.f,	0.f,						0.f,
+		0.f,	0.f,	1.f / (m_far - m_near),		-m_near / (m_far - m_near),
+		0.f,	0.f,	0.f,						1.f
+	);
 
 	lighting = { 0.0f, 0.0f, -1.0f };
 
@@ -61,7 +69,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	 m_object.rotate_x(m_cam_angle_x);
 	 m_object.rotate_y(m_cam_angle_y);
 
-	 m_object.translate(0, -2.f, 6.f);
+	 m_object.translate(0.f, -2.f, 6.f);
 
 	// camera transform
 	point_at(m_camera->get_pos(), target, vUp, cam_dir);
@@ -91,7 +99,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 				for (int c = 0; c < num_clipped; c++)
 				{
 					// Convert all coordinates to projection space
-					transform_tri(clipped_tris[c], m_projection);
+					transform_tri(clipped_tris[c], m_perspective);
 
 					clipped_tris[c].colour = colour;
 
@@ -100,7 +108,12 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			}
 			else if (num_clipped == 0)
 			{
-				transform_tri(o, m_projection);
+				o.z[0] = o.vertices[0].z;
+				o.z[1] = o.vertices[1].z;
+				o.z[2] = o.vertices[2].z;
+				
+				transform_tri(o, m_perspective);
+				transform_tri(o, m_orthogonal);
 
 				o.colour = colour;
 
@@ -109,16 +122,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 		}
 	}
 
-	std::sort(renderTriangles.begin(), renderTriangles.end(), [](const Triangle& tri1, const Triangle& tri2) {
-		float avg_z1 = (tri1.vertices[0].z + tri1.vertices[1].z + tri1.vertices[2].z) / 3.0f;
-		float avg_z2 = (tri2.vertices[0].z + tri2.vertices[1].z + tri2.vertices[2].z) / 3.0f;
-
-		if (avg_z1 > avg_z2)
-			return true;
-		else
-			return false;
-		});
-
 	for (const auto& t : renderTriangles)
 	{
 		rasterize(t);
@@ -126,7 +129,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 
 	// vector needs to be empty for next redraw
 	renderTriangles.clear();
-	//clear_depth_buffer();
+	clear_depth_buffer();
 
 	m_object.reset_transform();
 
@@ -138,9 +141,9 @@ void RadRenderer::rasterize(const Triangle& t)
 	int min_x, max_x;
 	int min_y, max_y;
 
-	math::Vec2<int> v0 = { imagesp_to_screensp(std::clamp(t.vertices[0].x, -1.f, 1.f), std::clamp(t.vertices[0].y, -1.f, 1.f)) };
-	math::Vec2<int> v1 = { imagesp_to_screensp(std::clamp(t.vertices[1].x, -1.f, 1.f), std::clamp(t.vertices[1].y, -1.f, 1.f)) };
-	math::Vec2<int> v2 = { imagesp_to_screensp(std::clamp(t.vertices[2].x, -1.f, 1.f), std::clamp(t.vertices[2].y, -1.f, 1.f)) };
+	math::Vec2<int> v0 = { imagesp_to_screensp(t.vertices[0].x, t.vertices[0].y) };
+	math::Vec2<int> v1 = { imagesp_to_screensp(t.vertices[1].x, t.vertices[1].y) };
+	math::Vec2<int> v2 = { imagesp_to_screensp(t.vertices[2].x, t.vertices[2].y) };
 
 	// bounding box
 	min_x = std::min(v0.x, v1.x);
@@ -161,20 +164,37 @@ void RadRenderer::rasterize(const Triangle& t)
 		{
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
-			if (edge_function(v0.x, v0.y, v1.x, v1.y, p) &&
-				edge_function(v1.x, v1.y, v2.x, v2.y, p) &&
-				edge_function(v2.x, v2.y, v0.x, v0.y, p))
+			float area_t = edge_function(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
+
+			float area0 = edge_function(v0.x, v0.y, v1.x, v1.y, p.x, p.y);
+			float area1 = edge_function(v1.x, v1.y, v2.x, v2.y, p.x, p.y);
+			float area2 = edge_function(v2.x, v2.y, v0.x, v0.y, p.x, p.y);
+
+			if (area0 > 0 &&
+				area1 > 0 &&
+				area2 > 0)
 			{
-				set_pixel(x, y, t.colour);
+				// barycentric coordinates
+				float l0 = area0 / area_t;
+				float l1 = area1 / area_t;
+				float l2 = area2 / area_t;
+
+				float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
+
+				if (int_z > m_depth_buffer[y * m_screen_width + x])
+				{
+					set_pixel(x, y, t.colour);
+
+					m_depth_buffer[y * m_screen_width + x] = int_z;
+				}
 			}
 		}
 	}
 }
 
-bool RadRenderer::edge_function(int x1, int y1, int x2, int y2, const math::Vec2<float>& p)
+float RadRenderer::edge_function(float x0, float y0, float x1, float y1, float x2, float y2)
 {
-	int res = (p.x - x1) * (y2 - y1) - (p.y - y1) * (x2 - x1);
-	return (res > 0);
+	return ( (x2 - x0) * (y1 - y0) - (y2 - y0) * (x1 - x0) );
 }
 
 Pixel RadRenderer::get_colour(float lum)
