@@ -2,44 +2,36 @@
 #include "Camera.h"
 
 Camera::Camera()
-	: m_position(math::Vec3<float>()),
-	m_rotation_x(math::Mat4<float>()), m_rotation_y(math::Mat4<float>()), m_rotation_z(math::Mat4<float>())
 {
+	m_forward = { 0.f, 0.f, 1.f };
+	m_up = { 0.f, 1.f, 0.f };
+	m_right = { 1.f, 0.f, 0.f };
 }
 
-void Camera::set_pos(math::Vec3<float> pos)
+void Camera::set_pos(math::Vec3<float>& pos)
 {
 	m_position = pos;
+
+	m_forward = m_forward - pos;
+	m_forward.normalize();
+
+	// Calculate the up vector in relation to the new camera direction
+	math::Vec3<float> temp;
+	m_forward.scalar_mul(temp, (m_up.dot(m_forward)));
+	math::Vec3<float> nUp;
+	m_up = m_up - temp;
+	m_up.normalize();
+
+	m_up.cross(m_forward, m_right);
+
+	// Set up camera direction matrix
+	m_transform(0, 0) = m_right.x;			m_transform(0, 1) = m_right.y;			m_transform(0, 2) = m_right.z;			m_transform(0, 3) = 0.0f;
+	m_transform(1, 0) = m_up.x;				m_transform(1, 1) = m_up.y;				m_transform(1, 2) = m_up.z;				m_transform(1, 3) = 0.0f;
+	m_transform(2, 0) = m_forward.x;		m_transform(2, 1) = m_forward.y;		m_transform(2, 2) = m_forward.z;		m_transform(2, 3) = 0.0f;
+	m_transform(3, 0) = pos.x;				m_transform(3, 1) = pos.y;				m_transform(3, 2) = pos.z;				m_transform(3, 3) = 1.0f;
 }
 
 const math::Vec3<float>& Camera::get_pos() const
 {
 	return m_position;
-}
-
-void Camera::set_rot_x(float rx)
-{
-}
-
-void Camera::set_rot_y(float ry)
-{
-}
-
-void Camera::set_rot_z(float rz)
-{
-}
-
-const math::Mat4<float>& Camera::get_rot_x() const
-{
-	return m_rotation_x;
-}
-
-const math::Mat4<float>& Camera::get_rot_y() const
-{
-	return m_rotation_y;
-}
-
-const math::Mat4<float>& Camera::get_rot_z() const
-{
-	return m_rotation_z;
 }

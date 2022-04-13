@@ -17,7 +17,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 #endif
 	m_depth_buffer(m_buffer_size, -9999),
 	m_cam_movement(0.f),
-	m_cam_angle_x(0.f), m_cam_angle_y(0.f), m_cam_angle_z(0.f),
+	m_angle_x(0.f), m_angle_y(0.f), m_angle_z(0.f),
 	m_camera(new Camera())
 {
 	clear_frame_buffer();
@@ -44,14 +44,9 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	);
 
 	lighting = { 0.0f, 0.0f, -1.0f };
+	camera_plane = { 0.0f, 0.0f, 1.0f };
 
 	lighting.normalize();
-
-	// set up basis vectors from world origin
-	vUp = { 0.0f, 1.0f, 0.0f };
-	look_dir = { 0.0f, 0.0f, 1.0f };
-	target = { 0.0f, 0.0f, 1.0f };
-	camera_plane = { 0.0f, 0.0f, 1.0f };
 }
 
 Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y)
@@ -59,21 +54,21 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// clear screen to redraw
 	clear_frame_buffer();
 
-	m_cam_angle_x += rotate_x * elapsed_time * 0.001f;
-	m_cam_angle_y += rotate_y * elapsed_time * 0.001f;
+	m_angle_x += rotate_x * elapsed_time * 0.001f;
+	m_angle_y += rotate_y * elapsed_time * 0.001f;
 
 	m_cam_movement += cam_forward * elapsed_time * 0.001f;
 
 	m_camera->set_pos(math::Vec3<float>(0.f, 0.f, m_cam_movement));
 
-	 m_object.rotate_x(m_cam_angle_x);
-	 m_object.rotate_y(m_cam_angle_y);
+	m_object.rotate_x(m_angle_x);
+	m_object.rotate_y(m_angle_y);
 
-	 m_object.translate(0.f, -2.f, 6.f);
+	m_object.translate(0.f, -2.f, 6.f);
 
 	// camera transform
-	point_at(m_camera->get_pos(), target, vUp, cam_dir);
-	m_view = cam_dir.inverse();
+	math::Mat4<float> cam_transform = m_camera->get_transform();
+	m_view = cam_transform.inverse();
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
@@ -86,7 +81,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 		calculate_normal(o);
 
 		// check if triangle is visible
-		if ((look_dir.dot(o.normal) < 0))
+		if ((m_camera->get_forward().dot(o.normal) < 0))
 		{
 			float lum = o.normal.dot(lighting);
 			Pixel colour = get_colour(lum);
@@ -100,10 +95,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 				{
 					// Convert all coordinates to projection space
 					transform_tri(clipped_tris[c], m_perspective);
+					transform_tri(o, m_orthogonal);
 
 					clipped_tris[c].colour = colour;
 
-					renderTriangles.push_back(clipped_tris[c]);
+					m_render_triangles.push_back(clipped_tris[c]);
 				}
 			}
 			else if (num_clipped == 0)
@@ -117,18 +113,18 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 
 				o.colour = colour;
 
-				renderTriangles.push_back(o);
+				m_render_triangles.push_back(o);
 			}
 		}
 	}
 
-	for (const auto& t : renderTriangles)
+	for (const auto& t : m_render_triangles)
 	{
 		rasterize(t);
 	}
 
 	// vector needs to be empty for next redraw
-	renderTriangles.clear();
+	m_render_triangles.clear();
 	clear_depth_buffer();
 
 	m_object.reset_transform();
@@ -225,31 +221,6 @@ void RadRenderer::clear_depth_buffer()
 {
 	for (auto& f : m_depth_buffer)
 		f = -9999;
-}
-
-// Takes the current camera position and translates it based on the user input
-inline void RadRenderer::point_at(const math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& mat)
-{
-	// The new forward vector aka where the camera is pointing
-	math::Vec3<float> nForward;
-	forward.subtract(point_to, nForward);
-	nForward.normalize();
-
-	// Calculate the up vector in relation to the new camera direction
-	math::Vec3<float> temp;
-	nForward.scalar_mul(temp, (up.dot(nForward)));
-	math::Vec3<float> nUp;
-	up.subtract(temp, nUp);
-	nUp.normalize();
-
-	math::Vec3<float> nRight;
-	nUp.cross(nForward, nRight);
-
-	// Set up camera direction matrix
-	mat(0, 0) = nRight.x;			mat(0, 1) = nRight.y;			mat(0, 2) = nRight.z;			mat(0, 3) = 0.0f;
-	mat(1, 0) = nUp.x;				mat(1, 1) = nUp.y;				mat(1, 2) = nUp.z;				mat(1, 3) = 0.0f;
-	mat(2, 0) = nForward.x;		mat(2, 1) = nForward.y;		mat(2, 2) = nForward.z;		mat(2, 3) = 0.0f;
-	mat(3, 0) = point_to.x;		mat(3, 1) = point_to.y;		mat(3, 2) = point_to.z;		mat(3, 3) = 1.0f;
 }
 
 // returns the point that the given plane and line intersect

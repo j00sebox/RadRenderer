@@ -28,8 +28,6 @@ protected:
 
 	void clear_depth_buffer();
 
-	inline void point_at(const math::Vec3<float>& point_to, math::Vec3<float>& forward, math::Vec3<float>& up, math::Mat4<float>& pMat4);
-
 	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
 
 	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
@@ -44,21 +42,16 @@ private:
 	std::unique_ptr<Camera> m_camera;
 
 	float m_far, m_near, m_fov;
-	float m_cam_angle_x, m_cam_angle_y, m_cam_angle_z;
+	float m_angle_x, m_angle_y, m_angle_z;
 	float m_cam_movement;
 
 	// transforms
-	math::Mat4<float> m_view, m_perspective, m_orthogonal, cam_dir, cam_inv;
+	math::Mat4<float> m_view, m_perspective, m_orthogonal;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;
 
-	std::vector<Triangle> renderTriangles;
-
-	math::Vec3<float> vUp; // current up vector
-	math::Vec3<float> look_dir; // current forward vector aka where the camera is looking
-	math::Vec3<float> target; // where the camera is being told to look aka new forward vector
-	math::Vec3<float> fVelocity; // velocity of camera in forward direction
+	std::vector<Triangle> m_render_triangles;
 
 	math::Vec3<float> camera_plane;
 	Triangle clipped_tris[2]; // holds the new triangles after clipping if any

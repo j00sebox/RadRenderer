@@ -75,7 +75,7 @@ namespace math {
 			normal.z = x * line.y - y * line.x;
 		}
 
-		inline float dot(Vec3& vec)
+		inline float dot(Vec3& vec) const
 		{
 			return x * vec.x + y * vec.y + z * vec.z;
 		}
@@ -94,6 +94,17 @@ namespace math {
 			outVec.x = x - inputVec.x;
 			outVec.y = y - inputVec.y;
 			outVec.z = z - inputVec.z;
+		}
+
+		inline Vec3<T> operator - (const Vec3<float>& v)
+		{
+			Vec3<T> r;
+
+			r.x = x - v.x;
+			r.y = y - v.y;
+			r.z = z - v.z;
+
+			return r;
 		}
 
 		inline void scalar_mul(Vec3& outVec, float scalar) const
