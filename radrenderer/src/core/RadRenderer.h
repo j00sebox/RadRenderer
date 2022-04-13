@@ -11,7 +11,7 @@ public:
 
 	~RadRenderer() {}
 
-	Pixel* update(float elapsed_time, float rotate_x, float rotate_y);
+	Pixel* update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
 
 protected:
 	void rasterize(const Triangle& t);
@@ -45,6 +45,7 @@ private:
 
 	float m_far, m_near, m_fov; 
 	float m_cam_angle_x, m_cam_angle_y, m_cam_angle_z;
+	float m_cam_movement;
 
 	// transforms
 	math::Mat4<float> m_projection, cam_dir, cam_inv;

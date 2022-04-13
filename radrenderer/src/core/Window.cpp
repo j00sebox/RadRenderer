@@ -54,6 +54,8 @@ void Window::loop()
     float rotate_x = 0.f;
     float rotate_y = 0.f;
 
+    float forward = 0.f;
+
     while (m_window.isOpen())
     {
         // events
@@ -62,6 +64,26 @@ void Window::loop()
         {
             if (event.type == sf::Event::Closed)
                 m_window.close();
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W)
+            {
+                forward = 1.f;
+            }
+
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::W)
+            {
+                forward = 0.f;
+            }
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::S)
+            {
+                forward = -1.f;
+            }
+
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::S)
+            {
+                forward = 0.f;
+            }
 
             if (event.type == sf::Event::MouseButtonPressed)
                 mouse_down = true;
@@ -115,7 +137,7 @@ void Window::loop()
 
         sf::Time elapsed = m_clock.restart();
 
-        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.update(elapsed.asMilliseconds(), rotate_x, rotate_y));
+        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.update(elapsed.asMilliseconds(), forward, rotate_x, rotate_y));
 
         float fps = 1.f / elapsed.asSeconds();
 

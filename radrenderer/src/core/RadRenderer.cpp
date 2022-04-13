@@ -16,6 +16,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_object(Object("res/objs/teapot.obj")),
 #endif
 	m_depth_buffer(m_buffer_size, -9999),
+	m_cam_movement(0.f),
 	m_cam_angle_x(0.f), m_cam_angle_y(0.f), m_cam_angle_z(0.f),
 	m_camera(new Camera())
 {
@@ -45,7 +46,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	camera_plane = { 0.0f, 0.0f, 1.0f };
 }
 
-Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
+Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y)
 {
 	// clear screen to redraw
 	clear_frame_buffer();
@@ -53,6 +54,9 @@ Pixel* RadRenderer::update(float elapsed_time, float rotate_x, float rotate_y)
 	m_cam_angle_x += rotate_x * elapsed_time * 0.001f;
 	m_cam_angle_y += rotate_y * elapsed_time * 0.001f;
 
+	m_cam_movement += cam_forward * elapsed_time * 0.001f;
+
+	m_camera->set_pos(math::Vec3<float>(0.f, 0.f, m_cam_movement));
 	m_camera->set_rot_x(m_cam_angle_x);
 	m_camera->set_rot_y(m_cam_angle_y);
 
@@ -218,12 +222,11 @@ inline void RadRenderer::point_at(const math::Vec3<float>& point_to, math::Vec3<
 
 	// Calculate the up vector in relation to the new camera direction
 	math::Vec3<float> temp;
-	nForward.scalar_mul(temp, (up.dot(nForward))); // scalar is used to calculate how far the nUp vector is displaced
+	nForward.scalar_mul(temp, (up.dot(nForward)));
 	math::Vec3<float> nUp;
 	up.subtract(temp, nUp);
 	nUp.normalize();
 
-	// Then the vector pointing to the right of the camera is perpendicular to the 2 new ones calculated
 	math::Vec3<float> nRight;
 	nUp.cross(nForward, nRight);
 
