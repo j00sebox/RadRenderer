@@ -93,6 +93,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			Pixel colour1 = get_colour(lum1);
 			Pixel colour2 = get_colour(lum2);
 
+			if( (o.vertices[0].z < m_near || o.vertices[0].z > m_far) ||
+				  (o.vertices[1].z < m_near || o.vertices[1].z > m_far) ||
+					(o.vertices[2].z < m_near || o.vertices[2].z > m_far) )
+					continue;
+
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
 
