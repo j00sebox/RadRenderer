@@ -8,7 +8,8 @@ public:
 	Camera();
 	~Camera() {}
 
-	void set_pos(math::Vec3<float>& pos);
+	void set_pos(const math::Vec3<float>& pos);
+	void set_pos(math::Vec3<float>&& pos);
 	const math::Vec3<float>& get_pos() const;
 
 	inline const math::Vec3<float>& get_forward() { return m_forward; }
