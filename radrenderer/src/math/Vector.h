@@ -96,6 +96,17 @@ namespace math {
 			outVec.z = z - inputVec.z;
 		}
 
+		inline Vec3<T> operator + (const Vec3<float>& v)
+		{
+			Vec3<T> r;
+
+			r.x = x + v.x;
+			r.y = y + v.y;
+			r.z = z + v.z;
+
+			return r;
+		}
+
 		inline Vec3<T> operator - (const Vec3<float>& v)
 		{
 			Vec3<T> r;

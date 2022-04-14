@@ -18,7 +18,6 @@ void Camera::set_pos(math::Vec3<float>& pos)
 	// Calculate the up vector in relation to the new camera direction
 	math::Vec3<float> temp;
 	m_forward.scalar_mul(temp, (m_up.dot(m_forward)));
-	math::Vec3<float> nUp;
 	m_up = m_up - temp;
 	m_up.normalize();
 

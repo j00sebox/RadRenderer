@@ -36,7 +36,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 		0.f,							0.f,			-m_near * q,	0.f
 	);
 
-	m_orthogonal.set(
+	m_orthographic.set(
 		1.f,	0.f,	0.f,						0.f,
 		0.f,	1.f,	0.f,						0.f,
 		0.f,	0.f,	1.f / (m_far - m_near),		-m_near / (m_far - m_near),
@@ -75,16 +75,23 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	{
 		transform_tri(o, m_object.get_transform());
 
-		// convert to camera space
-		transform_tri(o, m_view);
-
 		calculate_normal(o);
 
+		float lum0 = m_camera->get_forward().dot(o.normal[0]);
+		float lum1 = m_camera->get_forward().dot(o.normal[1]);
+		float lum2 = m_camera->get_forward().dot(o.normal[2]);
+
 		// check if triangle is visible
-		if ((m_camera->get_forward().dot(o.normal) < 0))
+		if (lum0 > 0 &&
+			lum1 > 0 &&
+			lum2 > 0)
 		{
-			float lum = o.normal.dot(lighting);
-			Pixel colour = get_colour(lum);
+			// convert to camera space
+			transform_tri(o, m_view);
+
+			Pixel colour0 = get_colour(lum0);
+			Pixel colour1 = get_colour(lum1);
+			Pixel colour2 = get_colour(lum2);
 
 			// before we project the coordinates onto the screen space we need the clipped ones
 			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
@@ -95,9 +102,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 				{
 					// Convert all coordinates to projection space
 					transform_tri(clipped_tris[c], m_perspective);
-					transform_tri(o, m_orthogonal);
+					transform_tri(clipped_tris[c], m_orthographic);
 
-					clipped_tris[c].colour = colour;
+					clipped_tris[c].colours[0] = colour0;
+					clipped_tris[c].colours[1] = colour1;
+					clipped_tris[c].colours[2] = colour2;
 
 					m_render_triangles.push_back(clipped_tris[c]);
 				}
@@ -109,9 +118,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 				o.z[2] = o.vertices[2].z;
 				
 				transform_tri(o, m_perspective);
-				transform_tri(o, m_orthogonal);
+				transform_tri(o, m_orthographic);
 
-				o.colour = colour;
+				o.colours[0] = colour0;
+				o.colours[1] = colour1;
+				o.colours[2] = colour2;
 
 				m_render_triangles.push_back(o);
 			}
@@ -137,9 +148,9 @@ void RadRenderer::rasterize(const Triangle& t)
 	int min_x, max_x;
 	int min_y, max_y;
 
-	math::Vec2<int> v0 = { imagesp_to_screensp(t.vertices[0].x, t.vertices[0].y) };
-	math::Vec2<int> v1 = { imagesp_to_screensp(t.vertices[1].x, t.vertices[1].y) };
-	math::Vec2<int> v2 = { imagesp_to_screensp(t.vertices[2].x, t.vertices[2].y) };
+	math::Vec2<int> v0 = { imagesp_to_screensp(std::clamp(t.vertices[0].x, -1.f, 1.f), std::clamp(t.vertices[0].y, -1.f, 1.f)) };
+	math::Vec2<int> v1 = { imagesp_to_screensp(std::clamp(t.vertices[1].x, -1.f, 1.f), std::clamp(t.vertices[1].y, -1.f, 1.f)) };
+	math::Vec2<int> v2 = { imagesp_to_screensp(std::clamp(t.vertices[2].x, -1.f, 1.f), std::clamp(t.vertices[2].y, -1.f, 1.f)) };
 
 	// bounding box
 	min_x = std::min(v0.x, v1.x);
@@ -177,9 +188,15 @@ void RadRenderer::rasterize(const Triangle& t)
 
 				float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
 
+				Pixel int_c;
+				int_c.r = l0 * t.colours[0].r + l1 * t.colours[1].r + l2 * t.colours[2].r;
+				int_c.g = l0 * t.colours[0].g + l1 * t.colours[1].g + l2 * t.colours[2].g;
+				int_c.r = l0 * t.colours[0].b + l1 * t.colours[1].b + l2 * t.colours[2].b;
+				int_c.a = 255;
+
 				if (int_z > m_depth_buffer[y * m_screen_width + x])
 				{
-					set_pixel(x, y, t.colour);
+					set_pixel(x, y, int_c);
 
 					m_depth_buffer[y * m_screen_width + x] = int_z;
 				}
@@ -247,7 +264,7 @@ math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, ma
 	return line;
 }
 
-// this returns the resulting number of traingles after a clip but will sort those triangles in the res_tri parameters
+// this returns the resulting number of traingles after a clip
 int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
 {
 	// make sure it's normalized
@@ -288,9 +305,9 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	else if (in_verts == 2)
 	{
 		// both new traingles will have the same properties as the one being clipped
-		res_tri1.colour = ref_tri.colour;
+		/*res_tri1.colours = ref_tri.colours;
 
-		res_tri2.colour = ref_tri.colour;
+		res_tri2.colours = ref_tri.colours;*/
 
 		// first new triangle contains the two in vertices
 		res_tri1.vertices[0] = in_vs[0];
@@ -310,7 +327,7 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	else if (in_verts == 1)
 	{
 		// new triangle will have same properties as old one
-		res_tri1.colour = ref_tri.colour;
+		//res_tri1.colour = ref_tri.colour;
 
 		// just 1 new triangle but smaller
 		res_tri1.vertices[0] = in_vs[0];
@@ -335,21 +352,49 @@ void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
 inline void RadRenderer::calculate_normal(Triangle& t)
 {
 	// construct line 1 of the triangle
-	math::Vec3<float> l1 = {
+	math::Vec3<float> l0 = {
 		t.vertices[1].x - t.vertices[0].x,
 		t.vertices[1].y - t.vertices[0].y,
 		t.vertices[1].z - t.vertices[0].z
 	};
 
 	// contstruct line 2 of the triangle
-	math::Vec3<float> l2 = {
+	math::Vec3<float> l1 = {
+		t.vertices[2].x - t.vertices[0].x,
+		t.vertices[2].y - t.vertices[0].y,
+		t.vertices[2].z - t.vertices[0].z
+	};
+
+	l1.cross(l0, t.normal[0]);
+	t.normal[0].normalize();
+
+	l0 = {
 		t.vertices[2].x - t.vertices[1].x,
 		t.vertices[2].y - t.vertices[1].y,
 		t.vertices[2].z - t.vertices[1].z
 	};
 
-	// calculate normal of triangle face
-	l1.cross(l2, t.normal);
+	l1 = {
+		t.vertices[0].x - t.vertices[1].x,
+		t.vertices[0].y - t.vertices[1].y,
+		t.vertices[0].z - t.vertices[1].z
+	};
 
-	t.normal.normalize();
+	l1.cross(l0, t.normal[1]);
+	t.normal[1].normalize();
+
+	l0 = {
+		t.vertices[0].x - t.vertices[2].x,
+		t.vertices[0].y - t.vertices[2].y,
+		t.vertices[0].z - t.vertices[2].z
+	};
+
+	l1 = {
+		t.vertices[1].x - t.vertices[2].x,
+		t.vertices[1].y - t.vertices[2].y,
+		t.vertices[1].z - t.vertices[2].z
+	};
+
+	l1.cross(l0, t.normal[2]);
+	t.normal[2].normalize();
 }

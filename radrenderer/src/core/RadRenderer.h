@@ -46,7 +46,7 @@ private:
 	float m_cam_movement;
 
 	// transforms
-	math::Mat4<float> m_view, m_perspective, m_orthogonal;
+	math::Mat4<float> m_view, m_perspective, m_orthographic;
 
 	// Direction that the light would be pointing in game
 	math::Vec3<float> lighting;
