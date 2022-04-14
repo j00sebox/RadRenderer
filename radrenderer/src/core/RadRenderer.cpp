@@ -177,9 +177,9 @@ void RadRenderer::rasterize(const Triangle& t)
 			float area1 = edge_function(v1.x, v1.y, v2.x, v2.y, p.x, p.y);
 			float area2 = edge_function(v2.x, v2.y, v0.x, v0.y, p.x, p.y);
 
-			if (area0 > 0 &&
-				area1 > 0 &&
-				area2 > 0)
+			if (area0 >= 0 &&
+				area1 >= 0 &&
+				area2 >= 0)
 			{
 				// barycentric coordinates
 				float l0 = area0 / area_t;
@@ -200,14 +200,7 @@ void RadRenderer::rasterize(const Triangle& t)
 
 					m_depth_buffer[y * m_screen_width + x] = int_z;
 				}
-				else
-				{
-					//set_pixel(x, y, { 255, 0, 0, 255 });
-				}
-			}
-			else
-			{
-				//set_pixel(x, y, { 0, 0, 255, 255 });
+
 			}
 		}
 	}
