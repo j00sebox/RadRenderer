@@ -113,9 +113,9 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			}
 			else if (num_clipped == 0)
 			{
-				o.z[0] = o.vertices[0].z;
-				o.z[1] = o.vertices[1].z;
-				o.z[2] = o.vertices[2].z;
+				o.z[0] = -o.vertices[0].z;
+				o.z[1] = -o.vertices[1].z;
+				o.z[2] = -o.vertices[2].z;
 
 				transform_tri(o, m_perspective);
 				transform_tri(o, m_orthographic);
@@ -202,12 +202,12 @@ void RadRenderer::rasterize(const Triangle& t)
 				}
 				else
 				{
-					set_pixel(x, y, { 255, 0, 0, 255 });
+					//set_pixel(x, y, { 255, 0, 0, 255 });
 				}
 			}
 			else
 			{
-				set_pixel(x, y, { 0, 0, 255, 255 });
+				//set_pixel(x, y, { 0, 0, 255, 255 });
 			}
 		}
 	}
@@ -279,7 +279,7 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	plane_normal.normalize();
 
 	// from the equation: x*Nx + y*Ny + z*Nz - N�P = 0
-	auto calc_distance = [&](math::Vec3<float>& tri_vertex)
+	auto calc_distance = [plane_normal](math::Vec3<float> tri_vertex)
 	{
 		tri_vertex.normalize();
 		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
