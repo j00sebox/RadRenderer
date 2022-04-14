@@ -116,7 +116,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 				o.z[0] = o.vertices[0].z;
 				o.z[1] = o.vertices[1].z;
 				o.z[2] = o.vertices[2].z;
-				
+
 				transform_tri(o, m_perspective);
 				transform_tri(o, m_orthographic);
 
@@ -200,6 +200,14 @@ void RadRenderer::rasterize(const Triangle& t)
 
 					m_depth_buffer[y * m_screen_width + x] = int_z;
 				}
+				else
+				{
+					set_pixel(x, y, { 255, 0, 0, 255 });
+				}
+			}
+			else
+			{
+				set_pixel(x, y, { 0, 0, 255, 255 });
 			}
 		}
 	}
