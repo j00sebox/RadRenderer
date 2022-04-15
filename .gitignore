@@ -169,7 +169,11 @@ bin-int/*
 radrenderer/vendor/sfml/*
 
 # Makefiles
-*/Makefile
 Makefile
-
 run.sh
+
+#Codelite
+*/.codelite
+*.workspace
+*.project
+*/.ctagsd
