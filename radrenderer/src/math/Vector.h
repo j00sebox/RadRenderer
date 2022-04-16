@@ -82,13 +82,13 @@ namespace math {
 
 		inline void normalize()
 		{
-			float normalize = sqrtf(pow(x, 2) + pow(y, 2) + pow(z, 2));
+			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
 			x /= normalize;
 			y /= normalize;
 			z /= normalize;
 		}
-
+        
 		inline void subtract(const Vec3& inputVec, Vec3& outVec) const
 		{
 			outVec.x = x - inputVec.x;
@@ -96,7 +96,7 @@ namespace math {
 			outVec.z = z - inputVec.z;
 		}
 
-		inline Vec3<T> operator + (const Vec3<float>& v)
+		inline Vec3<T> operator + (const Vec3<T>& v)
 		{
 			Vec3<T> r;
 
@@ -107,7 +107,7 @@ namespace math {
 			return r;
 		}
 
-		inline Vec3<T> operator - (const Vec3<float>& v)
+		inline Vec3<T> operator - (const Vec3<T>& v)
 		{
 			Vec3<T> r;
 
@@ -133,6 +133,32 @@ namespace math {
 		}
 
 		T x, y, z;
+        
+#ifdef DEBUG
+        template<typename O>
+        friend std::ostream& operator<<(std::ostream& os, const Vec3<O>& v);
+#endif
+
 	};
+    
+    template<>
+    inline void Vec3<float>::normalize()
+    {
+        float normalize = sqrtf(powf(x, 2) + powf(y, 2) + powf(z, 2));
+
+        x /= normalize;
+        y /= normalize;
+        z /= normalize;
+    }
+    
+#ifdef DEBUG
+    template<typename O>
+    std::ostream& operator<<(std::ostream& os, const Vec3<O>& v)
+    {
+        os << "\n" 
+        << v.x << v.y << v.z << "\n";
+        return os;
+    }
+#endif
 
 }

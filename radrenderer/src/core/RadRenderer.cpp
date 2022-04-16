@@ -66,7 +66,10 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	math::Mat4<float> cam_transform = m_camera->get_transform();
 	m_view = cam_transform.inverse();
     
-    std::cout << m_view;
+//    std::cout << "\nCam Movement: " << m_cam_movement << "\n";
+//    std::cout << "\nForward: " << m_camera->get_forward();
+      std::cout << "\nView: " << m_view;
+//    printf("\nz-forward: %f\n", m_camera->get_forward().z);
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
