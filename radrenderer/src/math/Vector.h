@@ -117,6 +117,17 @@ namespace math {
 
 			return r;
 		}
+        
+        inline Vec3<T> operator * (float a) const 
+		{
+			Vec3<T> r;
+
+			r.x = x * a;
+			r.y = y * a;
+			r.z = z * a;
+
+			return r;
+		}
 
 		inline void scalar_mul(Vec3& outVec, float scalar) const
 		{

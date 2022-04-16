@@ -74,20 +74,15 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
         // convert to camera space
         transform_tri(o, m_view);
             
-		calculate_normal(o);
-
+        o.normal[0] = calculate_normal(o);
+        o.normal[1] = o.normal[0];
+        o.normal[2] = o.normal[0];
+        
 		// check if triangle is visible
 		if (m_camera->get_forward().dot(o.normal[0]) > 0 &&
 			m_camera->get_forward().dot(o.normal[1]) > 0 &&
 			m_camera->get_forward().dot(o.normal[2]) > 0)
 		{
-            float lum0 = m_directional_light.dot(o.normal[0]);
-            float lum1 = m_directional_light.dot(o.normal[1]);
-            float lum2 = m_directional_light.dot(o.normal[2]);
-        
-			Pixel colour0 = get_colour(lum0);
-			Pixel colour1 = get_colour(lum1);
-			Pixel colour2 = get_colour(lum2);
 
 			if( (o.vertices[0].z < m_near || o.vertices[0].z > m_far) ||
                 (o.vertices[1].z < m_near || o.vertices[1].z > m_far) ||
@@ -109,10 +104,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
                 (o.vertices[1].y < -1.f || o.vertices[1].y > 1.f) ||
                 (o.vertices[2].y < -1.f || o.vertices[2].y > 1.f) )
 					continue;
-
-            o.colours[0] = colour0;
-            o.colours[1] = colour1;
-            o.colours[2] = colour2;
 
             m_render_triangles.push_back(o);
 			
@@ -178,16 +169,13 @@ void RadRenderer::rasterize(const Triangle& t)
 
 				float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
 
-				Pixel int_c;
-				int_c.r = l0 * t.colours[0].r + l1 * t.colours[1].r + l2 * t.colours[2].r;
-				int_c.g = l0 * t.colours[0].g + l1 * t.colours[1].g + l2 * t.colours[2].g;
-				int_c.b = l0 * t.colours[0].b + l1 * t.colours[1].b + l2 * t.colours[2].b;
-				int_c.a = 255;
+                math::Vec3<float> normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2; 
                 
+                float lum = m_directional_light.dot(normal);
 
 				if (int_z > m_depth_buffer[y * m_screen_width + x])
 				{
-					set_pixel(x, y, int_c);
+					set_pixel(x, y, get_colour(lum));
 
 					m_depth_buffer[y * m_screen_width + x] = int_z;
 				}
@@ -332,6 +320,8 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	}
 	else if (in_verts == 0)
 		return -1; // triangle lies outside of screen so it should be discarded
+        
+    return 0;
 }
 
 void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
@@ -341,7 +331,7 @@ void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
 	transform.mat_mul_vec(t.vertices[2]);
 }
 
-inline void RadRenderer::calculate_normal(Triangle& t)
+math::Vec3<float> RadRenderer::calculate_normal(Triangle& t)
 {
 	// construct line 1 of the triangle
 	math::Vec3<float> l0 = {
@@ -356,37 +346,10 @@ inline void RadRenderer::calculate_normal(Triangle& t)
 		t.vertices[2].y - t.vertices[0].y,
 		t.vertices[2].z - t.vertices[0].z
 	};
-
-	l1.cross(l0, t.normal[0]);
-	t.normal[0].normalize();
-
-	l0 = {
-		t.vertices[2].x - t.vertices[1].x,
-		t.vertices[2].y - t.vertices[1].y,
-		t.vertices[2].z - t.vertices[1].z
-	};
-
-	l1 = {
-		t.vertices[0].x - t.vertices[1].x,
-		t.vertices[0].y - t.vertices[1].y,
-		t.vertices[0].z - t.vertices[1].z
-	};
-
-	l1.cross(l0, t.normal[1]);
-	t.normal[1].normalize();
-
-	l0 = {
-		t.vertices[0].x - t.vertices[2].x,
-		t.vertices[0].y - t.vertices[2].y,
-		t.vertices[0].z - t.vertices[2].z
-	};
-
-	l1 = {
-		t.vertices[1].x - t.vertices[2].x,
-		t.vertices[1].y - t.vertices[2].y,
-		t.vertices[1].z - t.vertices[2].z
-	};
-
-	l1.cross(l0, t.normal[2]);
-	t.normal[2].normalize();
+    
+    math::Vec3<float> face_normal;
+	l1.cross(l0, face_normal);
+	face_normal.normalize();
+    
+    return face_normal;
 }

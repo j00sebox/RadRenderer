@@ -34,7 +34,7 @@ protected:
 
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
 
-	inline void calculate_normal(Triangle& t);
+	inline math::Vec3<float> calculate_normal(Triangle& t);
 
 private:
 	Object m_object;
