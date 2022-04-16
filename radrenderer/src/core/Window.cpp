@@ -63,7 +63,7 @@ void Window::loop()
 
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W)
             {
-                forward = 1.f;
+                forward = -1.f;
             }
 
             if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::W)
@@ -73,7 +73,7 @@ void Window::loop()
 
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::S)
             {
-                forward = -1.f;
+                forward = 1.f;
             }
 
             if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::S)

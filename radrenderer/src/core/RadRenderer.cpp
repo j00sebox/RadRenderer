@@ -39,7 +39,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 		0.f,	0.f,	0.f,						1.f
 	);
 
-	m_directional_light = { 0.0f, 6.0f, -1.0f };
+	m_directional_light = { 0.0f, 4.0f, -1.0f };
 	camera_plane = { 0.0f, 0.0f, 1.0f };
 
 	m_directional_light.normalize();
@@ -65,11 +65,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// camera transform
 	math::Mat4<float> cam_transform = m_camera->get_transform();
 	m_view = cam_transform.inverse();
-    
-//    std::cout << "\nCam Movement: " << m_cam_movement << "\n";
-//    std::cout << "\nForward: " << m_camera->get_forward();
-      std::cout << "\nView: " << m_view;
-//    printf("\nz-forward: %f\n", m_camera->get_forward().z);
 
 	// iterate through all triangles in the object
 	for (auto o : m_object)
