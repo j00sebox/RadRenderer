@@ -29,7 +29,7 @@ Window::Window(unsigned int width, unsigned int height)
 #ifdef PLATFORM_WINDOWS
     if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
 #elif PLATFORM_LINUX
-    if (!m_font.loadFromFile("./radrenderer/res/fonts/arial_narrow_7.ttf"))
+    if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
 #endif
     {
 #ifdef PLATFORM_WINDOWS

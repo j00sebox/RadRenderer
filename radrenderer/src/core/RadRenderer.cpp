@@ -11,7 +11,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
 #ifdef PLATFORM_LINUX
-	m_object(Object("./radrenderer/res/objs/teapot.obj")),
+	m_object(Object("res/objs/teapot.obj")),
 #elif PLATFORM_WINDOWS
 	m_object(Object("res/objs/teapot.obj")),
 #endif

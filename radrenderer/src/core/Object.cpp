@@ -81,7 +81,7 @@ void Object::load_obj_file(const std::string& fname)
 	// iterate through all lines in file
 	while (std::getline(readFile, line))
 	{
-		std::strstream st;
+		std::stringstream st;
 		st << line;
 
 		// indicates vertex data

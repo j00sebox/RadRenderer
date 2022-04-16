@@ -174,6 +174,12 @@ run.sh
 
 #Codelite
 */.codelite
+.codelite
+*/.ctagsd
+.ctagsd
 *.workspace
 *.project
-*/.ctagsd
+compile_flags.txt
+radrenderer.mk
+radrenderer.txt
+pch.h.gch
