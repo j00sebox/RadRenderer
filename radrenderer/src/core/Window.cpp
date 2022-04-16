@@ -26,11 +26,7 @@ Window::Window(unsigned int width, unsigned int height)
 
     m_window.setVerticalSyncEnabled(true);
 
-#ifdef PLATFORM_WINDOWS
     if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
-#elif PLATFORM_LINUX
-    if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
-#endif
     {
 #ifdef PLATFORM_WINDOWS
           __debugbreak();

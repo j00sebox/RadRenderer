@@ -10,11 +10,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
-#ifdef PLATFORM_LINUX
-	m_object(Object("res/objs/teapot.obj")),
-#elif PLATFORM_WINDOWS
-	m_object(Object("res/objs/teapot.obj")),
-#endif
+	m_object(Object("res/objs/ship.obj")),
 	m_depth_buffer(m_buffer_size, -9999),
 	m_cam_movement(0.f),
 	m_angle_x(0.f), m_angle_y(0.f), m_angle_z(0.f),
@@ -74,7 +70,10 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	for (auto o : m_object)
 	{
 		transform_tri(o, m_object.get_transform());
-
+        
+        // convert to camera space
+        transform_tri(o, m_view);
+            
 		calculate_normal(o);
 
 		float lum0 = m_camera->get_forward().dot(o.normal[0]);
@@ -86,51 +85,37 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			lum1 > 0 &&
 			lum2 > 0)
 		{
-			// convert to camera space
-			transform_tri(o, m_view);
-
 			Pixel colour0 = get_colour(lum0);
 			Pixel colour1 = get_colour(lum1);
 			Pixel colour2 = get_colour(lum2);
 
 			if( (o.vertices[0].z < m_near || o.vertices[0].z > m_far) ||
-				  (o.vertices[1].z < m_near || o.vertices[1].z > m_far) ||
-					(o.vertices[2].z < m_near || o.vertices[2].z > m_far) )
+                (o.vertices[1].z < m_near || o.vertices[1].z > m_far) ||
+                (o.vertices[2].z < m_near || o.vertices[2].z > m_far) )
 					continue;
 
-			// before we project the coordinates onto the screen space we need the clipped ones
-			num_clipped = triangle_clip(camera_plane, camera_plane, o, clipped_tris[0], clipped_tris[1]);
+            o.z[0] = -o.vertices[0].z;
+            o.z[1] = -o.vertices[1].z;
+            o.z[2] = -o.vertices[2].z;
 
-			if (num_clipped > 0)
-			{
-				for (int c = 0; c < num_clipped; c++)
-				{
-					// Convert all coordinates to projection space
-					transform_tri(clipped_tris[c], m_perspective);
-					transform_tri(clipped_tris[c], m_orthographic);
+            transform_tri(o, m_perspective);
+            transform_tri(o, m_orthographic);
+            
+            if( (o.vertices[0].x < -1.f || o.vertices[0].x > 1.f) ||
+                (o.vertices[1].x < -1.f || o.vertices[1].x > 1.f) ||
+                (o.vertices[2].x < -1.f || o.vertices[2].x > 1.f) ||
+                
+                (o.vertices[0].y < -1.f || o.vertices[0].y > 1.f) ||
+                (o.vertices[1].y < -1.f || o.vertices[1].y > 1.f) ||
+                (o.vertices[2].y < -1.f || o.vertices[2].y > 1.f) )
+					continue;
 
-					clipped_tris[c].colours[0] = colour0;
-					clipped_tris[c].colours[1] = colour1;
-					clipped_tris[c].colours[2] = colour2;
+            o.colours[0] = colour0;
+            o.colours[1] = colour1;
+            o.colours[2] = colour2;
 
-					m_render_triangles.push_back(clipped_tris[c]);
-				}
-			}
-			else if (num_clipped == 0)
-			{
-				o.z[0] = -o.vertices[0].z;
-				o.z[1] = -o.vertices[1].z;
-				o.z[2] = -o.vertices[2].z;
-
-				transform_tri(o, m_perspective);
-				transform_tri(o, m_orthographic);
-
-				o.colours[0] = colour0;
-				o.colours[1] = colour1;
-				o.colours[2] = colour2;
-
-				m_render_triangles.push_back(o);
-			}
+            m_render_triangles.push_back(o);
+			
 		}
 	}
 
@@ -153,9 +138,9 @@ void RadRenderer::rasterize(const Triangle& t)
 	int min_x, max_x;
 	int min_y, max_y;
 
-	math::Vec2<int> v0 = { imagesp_to_screensp(std::clamp(t.vertices[0].x, -1.f, 1.f), std::clamp(t.vertices[0].y, -1.f, 1.f)) };
-	math::Vec2<int> v1 = { imagesp_to_screensp(std::clamp(t.vertices[1].x, -1.f, 1.f), std::clamp(t.vertices[1].y, -1.f, 1.f)) };
-	math::Vec2<int> v2 = { imagesp_to_screensp(std::clamp(t.vertices[2].x, -1.f, 1.f), std::clamp(t.vertices[2].y, -1.f, 1.f)) };
+	math::Vec2<int> v0 = { imagesp_to_screensp(t.vertices[0].x, t.vertices[0].y) };
+	math::Vec2<int> v1 = { imagesp_to_screensp(t.vertices[1].x, t.vertices[1].y) };
+	math::Vec2<int> v2 = { imagesp_to_screensp(t.vertices[2].x, t.vertices[2].y) };
 
 	// bounding box
 	min_x = std::min(v0.x, v1.x);
