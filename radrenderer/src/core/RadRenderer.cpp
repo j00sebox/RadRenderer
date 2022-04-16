@@ -184,8 +184,6 @@ void RadRenderer::rasterize(const Triangle& t)
 				int_c.b = l0 * t.colours[0].b + l1 * t.colours[1].b + l2 * t.colours[2].b;
 				int_c.a = 255;
                 
-                //printf("r: %i, g: %i, b: %i\n", int_c.r, int_c.g, int_c.b);
-                
 
 				if (int_z > m_depth_buffer[y * m_screen_width + x])
 				{
