@@ -18,7 +18,7 @@ window and display the image; I also use it to handle events.
 
 End Result:
 
-![Teapot](/screenshots/teapot.PNG)
+![Teapot](/screenshots/teapot.png)
 
 ## Things I Want To Do
 
