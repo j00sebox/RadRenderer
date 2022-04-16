@@ -60,17 +60,21 @@ project "radrenderer"
 		libdirs { "/usr/lib/x86_64-linux-gnu/" }
 
 		links { "sfml-graphics", "sfml-window", "sfml-system" }
-
-	filter { "system:windows", "configurations:Debug" }
+    
+    filter "configurations:Debug"
 		defines "DEBUG"
 		runtime "Debug"
 		symbols "On"
+    
+    filter "configurations:Release"
+		defines "RELEASE"
+		runtime "Release"
+		optimize "On"
+
+	filter { "system:windows", "configurations:Debug" }
 
 		links { "sfml-audio-s-d.lib", "sfml-graphics-s-d.lib", "sfml-network-s-d.lib", "sfml-system-s-d.lib", "sfml-window-s-d.lib" }
 
 	filter { "system:windows", "configurations:Release" }
-		defines "RELEASE"
-		runtime "Release"
-		optimize "On"
 
 		links { "sfml-audio-s.lib", "sfml-graphics-s.lib", "sfml-network-s.lib", "sfml-system-s.lib", "sfml-window-s.lib" }

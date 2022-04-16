@@ -67,17 +67,18 @@ namespace math {
 		}
 
 		// computes the inverse of the matrix using the Gauss-Jordan elimination method
-		inline Mat4<T> inverse()
+		inline Mat4<T> inverse() const
 		{
 			// an identity matrix is needed to keep track of all the operations done on the original matrix
 			// this ends up becoming the inverse
 			Mat4 inv;
+            Mat4 orig(*this);
 
 			// loop through matrix to set all elements to 0 except for the pivot points
 			for (int i = 0; i < 4; i++)
 			{
 				// pivot points are the elements on the diagonal
-				int pivot = mat[i][i];
+				int pivot = orig.mat[i][i];
 
 				// if a pivot is 0 it must be swapped with another row that is a value other than 0
 				if (pivot == 0)
@@ -88,14 +89,14 @@ namespace math {
 					// check all elements in the column for the largest absolute value
 					for (int j = 0; j < 4; j++)
 					{
-						if (std::abs(mat[j][i]) > std::abs(mat[bestOption][i]))
+						if (std::abs(orig.mat[j][i]) > std::abs(orig.mat[bestOption][i]))
 						{
 							bestOption = j;
 						}
 					}
 
 					// if all the elements in the column are 0 then this matrix is Singular
-					if (mat[i][bestOption] == 0)
+					if (orig.mat[i][bestOption] == 0)
 					{
 						fprintf(stderr, "Matrix has no inverse!\n");
 					}
@@ -105,9 +106,9 @@ namespace math {
 
 						for (int j = 0; j < 4; j++)
 						{
-							temp = mat[i][j];
-							mat[i][j] = mat[bestOption][j];
-							mat[bestOption][j] = temp;
+							temp = orig.mat[i][j];
+							orig.mat[i][j] = orig.mat[bestOption][j];
+							orig.mat[bestOption][j] = temp;
 
 							temp = inv.mat[i][j];
 							inv.mat[i][j] = inv.mat[bestOption][j];
@@ -123,13 +124,13 @@ namespace math {
 				{
 					if (i != j)
 					{
-						T q = mat[j][i] / mat[i][i];
+						T q = orig.mat[j][i] / orig.mat[i][i];
 
 						if (q != 0)
 						{
 							for (int k = 0; k < 4; k++)
 							{
-								mat[j][k] -= q * mat[i][k];
+								orig.mat[j][k] -= q * orig.mat[i][k];
 								inv.mat[j][k] -= q * inv.mat[i][k];
 							}
 						}
@@ -142,11 +143,11 @@ namespace math {
 			for (int i = 0; i < 4; i++)
 			{
 
-				if (mat[i][i] != 1)
+				if (orig.mat[i][i] != 1)
 				{
 					for (int j = 0; j < 4; j++)
 					{
-						inv.mat[i][j] /= mat[i][i];
+						inv.mat[i][j] /= orig.mat[i][i];
 					}
 				}
 			}
@@ -263,10 +264,30 @@ namespace math {
 
 			return res_mat;
 		}
+    
+#ifdef DEBUG
+        template<typename O>
+        friend std::ostream& operator<<(std::ostream& os, const Mat4<O>& m);
+#endif
 
 	private:
 		// default matrix is identity
 		T mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
 	};
+    
+#ifdef DEBUG
+    template<typename O>
+    std::ostream& operator<<(std::ostream& os, const Mat4<O>& m)
+    {
+        os << "\n" 
+        << m.mat[0][0] << m.mat[0][1] << m.mat[0][2] << m.mat[0][3] << "\n"
+        << m.mat[1][0] << m.mat[1][1] << m.mat[1][2] << m.mat[1][3] << "\n"
+        << m.mat[2][0] << m.mat[2][1] << m.mat[2][2] << m.mat[2][3] << "\n"
+        << m.mat[3][0] << m.mat[3][1] << m.mat[3][2] << m.mat[3][3] << "\n";
+        return os;
+    }
+#endif
 
 }
+
+
