@@ -2,7 +2,9 @@
 
 ## Description
 
-An implementation of a 3D renderer. Can load objects from .obj files.
+Trying to apply my knowledge of rendering to make a rasterizer from scratch. This is just for fun and learning not planning on making any triple A games.
+So far it can load vertex position info from an .obj file and render it on screen. The only outside library I am currently using is SFML to create a
+window and display the image; I also use it to handle events. 
 
 ## How it Works
 
@@ -10,9 +12,9 @@ An implementation of a 3D renderer. Can load objects from .obj files.
 2. Applies transformations to object
 3. Does all necessary clipping
 4. Performs a perpective projection on all vertices
-5. Sorts triangles based on z values
 6. Rasterizes each triangle from back to front using an edge function
-7. Writes pixels to a frame buffer that is displayed by SFML
+7. Determines if pixels should be drawn using a depth buffer
+8. Writes pixels to a frame buffer that is displayed by SFML
 
 End Result:
 
@@ -20,8 +22,9 @@ End Result:
 
 ## Things I Want To Do
 
-- Add depth buffer
 - Implement Gouraud shading
+- Quaternion lib
 - SIMD math operations
+- Anti-aliasing
 - Textures
 
