@@ -4,6 +4,16 @@
 
 #include <memory>
 
+enum class ClipPlanes
+{
+    Near = 0,
+    Far,
+    Top,
+    Bottom,
+    Left,
+    Right
+};
+
 class RadRenderer
 {
 public:
@@ -30,7 +40,9 @@ protected:
 
 	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
 
-	int triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2);
+	void clip_triangle(ClipPlanes plane, math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& t);
+    
+    void clip_triangle(ClipPlanes plane, math::Vec3<float>&& point, math::Vec3<float>&& plane_normal, Triangle& t);
 
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
 
@@ -47,16 +59,19 @@ private:
 
 	// transforms
 	math::Mat4<float> m_view, m_perspective, m_orthographic;
-
+    
+    // lighting
 	math::Vec3<float> m_directional_light;
-    float m_diffuse_constant = 0.75f;
+    float m_diffuse_constant = 0.75f; // make some kind of material class for this
 
 	std::vector<Triangle> m_render_triangles;
 
 	math::Vec3<float> camera_plane;
-	Triangle clipped_tris[2]; // holds the new triangles after clipping if any
-	int num_clipped = 0; // holds the number of clipped triangles
-
+	std::vector<Triangle> m_clipped_tris_view; // clipped tris in the camera space
+    std::vector<Triangle> m_clipped_tris_proj;  // clipped tris in the view space
+	int num_clipped = 0; 
+    
+    // screen stuff
 	unsigned int m_screen_width, m_screen_height, m_buffer_size;
 	int m_half_width, m_half_height; // caching these for later
 	std::unique_ptr<Pixel> m_frame_buffer;

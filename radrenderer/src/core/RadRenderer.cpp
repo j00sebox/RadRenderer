@@ -73,7 +73,8 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
         
         // convert to camera space
         transform_tri(o, m_view);
-            
+        
+        // remove when normals are attributes
         o.normal[0] = calculate_normal(o);
         o.normal[1] = o.normal[0];
         o.normal[2] = o.normal[0];
@@ -84,11 +85,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			m_camera->get_forward().dot(o.normal[2]) > 0)
 		{
 
-			if( (o.vertices[0].z < m_near || o.vertices[0].z > m_far) ||
-                (o.vertices[1].z < m_near || o.vertices[1].z > m_far) ||
-                (o.vertices[2].z < m_near || o.vertices[2].z > m_far) )
-					continue;
-
             o.z[0] = -o.vertices[0].z;
             o.z[1] = -o.vertices[1].z;
             o.z[2] = -o.vertices[2].z;
@@ -96,9 +92,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
             transform_tri(o, m_perspective);
             transform_tri(o, m_orthographic);
             
-            if( (o.vertices[0].x < -1.f || o.vertices[0].x > 1.f) ||
-                (o.vertices[1].x < -1.f || o.vertices[1].x > 1.f) ||
-                (o.vertices[2].x < -1.f || o.vertices[2].x > 1.f) ||
+            //clip_triangle(ClipPlanes::Left, { -1.f, 0.f, 0.f }, { 1.f, 0.f, 0.f  }, o);
+            
+            if( (o.vertices[0].x > 1.f) ||
+                (o.vertices[1].x > 1.f) ||
+                (o.vertices[2].x > 1.f) ||
                 
                 (o.vertices[0].y < -1.f || o.vertices[0].y > 1.f) ||
                 (o.vertices[1].y < -1.f || o.vertices[1].y > 1.f) ||
@@ -109,6 +107,21 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 			
 		}
 	}
+    
+    for (auto t : m_clipped_tris_view)
+	{
+        t.z[0] = -t.vertices[0].z;
+        t.z[1] = -t.vertices[1].z;
+        t.z[2] = -t.vertices[2].z;
+
+        transform_tri(t, m_perspective);
+        transform_tri(t, m_orthographic);
+    }
+    
+    for (auto t : m_clipped_tris_proj)
+	{
+       m_render_triangles.push_back(t);
+    }
 
 	for (const auto& t : m_render_triangles)
 	{
@@ -244,23 +257,11 @@ math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, ma
 	return line;
 }
 
-// this returns the resulting number of traingles after a clip
-int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& ref_tri, Triangle& res_tri1, Triangle& res_tri2)
+// creates new triangles if needed and adds them to a vector
+void RadRenderer::clip_triangle(ClipPlanes plane, math::Vec3<float>& plane_point, math::Vec3<float>& plane_normal, Triangle& t)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
-
-	// from the equation: x*Nx + y*Ny + z*Nz - NP = 0
-	auto calc_distance = [plane_normal](math::Vec3<float> tri_vertex)
-	{
-		tri_vertex.normalize();
-		return (tri_vertex.x * plane_normal.x + tri_vertex.y * plane_normal.y + tri_vertex.z * plane_normal.z - plane_normal.dot(tri_vertex));
-	};
-
-	// calculate distance for each vertex
-	float d0 = calc_distance(ref_tri.vertices[0]);
-	float d1 = calc_distance(ref_tri.vertices[1]);
-	float d2 = calc_distance(ref_tri.vertices[2]);
 
 	int in_verts = 0;
 	int out_verts = 0;
@@ -269,59 +270,296 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	math::Vec3<float> in_vs[3];
 	math::Vec3<float> out_vs[3];
 
-	// determine amount of inside and outside vertices
-	if (d0 >= 0) { in_vs[in_verts] = ref_tri.vertices[0]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[0]; out_verts++; }
+	switch (plane)
+    {
+        case ClipPlanes::Near:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].z < m_near)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+        
+        case ClipPlanes::Far:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].z > m_far)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+            
+        case ClipPlanes::Top:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].y > 1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+            
+        case ClipPlanes::Bottom:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].y < -1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+            
+        case ClipPlanes::Left:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].x < -1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+        
+        case ClipPlanes::Right:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].x > 1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+            break;
+    }
 
-	if (d1 >= 0) { in_vs[in_verts] = ref_tri.vertices[1]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[1]; out_verts++; }
-
-	if (d2 >= 0) { in_vs[in_verts] = ref_tri.vertices[2]; in_verts++; }
-	else { out_vs[out_verts] = ref_tri.vertices[2]; out_verts++; }
-
-	// determine how many traingles are needed
-	if (in_verts == 3)
-		return 0; // no new traingles are needed
-	else if (in_verts == 2)
+	if (in_verts == 2)
 	{
-		// both new traingles will have the same properties as the one being clipped
-		/*res_tri1.colours = ref_tri.colours;
+		Triangle t1, t2;
+        
+		t1.vertices[0] = in_vs[0];
+		t1.vertices[1] = in_vs[1];
 
-		res_tri2.colours = ref_tri.colours;*/
-
-		// first new triangle contains the two in vertices
-		res_tri1.vertices[0] = in_vs[0];
-		res_tri1.vertices[1] = in_vs[1];
-
-		// second one will just contain the second vertex as it's first
-		res_tri2.vertices[0] = in_vs[1];
+		t2.vertices[0] = in_vs[1];
 
 		// the intersecting points to the plane will make up the rest of both triangles
-		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
 
-		res_tri2.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[1]);
-		res_tri2.vertices[2] = res_tri1.vertices[2]; // both new triangles share this vertex
-
-		return 2;
+		t2.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[1]);
+		t2.vertices[2] = t1.vertices[2]; // both new triangles share this vertex
+        
+        if(plane == ClipPlanes::Near || plane == ClipPlanes::Far)
+        {
+            m_clipped_tris_view.push_back(t1);
+            m_clipped_tris_view.push_back(t2);
+        }
+        else
+        {
+            m_clipped_tris_proj.push_back(t1);
+            m_clipped_tris_proj.push_back(t2);
+        }
 	}
 	else if (in_verts == 1)
 	{
-		// new triangle will have same properties as old one
-		//res_tri1.colour = ref_tri.colour;
+        Triangle t1;
+		t1.vertices[0] = in_vs[0];
 
-		// just 1 new triangle but smaller
-		res_tri1.vertices[0] = in_vs[0];
-
-		// 2 new vertices are made by finding the intersection to the plane ( screen edge )
-		res_tri1.vertices[1] = line_plane_intersect(point, plane_normal, out_vs[0], in_vs[0]);
-		res_tri1.vertices[2] = line_plane_intersect(point, plane_normal, out_vs[1], in_vs[0]);
-
-		return 1;
-	}
-	else if (in_verts == 0)
-		return -1; // triangle lies outside of screen so it should be discarded
+		t1.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[1], in_vs[0]);
         
-    return 0;
+        if(plane == ClipPlanes::Near || plane == ClipPlanes::Far)
+        {
+            m_clipped_tris_view.push_back(t1);
+        }
+        else
+        {
+            m_clipped_tris_proj.push_back(t1);
+        }
+	}
+        
+}
+
+void RadRenderer::clip_triangle(ClipPlanes plane, math::Vec3<float>&& plane_point, math::Vec3<float>&& plane_normal, Triangle& t)
+{
+	// make sure it's normalized
+	plane_normal.normalize();
+
+	int in_verts = 0;
+	int out_verts = 0;
+
+	// this will keep track of which vertices are in vs out
+	math::Vec3<float> in_vs[3];
+	math::Vec3<float> out_vs[3];
+
+	switch (plane)
+    {
+        case ClipPlanes::Near:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].z < m_near)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+                
+                printf("\n%f\n", t.vertices[i].z);
+            }
+        
+        case ClipPlanes::Far:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].z > m_far)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+        case ClipPlanes::Top:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].y > 1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+        case ClipPlanes::Bottom:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].y < -1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+            
+        case ClipPlanes::Left:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].x < -1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+        
+        case ClipPlanes::Right:
+            
+            for(int i = 0; i < 3; i++)
+            {
+                if(t.vertices[i].x > 1.f)
+                {
+                    out_vs[out_verts++] = t.vertices[i];
+                }
+                else
+                {
+                    in_vs[in_verts++] = t.vertices[i];
+                }
+            }
+    }
+
+	if (in_verts == 2)
+	{
+		Triangle t1, t2;
+        
+		t1.vertices[0] = in_vs[0];
+		t1.vertices[1] = in_vs[1];
+
+		t2.vertices[0] = in_vs[1];
+
+		// the intersecting points to the plane will make up the rest of both triangles
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
+
+		t2.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[1]);
+		t2.vertices[2] = t1.vertices[2]; // both new triangles share this vertex
+        
+        if(plane == ClipPlanes::Near || plane == ClipPlanes::Far)
+        {
+            m_clipped_tris_view.push_back(t1);
+            m_clipped_tris_view.push_back(t2);
+        }
+        else
+        {
+            m_clipped_tris_proj.push_back(t1);
+            m_clipped_tris_proj.push_back(t2);
+        }
+	}
+	else if (in_verts == 1)
+	{
+        Triangle t1;
+		t1.vertices[0] = in_vs[0];
+
+		t1.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[1], in_vs[0]);
+        
+        if(plane == ClipPlanes::Near || plane == ClipPlanes::Far)
+        {
+            m_clipped_tris_view.push_back(t1);
+        }
+        else
+        {
+            m_clipped_tris_proj.push_back(t1);
+        }
+	}
+        
 }
 
 void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
