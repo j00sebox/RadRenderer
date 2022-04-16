@@ -10,7 +10,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
-	m_object(Object("res/objs/ship.obj")),
+	m_object(Object("res/objs/teapot.obj")),
 	m_depth_buffer(m_buffer_size, -9999),
 	m_cam_movement(0.f),
 	m_angle_x(0.f), m_angle_y(0.f), m_angle_z(0.f),
@@ -39,10 +39,10 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 		0.f,	0.f,	0.f,						1.f
 	);
 
-	lighting = { 0.0f, 0.0f, -1.0f };
+	m_directional_light = { 0.0f, 6.0f, -1.0f };
 	camera_plane = { 0.0f, 0.0f, 1.0f };
 
-	lighting.normalize();
+	m_directional_light.normalize();
 }
 
 Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y)
@@ -76,15 +76,15 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
             
 		calculate_normal(o);
 
-		float lum0 = m_camera->get_forward().dot(o.normal[0]);
-		float lum1 = m_camera->get_forward().dot(o.normal[1]);
-		float lum2 = m_camera->get_forward().dot(o.normal[2]);
-
 		// check if triangle is visible
-		if (lum0 > 0 &&
-			lum1 > 0 &&
-			lum2 > 0)
+		if (m_camera->get_forward().dot(o.normal[0]) > 0 &&
+			m_camera->get_forward().dot(o.normal[1]) > 0 &&
+			m_camera->get_forward().dot(o.normal[2]) > 0)
 		{
+            float lum0 = m_directional_light.dot(o.normal[0]);
+            float lum1 = m_directional_light.dot(o.normal[1]);
+            float lum2 = m_directional_light.dot(o.normal[2]);
+        
 			Pixel colour0 = get_colour(lum0);
 			Pixel colour1 = get_colour(lum1);
 			Pixel colour2 = get_colour(lum2);
@@ -181,8 +181,11 @@ void RadRenderer::rasterize(const Triangle& t)
 				Pixel int_c;
 				int_c.r = l0 * t.colours[0].r + l1 * t.colours[1].r + l2 * t.colours[2].r;
 				int_c.g = l0 * t.colours[0].g + l1 * t.colours[1].g + l2 * t.colours[2].g;
-				int_c.r = l0 * t.colours[0].b + l1 * t.colours[1].b + l2 * t.colours[2].b;
+				int_c.b = l0 * t.colours[0].b + l1 * t.colours[1].b + l2 * t.colours[2].b;
 				int_c.a = 255;
+                
+                //printf("r: %i, g: %i, b: %i\n", int_c.r, int_c.g, int_c.b);
+                
 
 				if (int_z > m_depth_buffer[y * m_screen_width + x])
 				{
@@ -203,7 +206,7 @@ float RadRenderer::edge_function(float x0, float y0, float x1, float y1, float x
 
 Pixel RadRenderer::get_colour(float lum)
 {
-	Pixel p = { (std::uint8_t)(255 * lum), (std::uint8_t)(255 * lum), (std::uint8_t)(255 * lum), 255 };
+	Pixel p = { (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255 };
 	return p;
 }
 
@@ -261,7 +264,7 @@ int RadRenderer::triangle_clip(math::Vec3<float>& point, math::Vec3<float>& plan
 	// make sure it's normalized
 	plane_normal.normalize();
 
-	// from the equation: x*Nx + y*Ny + z*Nz - N�P = 0
+	// from the equation: x*Nx + y*Ny + z*Nz - NP = 0
 	auto calc_distance = [plane_normal](math::Vec3<float> tri_vertex)
 	{
 		tri_vertex.normalize();

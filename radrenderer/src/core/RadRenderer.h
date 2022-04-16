@@ -48,8 +48,8 @@ private:
 	// transforms
 	math::Mat4<float> m_view, m_perspective, m_orthographic;
 
-	// Direction that the light would be pointing in game
-	math::Vec3<float> lighting;
+	math::Vec3<float> m_directional_light;
+    float m_diffuse_constant = 0.75f;
 
 	std::vector<Triangle> m_render_triangles;
 
