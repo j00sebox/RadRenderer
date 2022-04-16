@@ -22,7 +22,6 @@ End Result:
 
 ## Things I Want To Do
 
-- Implement Gouraud shading
 - Quaternion lib
 - SIMD math operations
 - Anti-aliasing
