@@ -89,6 +89,8 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 
             transform_tri(o, m_perspective);
             transform_tri(o, m_orthographic);
+
+			//printf("\ny1: %f, y2: %f, y3: %f\n", o.vertices[0].y, o.vertices[1].y, o.vertices[2].y);
             
 			bool clipped = false;
 
@@ -222,25 +224,12 @@ void RadRenderer::clear_depth_buffer()
 // returns the point that the given plane and line intersect
 math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
 {
-	// always gotta normalize
-	plane_normal.normalize();
+	float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
+		(plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
-	// line_begin + line*t = p0 + p1*u + p2*v
-	float np = -point.dot(plane_normal);
-	float dotb = line_begin.dot(plane_normal);
-	float dote = line_end.dot(plane_normal);
-	float t = (-np - dotb) / (dote - dotb);
+	math::Vec3<float> intersection_point = line_begin + (line_end - line_begin) * t;
 
-	// construct line
-	math::Vec3<float> line;
-	line_end.subtract(line_begin, line);
-
-	math::Vec3<float> intersection;
-	line.scalar_mul(intersection, t);
-
-	line_begin.add(intersection, line);
-
-	return line;
+	return intersection_point;
 }
 
 bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<float>&& plane_normal, Triangle& t)
@@ -280,9 +269,9 @@ bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<floa
 		t2.vertices[0] = in_vs[1];
 
 		// the intersecting points to the plane will make up the rest of both triangles
-		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, in_vs[0], out_vs[0]);
 
-		t2.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[1]);
+		t2.vertices[1] = line_plane_intersect(plane_point, plane_normal, in_vs[1], out_vs[0]);
 		t2.vertices[2] = t1.vertices[2]; // both new triangles share this vertex
 
 		// copy over attributes
@@ -312,8 +301,8 @@ bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<floa
 		Triangle t1;
 		t1.vertices[0] = in_vs[0];
 
-		t1.vertices[1] = line_plane_intersect(plane_point, plane_normal, out_vs[0], in_vs[0]);
-		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, out_vs[1], in_vs[0]);
+		t1.vertices[1] = line_plane_intersect(plane_point, plane_normal, in_vs[0], out_vs[0]);
+		t1.vertices[2] = line_plane_intersect(plane_point, plane_normal, in_vs[0], out_vs[1]);
 
 		t1.z[0] = t.z[0];
 		t1.z[1] = t.z[1];
