@@ -4,16 +4,6 @@
 
 #include <memory>
 
-enum class ClipPlanes
-{
-    Near = 0,
-    Far,
-    Top,
-    Bottom,
-    Left,
-    Right
-};
-
 class RadRenderer
 {
 public:
@@ -39,10 +29,8 @@ protected:
 	void clear_depth_buffer();
 
 	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
-
-	void clip_triangle(ClipPlanes plane, math::Vec3<float>& point, math::Vec3<float>& plane_normal, Triangle& t);
     
-    void clip_triangle(ClipPlanes plane, math::Vec3<float>&& point, math::Vec3<float>&& plane_normal, Triangle& t);
+    bool clip_triangle(math::Vec3<float>&& point, math::Vec3<float>&& plane_normal, Triangle& t);
 
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
 
@@ -65,11 +53,7 @@ private:
     float m_diffuse_constant = 0.75f; // make some kind of material class for this
 
 	std::vector<Triangle> m_render_triangles;
-
-	math::Vec3<float> camera_plane;
-	std::vector<Triangle> m_clipped_tris_view; // clipped tris in the camera space
-    std::vector<Triangle> m_clipped_tris_proj;  // clipped tris in the view space
-	int num_clipped = 0; 
+	std::vector<Triangle> m_clipped_tris;
     
     // screen stuff
 	unsigned int m_screen_width, m_screen_height, m_buffer_size;
