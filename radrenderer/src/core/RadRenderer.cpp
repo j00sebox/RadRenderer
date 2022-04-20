@@ -78,7 +78,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
         o.normal[2] = o.normal[0];
         
 		// check if triangle is visible
-		if (m_camera->get_forward().dot(o.normal[0]) > 0 &&
+		if (m_camera->get_forward().dot(o.normal[0]) > 0 && 
 			m_camera->get_forward().dot(o.normal[1]) > 0 &&
 			m_camera->get_forward().dot(o.normal[2]) > 0)
 		{
@@ -89,8 +89,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 
             transform_tri(o, m_perspective);
             transform_tri(o, m_orthographic);
-
-			//printf("\ny1: %f, y2: %f, y3: %f\n", o.vertices[0].y, o.vertices[1].y, o.vertices[2].y);
             
 			bool clipped = false;
 
@@ -153,8 +151,6 @@ void RadRenderer::rasterize(const Triangle& t)
 		{
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
-			float area_t = edge_function(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
-
 			float area0 = edge_function(v0.x, v0.y, v1.x, v1.y, p.x, p.y);
 			float area1 = edge_function(v1.x, v1.y, v2.x, v2.y, p.x, p.y);
 			float area2 = edge_function(v2.x, v2.y, v0.x, v0.y, p.x, p.y);
@@ -163,6 +159,9 @@ void RadRenderer::rasterize(const Triangle& t)
 				area1 >= 0 &&
 				area2 >= 0)
 			{
+
+				float area_t = edge_function(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
+
 				// barycentric coordinates
 				float l0 = area0 / area_t;
 				float l1 = area1 / area_t;
@@ -180,7 +179,6 @@ void RadRenderer::rasterize(const Triangle& t)
 
 					m_depth_buffer[y * m_screen_width + x] = int_z;
 				}
-
 			}
 		}
 	}
@@ -224,6 +222,7 @@ void RadRenderer::clear_depth_buffer()
 // returns the point that the given plane and line intersect
 math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
 {
+	// using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
 	float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
 		(plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
