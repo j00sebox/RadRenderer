@@ -264,6 +264,20 @@ namespace math {
 
 			return res_mat;
 		}
+
+		inline Mat4<T> operator * (float scalar) const
+		{
+			Mat4<T> res_mat;
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					res_mat(i, j) = mat[i][j] * scalar;
+				}
+			}
+
+			return res_mat;
+		}
     
 #ifdef DEBUG
         template<typename O>

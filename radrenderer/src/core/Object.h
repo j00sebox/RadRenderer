@@ -45,7 +45,7 @@ public:
 	inline std::vector<Triangle>::const_iterator end() const { return m_tris.end(); }
 
 private:
-	// loads vertex and face data from txt file realting to obj file
+	// loads vertex and face data from obj file
 	void load_obj_file(const std::string& fname);
 
 	std::vector<Triangle> m_tris;

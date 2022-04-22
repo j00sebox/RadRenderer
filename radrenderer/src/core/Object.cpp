@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Object.h"
 
+#include "math/Quaternion.h"
+
 Object::Object(const std::string& fname)
 {
 	load_obj_file(fname);
@@ -20,6 +22,7 @@ void Object::translate(float x, float y, float z)
 
 void Object::rotate_x(float rx)
 {
+
 	m_transform = m_transform *
 
 		math::Mat4<float>({
