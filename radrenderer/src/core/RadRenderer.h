@@ -32,8 +32,8 @@ private:
 	std::unique_ptr<Camera> m_camera;
 
 	float m_far, m_near, m_fov;
-	float m_angle_x, m_angle_y, m_angle_z;
-	float m_cam_movement;
+	float m_angle_x = 0.f, m_angle_y = 0.f, m_angle_z = 0.f;
+	float m_cam_movement = 0.f;
 
 	// transforms
 	math::Mat4<float> m_view, m_perspective, m_orthographic;

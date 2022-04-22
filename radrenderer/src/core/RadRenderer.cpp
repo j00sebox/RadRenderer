@@ -11,12 +11,11 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
 	m_object(Object("res/objs/teapot.obj")),
-	m_depth_buffer(m_buffer_size, -9999),
-	m_cam_movement(0.f),
-	m_angle_x(0.f), m_angle_y(0.f), m_angle_z(0.f),
-	m_camera(new Camera())
+	m_depth_buffer(m_buffer_size, -9999)
 {
 	clear_frame_buffer();
+
+	m_camera.reset(new Camera());
 
 	float m_fovRAD = DEG_TO_RAD(m_fov);
 	float scaling_factor = 1.0f / tanf(m_fov * 0.5f);
@@ -151,16 +150,16 @@ void RadRenderer::rasterize(const Triangle& t)
 		{
 			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
-			float area0 = edge_function(v0.x, v0.y, v1.x, v1.y, p.x, p.y);
-			float area1 = edge_function(v1.x, v1.y, v2.x, v2.y, p.x, p.y);
-			float area2 = edge_function(v2.x, v2.y, v0.x, v0.y, p.x, p.y);
+			float area0 = edge_function((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, p.x, p.y);
+			float area1 = edge_function((float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y, p.x, p.y);
+			float area2 = edge_function((float)v2.x, (float)v2.y, (float)v0.x, (float)v0.y, p.x, p.y);
 
 			if (area0 >= 0 &&
 				area1 >= 0 &&
 				area2 >= 0)
 			{
 
-				float area_t = edge_function(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
+				float area_t = edge_function((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
 
 				// barycentric coordinates
 				float l0 = area0 / area_t;

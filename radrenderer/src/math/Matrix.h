@@ -78,7 +78,7 @@ namespace math {
 			for (int i = 0; i < 4; i++)
 			{
 				// pivot points are the elements on the diagonal
-				int pivot = orig.mat[i][i];
+				T pivot = orig.mat[i][i];
 
 				// if a pivot is 0 it must be swapped with another row that is a value other than 0
 				if (pivot == 0)
