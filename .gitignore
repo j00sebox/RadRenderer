@@ -164,6 +164,10 @@ bin-int/*
 # VS
 .vs/*
 */.vs/*
+*/*.vcxproj
+*/*.vcxproj.user
+*/*.vcxproj.filters
+*.sln
 
 # SFML
 radrenderer/vendor/sfml/*
