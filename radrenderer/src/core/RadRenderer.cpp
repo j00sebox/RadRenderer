@@ -339,7 +339,7 @@ math::Vec3<float> RadRenderer::calculate_normal(Triangle& t)
 		t.vertices[1].z - t.vertices[0].z
 	};
 
-	// contstruct line 2 of the triangle
+	// construct line 2 of the triangle
 	math::Vec3<float> l1 = {
 		t.vertices[2].x - t.vertices[0].x,
 		t.vertices[2].y - t.vertices[0].y,

@@ -9,6 +9,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\Camera.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="src\core\Object.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -28,9 +31,11 @@
       <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\core\Camera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\Camera.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
     <ClCompile Include="src\core\Object.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -42,6 +47,5 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\core\Camera.cpp" />
   </ItemGroup>
 </Project>

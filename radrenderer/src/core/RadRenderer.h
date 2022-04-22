@@ -15,25 +15,15 @@ public:
 
 protected:
 	void rasterize(const Triangle& t);
-
 	float edge_function(float x0, float y0, float x1, float y1, float x2, float y2);
-
 	Pixel get_colour(float lum);
-
 	void set_pixel(int x, int y, const Pixel& col);
-
 	std::pair<int, int> imagesp_to_screensp(float x, float y);
-
 	void clear_frame_buffer();
-
 	void clear_depth_buffer();
-
 	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
-    
     bool clip_triangle(math::Vec3<float>&& point, math::Vec3<float>&& plane_normal, Triangle& t);
-
 	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
-
 	inline math::Vec3<float> calculate_normal(Triangle& t);
 
 private:

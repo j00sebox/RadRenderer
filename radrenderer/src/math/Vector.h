@@ -172,4 +172,76 @@ namespace math {
     }
 #endif
 
+	template<typename T>
+	class Vec4
+	{
+	public:
+		Vec4() : x(0), y(0), z(0), w(0) {}
+
+		Vec4(const Vec3<T>& vec, int w)
+		{
+			x = vec.x;
+			y = vec.y;
+			z = vec.z;
+			this->w = w;
+		}
+
+		inline void normalize()
+		{
+			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+
+			x /= normalize;
+			y /= normalize;
+			z /= normalize;
+			w /= normalize;
+		}
+
+		inline void normalize_xyz()
+		{
+			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+
+			x /= normalize;
+			y /= normalize;
+			z /= normalize;
+		}
+
+		inline Vec4<T> operator + (const Vec4<T>& v)
+		{
+			Vec4<T> r;
+
+			r.x = x + v.x;
+			r.y = y + v.y;
+			r.z = z + v.z;
+			r.w = w + v.w;
+
+			return r;
+		}
+
+		inline Vec4<T> operator - (const Vec4<T>& v)
+		{
+			Vec4<T> r;
+
+			r.x = x - v.x;
+			r.y = y - v.y;
+			r.z = z - v.z;
+			r.w = w - v.w;
+
+			return r;
+		}
+
+		inline Vec4<T> operator * (float a) const
+		{
+			Vec4<T> r;
+
+			r.x = x * a;
+			r.y = y * a;
+			r.z = z * a;
+			r.w = w * a;
+
+			return r;
+		}
+
+		T x, y, z, w;
+	};
+
 }
