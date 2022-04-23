@@ -8,7 +8,6 @@ public:
 	Camera();
 	~Camera() {}
 
-	void set_pos(const math::Vec3& pos);
 	void set_pos(math::Vec3&& pos);
 	const math::Vec3& get_pos() const;
 

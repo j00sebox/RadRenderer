@@ -99,8 +99,8 @@ void Window::loop()
                     int x = event.mouseMove.x;
                     int y = event.mouseMove.y;
 
-					dx = (x - prev_x);
-					dy = (y - prev_y);
+					dx = (float)(x - prev_x);
+					dy = (float)(y - prev_y);
                 }
             }
 

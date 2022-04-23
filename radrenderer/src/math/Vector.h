@@ -67,11 +67,15 @@ namespace math {
 
 		Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
-		inline void cross(Vec3& line, Vec3& normal)
+		inline Vec3 cross(const Vec3& line) const
 		{
+			Vec3 normal;
+
 			normal.x = y * line.z - z * line.y;
 			normal.y = z * line.x - x * line.z;
 			normal.z = x * line.y - y * line.x;
+
+			return normal;
 		}
 
 		inline float dot(Vec3& vec) const
@@ -81,14 +85,17 @@ namespace math {
 
 		inline void normalize()
 		{
-			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+			float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f));
 
-			x /= normalize;
-			y /= normalize;
-			z /= normalize;
+			if (divisor > 0.f)
+			{
+				x /= divisor;
+				y /= divisor;
+				z /= divisor;
+			}
 		}
 
-		inline Vec3 operator + (const Vec3& v)
+		inline Vec3 operator + (const Vec3& v) const 
 		{
 			Vec3 r;
 
@@ -99,7 +106,7 @@ namespace math {
 			return r;
 		}
 
-		inline Vec3 operator - (const Vec3& v)
+		inline Vec3 operator - (const Vec3& v) const
 		{
 			Vec3 r;
 
@@ -110,42 +117,27 @@ namespace math {
 			return r;
 		}
         
-        inline Vec3 operator * (float a) const 
+        inline Vec3 operator * (float scalar) const 
 		{
 			Vec3 r;
 
-			r.x = x * a;
-			r.y = y * a;
-			r.z = z * a;
+			r.x = x * scalar;
+			r.y = y * scalar;
+			r.z = z * scalar;
 
 			return r;
-		}
-
-		inline void scalar_mul(Vec3& outVec, float scalar) const
-		{
-			outVec.x = scalar * x;
-			outVec.y = scalar * y;
-			outVec.z = scalar * z;
-		}
-
-		inline void add(const Vec3& a, Vec3& outVec) const
-		{
-			outVec.x = x + a.x;
-			outVec.y = y + a.y;
-			outVec.z = z + a.z;
 		}
 
 		float x, y, z;
 	};
 
 
-	template<typename T>
 	class Vec4
 	{
 	public:
 		Vec4() : x(0), y(0), z(0), w(0) {}
 
-		Vec4(const Vec3& vec, int w)
+		Vec4(const Vec3& vec, float w)
 		{
 			x = vec.x;
 			y = vec.y;
@@ -155,26 +147,32 @@ namespace math {
 
 		inline void normalize()
 		{
-			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+			float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f) + powf(w, 2.f));
 
-			x /= normalize;
-			y /= normalize;
-			z /= normalize;
-			w /= normalize;
+			if (divisor > 0.f)
+			{
+				x /= divisor;
+				y /= divisor;
+				z /= divisor;
+				w /= divisor;
+			}
 		}
 
 		inline void normalize_xyz()
 		{
-			float normalize = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+			float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f));
 
-			x /= normalize;
-			y /= normalize;
-			z /= normalize;
+			if (divisor > 0.f)
+			{
+				x /= divisor;
+				y /= divisor;
+				z /= divisor;
+			}
 		}
 
-		inline Vec4<T> operator + (const Vec4<T>& v)
+		inline Vec4 operator + (const Vec4& v)
 		{
-			Vec4<T> r;
+			Vec4 r;
 
 			r.x = x + v.x;
 			r.y = y + v.y;
@@ -184,9 +182,9 @@ namespace math {
 			return r;
 		}
 
-		inline Vec4<T> operator - (const Vec4<T>& v)
+		inline Vec4 operator - (const Vec4& v)
 		{
-			Vec4<T> r;
+			Vec4 r;
 
 			r.x = x - v.x;
 			r.y = y - v.y;
@@ -196,9 +194,9 @@ namespace math {
 			return r;
 		}
 
-		inline Vec4<T> operator * (float a) const
+		inline Vec4 operator * (float a) const
 		{
-			Vec4<T> r;
+			Vec4 r;
 
 			r.x = x * a;
 			r.y = y * a;
@@ -208,7 +206,7 @@ namespace math {
 			return r;
 		}
 
-		T x, y, z, w;
+		float x, y, z, w;
 	};
 
 }

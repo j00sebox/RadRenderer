@@ -44,10 +44,10 @@ namespace math
 		Mat4 convert_to_mat() const
 		{
 			return Mat4(
-				1.f - 2.f * (pow(j, 2) + pow(k, 2)),	2.f * (i * j - q * k),					2.f * (i * k + q * j),					0.f,
-				2.f * (i * j + q * k),					1.f - 2.f * (pow(i, 2) + pow(k, 2)),	2.f * (j * k - q * i),					0.f,
-				2.f * (i * k - q * j),					2.f * (j * k + q * i),					1.f - 2.f * (pow(i, 2) + pow(j, 2)),	0.f,
-				0.f,									0.f,									0.f,									1.f
+				1.f - 2.f * (powf(j, 2.f) + powf(k, 2.f)),	2.f * (i * j - q * k),						2.f * (i * k + q * j),						0.f,
+				2.f * (i * j + q * k),						1.f - 2.f * (powf(i, 2.f) + powf(k, 2.f)),	2.f * (j * k - q * i),						0.f,
+				2.f * (i * k - q * j),						2.f * (j * k + q * i),						1.f - 2.f * (powf(i, 2.f) + powf(j, 2.f)),	0.f,
+				0.f,										0.f,										0.f,										1.f
 			);
 		}
 

@@ -369,8 +369,7 @@ math::Vec3 RadRenderer::calculate_normal(Triangle& t)
 		t.vertices[2].z - t.vertices[0].z
 	};
     
-    math::Vec3 face_normal;
-	l1.cross(l0, face_normal);
+    math::Vec3 face_normal = l1.cross(l0);
 	face_normal.normalize();
     
     return face_normal;
