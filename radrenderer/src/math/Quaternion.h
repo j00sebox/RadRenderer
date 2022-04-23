@@ -16,21 +16,22 @@ namespace math
 
 		Quaternion(float angle, Vec3<float> vec)
 		{
-			set_angle(angle);
+			vec.normalize();           
 
-			set_axis(vec);
+			set_angle(angle);
+			set_axis(vec, sinf(angle * 0.5f));
 		}
 
-		void set_axis(const Vec3<float>& axis)
+		void set_axis(const Vec3<float>& axis, float sine)
 		{
-			i = axis.x;
-			j = axis.y;
-			k = axis.z;
+			i = axis.x * sine;
+			j = axis.y * sine;
+			k = axis.z * sine;
 		}
 
 		void set_angle(float angle)
 		{
-			q = cosf(angle / 2.f) + sinf(angle / 2.f);
+			q = cosf(angle * 0.5f);
 		}
 
 		void invert()
@@ -43,11 +44,11 @@ namespace math
 		Mat4<float> convert_to_mat()
 		{
 			return Mat4<float>(
-				2.f * (pow(q, 2) + pow(i, 2)) - 1.f, 2.f * (i * j - q * k), 2.f * (i * k + q * j), 0.f,
-				2.f * (i * j + q * k), 2.f * (pow(q, 2) + pow(j, 2)) - 1.f, 2.f * (j * k - q * i), 0.f,
-				2.f * (i * k - q * j), 2.f * (j * k + q * i), 2.f * (pow(q, 2) + pow(k, 2)) - 1.f, 0.f,
-				0.f, 0.f, 0.f, 1.f
-				);
+				1.f - 2.f * (pow(j, 2) + pow(k, 2)),	2.f * (i * j - q * k),					2.f * (i * k + q * j),					0.f,
+				2.f * (i * j + q * k),					1.f - 2.f * (pow(i, 2) + pow(k, 2)),	2.f * (j * k - q * i),					0.f,
+				2.f * (i * k - q * j),					2.f * (j * k + q * i),					1.f - 2.f * (pow(i, 2) + pow(j, 2)),	0.f,
+				0.f,									0.f,									0.f,									1.f
+			);
 		}
 
 		Quaternion operator * (const Quaternion& other)

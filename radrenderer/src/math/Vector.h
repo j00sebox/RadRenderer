@@ -155,11 +155,14 @@ namespace math {
     template<>
     inline void Vec3<float>::normalize()
     {
-        float normalize = sqrtf(powf(x, 2) + powf(y, 2) + powf(z, 2));
+        float factor = sqrtf(powf(x, 2) + powf(y, 2) + powf(z, 2));
 
-        x /= normalize;
-        y /= normalize;
-        z /= normalize;
+		if (factor > 0.f)
+		{
+			x /= factor;
+			y /= factor;
+			z /= factor;
+		}
     }
     
 #ifdef DEBUG

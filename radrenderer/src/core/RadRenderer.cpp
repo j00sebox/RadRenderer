@@ -3,7 +3,7 @@
 
 #include "math/Quaternion.h"
 
-#define DEG_TO_RAD(x) ( x / 180.0f * 3.14159f  )
+#define DEG_TO_RAD(x) ( ( x / 180.0f ) * 3.14159f  )
 
 RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs)
 
@@ -59,14 +59,25 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	/*m_object.rotate_x(m_angle_x);
 	m_object.rotate_y(m_angle_y);*/
 
+	math::Quaternion q(1.f, 0.f, 0.f, 0.f );
+	math::Quaternion rot = q;
+
+	if (m_angle_x != 0.f)
+	{
+		math::Quaternion q_x(m_angle_x, { 1.f, 0.f, 0.f });
+		rot = rot * q_x;
+	}
+
+	if (m_angle_y != 0.f)
+	{
+		math::Quaternion q_y(m_angle_y, { 0.f, 1.f, 0.f });
+		rot = rot * q_y;
+	}
 	
-	math::Quaternion q;
-	q.set_axis({ 0.f, 1.f, 0.f });
-	q.set_angle(m_angle_x);
 	math::Quaternion q_prime = q;
 	q_prime.invert();
 
-	m_object.translate(0.f, -2.f, 6.f);
+	m_object.translate(0.f, -3.f, 6.f);
 
 	// camera transform
 	math::Mat4<float> cam_transform = m_camera->get_transform();
@@ -75,9 +86,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// iterate through all triangles in the object
 	for (auto o : m_object)
 	{
-		//transform_tri(o, q.convert_to_mat());
-
-		math::Quaternion p0(0, o.vertices[0]);
+		/*math::Quaternion p0(0, o.vertices[0]);
 		math::Quaternion p1(0, o.vertices[1]);
 		math::Quaternion p2(0, o.vertices[2]);
 
@@ -87,11 +96,13 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 		math::Quaternion res1 = q * p1 * q_prime;
 		o.vertices[1] = { res1.i, res1.j, res1.k };
 
-		math::Quaternion res2 = q *p2 * q_prime;
-		o.vertices[2] = { res2.i, res2.j, res2.k };
+		math::Quaternion res2 = q * p2 * q_prime;
+		o.vertices[2] = { res2.i, res2.j, res2.k };*/
+		
+		transform_tri(o, rot.convert_to_mat());
 
 		transform_tri(o, m_object.get_transform());
-        
+
         // convert to camera space
         transform_tri(o, m_view);
         
