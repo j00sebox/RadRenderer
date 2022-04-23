@@ -348,9 +348,9 @@ bool RadRenderer::clip_triangle(math::Vec3&& plane_point, math::Vec3&& plane_nor
 
 void RadRenderer::transform_tri(Triangle& t, const math::Mat4& transform)
 {
-	transform.mat_mul_vec(t.vertices[0]);
-	transform.mat_mul_vec(t.vertices[1]);
-	transform.mat_mul_vec(t.vertices[2]);
+	t.vertices[0] = transform * t.vertices[0];
+	t.vertices[1] = transform * t.vertices[1];
+	t.vertices[2] = transform * t.vertices[2];
 }
 
 math::Vec3 RadRenderer::calculate_normal(Triangle& t)

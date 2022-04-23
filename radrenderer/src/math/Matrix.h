@@ -178,7 +178,28 @@ namespace math {
 			return res;
 		};
 
-		inline void mat_mul_vec(Vec3& vec) const
+		// allows value to be accessed easier
+		inline float& operator () (int i, int j) { return mat[i][j]; };
+
+		inline Mat4 operator* (const Mat4& other_mat) const
+		{
+			Mat4 res_mat;
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					res_mat(i, j) =
+						mat[i][0] * other_mat.mat[0][j] +
+						mat[i][1] * other_mat.mat[1][j] +
+						mat[i][2] * other_mat.mat[2][j] +
+						mat[i][3] * other_mat.mat[3][j];
+				}
+			}
+
+			return res_mat;
+		}
+
+		inline Vec3 operator* (const Vec3& vec) const
 		{
 			float w;
 
@@ -197,73 +218,10 @@ namespace math {
 				new_vec.z /= w;
 			}
 
-			vec = std::move(new_vec);
+			return new_vec;
 		}
 
-		void mat_mul_mat(const Mat4& mat1, Mat4& resmat) const
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					resmat(i, j) =
-						mat[i][0] * mat1.mat[0][j] +
-						mat[i][1] * mat1.mat[1][j] +
-						mat[i][2] * mat1.mat[2][j] +
-						mat[i][3] * mat1.mat[3][j];
-				}
-			}
-		}
-
-		void clear()
-		{
-			set( 	1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1
-				);
-		}
-
-		// allows value to be accessed easier
-		inline float& operator () (int i, int j) { return mat[i][j]; };
-
-		inline Mat4 operator * (const Mat4& other_mat) const
-		{
-			Mat4 res_mat;
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					res_mat(i, j) =
-						mat[i][0] * other_mat.mat[0][j] +
-						mat[i][1] * other_mat.mat[1][j] +
-						mat[i][2] * other_mat.mat[2][j] +
-						mat[i][3] * other_mat.mat[3][j];
-				}
-			}
-
-			return res_mat;
-		}
-
-		inline Mat4 operator * (Mat4&& other_mat) const
-		{
-			Mat4 res_mat;
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					res_mat(i, j) =
-						mat[i][0] * other_mat.mat[0][j] +
-						mat[i][1] * other_mat.mat[1][j] +
-						mat[i][2] * other_mat.mat[2][j] +
-						mat[i][3] * other_mat.mat[3][j];
-				}
-			}
-
-			return res_mat;
-		}
-
-		inline Mat4 operator * (float scalar) const
+		inline Mat4 operator* (float scalar) const
 		{
 			Mat4 res_mat;
 			for (int i = 0; i < 4; i++)
@@ -275,6 +233,15 @@ namespace math {
 			}
 
 			return res_mat;
+		}
+
+		void clear()
+		{
+			set(1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 1
+			);
 		}
 
 	private:
