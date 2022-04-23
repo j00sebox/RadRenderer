@@ -103,6 +103,11 @@ void Window::loop()
 					dy = (y - prev_y);
                 }
             }
+
+			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+			{
+                m_renderer.reset_object();
+			}
         }
 
         sf::Time elapsed = m_clock.restart();

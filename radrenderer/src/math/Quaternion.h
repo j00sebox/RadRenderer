@@ -61,6 +61,7 @@ namespace math
 			return Quaternion(new_q, new_i, new_j, new_k);
 		}
 
+	private:
 		float q, i, j, k;
 	};
 }

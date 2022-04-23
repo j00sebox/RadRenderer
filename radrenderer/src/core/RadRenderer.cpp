@@ -126,6 +126,11 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 	return m_frame_buffer.get();
 }
 
+void RadRenderer::reset_object()
+{
+	m_object = math::Quaternion(1.f, 0.f, 0.f, 0.f);
+}
+
 bool out_of_bounds(const Triangle& t)
 {
 	return  (t.vertices[0].x < -1.f || t.vertices[0].x > 1.f) ||

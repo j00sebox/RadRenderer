@@ -13,6 +13,8 @@ public:
 
 	Pixel* update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
 
+	void reset_object();
+
 protected:
 	void rasterize(const Triangle& t);
 	float edge_function(float x0, float y0, float x1, float y1, float x2, float y2);
