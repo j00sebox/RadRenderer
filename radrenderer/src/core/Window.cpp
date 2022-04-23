@@ -58,7 +58,7 @@ void Window::loop()
         sf::Event event;
         while (m_window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape))
                 m_window.close();
 
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W)

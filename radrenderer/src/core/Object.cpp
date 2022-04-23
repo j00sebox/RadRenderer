@@ -11,7 +11,7 @@ Object::Object(const std::string& fname)
 
 void Object::translate(float x, float y, float z)
 {
-	m_transform = m_transform *
+	m_transform = 
 
 		math::Mat4({
 			1, 0, 0, 0,
@@ -23,7 +23,6 @@ void Object::translate(float x, float y, float z)
 
 void Object::rotate_x(float rx)
 {
-
 	m_transform = m_transform *
 
 		math::Mat4({

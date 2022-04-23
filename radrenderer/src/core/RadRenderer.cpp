@@ -121,8 +121,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 	m_clipped_tris.clear();
 	clear_depth_buffer();
 
-	m_object.reset_transform();
-
 	return m_frame_buffer.get();
 }
 
