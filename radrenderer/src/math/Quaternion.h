@@ -41,7 +41,7 @@ namespace math
 			k = -k;
 		}
 		
-		Mat4<float> convert_to_mat()
+		Mat4<float> convert_to_mat() const
 		{
 			return Mat4<float>(
 				1.f - 2.f * (pow(j, 2) + pow(k, 2)),	2.f * (i * j - q * k),					2.f * (i * k + q * j),					0.f,
@@ -51,7 +51,7 @@ namespace math
 			);
 		}
 
-		Quaternion operator * (const Quaternion& other)
+		Quaternion operator * (const Quaternion& other) const
 		{
 			float new_q = q * other.q - i * other.i - j * other.j - k * other.k;
 			float new_i = q * other.i + i * other.q + j * other.k - k * other.j;

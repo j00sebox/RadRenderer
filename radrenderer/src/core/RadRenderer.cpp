@@ -44,38 +44,19 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_directional_light.normalize();
 }
 
-Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x, float rotate_y)
+Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, float dy)
 {
 	// clear screen to redraw
 	clear_frame_buffer();
-
-	m_angle_x += rotate_x * elapsed_time * 0.001f;
-	m_angle_y += rotate_y * elapsed_time * 0.001f;
 
 	m_cam_movement += cam_forward * elapsed_time * 0.001f;
 
 	m_camera->set_pos(math::Vec3<float>(0.f, 0.f, m_cam_movement));
 
-	/*m_object.rotate_x(m_angle_x);
-	m_object.rotate_y(m_angle_y);*/
+	math::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * m_rotation_speed), { 1.f, 0.f, 0.f });
+	math::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * m_rotation_speed), { 0.f, 1.f, 0.f });
 
-	math::Quaternion q(1.f, 0.f, 0.f, 0.f );
-	math::Quaternion rot = q;
-
-	if (m_angle_x != 0.f)
-	{
-		math::Quaternion q_x(m_angle_x, { 1.f, 0.f, 0.f });
-		rot = rot * q_x;
-	}
-
-	if (m_angle_y != 0.f)
-	{
-		math::Quaternion q_y(m_angle_y, { 0.f, 1.f, 0.f });
-		rot = rot * q_y;
-	}
-	
-	math::Quaternion q_prime = q;
-	q_prime.invert();
+	m_object = m_object.get_quaternion() * qx * qy;
 
 	m_object.translate(0.f, -3.f, 6.f);
 
@@ -86,20 +67,8 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float rotate_x
 	// iterate through all triangles in the object
 	for (auto o : m_object)
 	{
-		/*math::Quaternion p0(0, o.vertices[0]);
-		math::Quaternion p1(0, o.vertices[1]);
-		math::Quaternion p2(0, o.vertices[2]);
-
-		math::Quaternion res0 = q * p0 * q_prime;
-		o.vertices[0] = { res0.i, res0.j, res0.k };
-
-		math::Quaternion res1 = q * p1 * q_prime;
-		o.vertices[1] = { res1.i, res1.j, res1.k };
-
-		math::Quaternion res2 = q * p2 * q_prime;
-		o.vertices[2] = { res2.i, res2.j, res2.k };*/
-		
-		transform_tri(o, rot.convert_to_mat());
+		// rotate object
+		transform_tri(o, m_object.get_quaternion().convert_to_mat());
 
 		transform_tri(o, m_object.get_transform());
 
@@ -174,9 +143,6 @@ bool out_of_bounds(const Triangle& t)
 
 void RadRenderer::rasterize(const Triangle& t)
 {
-	if (out_of_bounds(t))
-		return;
-
 	int min_x, max_x;
 	int min_y, max_y;
 

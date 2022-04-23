@@ -4,6 +4,7 @@
 #include "math/Quaternion.h"
 
 Object::Object(const std::string& fname)
+	: m_qrotation(1.f, 0.f, 0.f, 0.f)
 {
 	load_obj_file(fname);
 }
@@ -62,6 +63,11 @@ void Object::reset_transform()
 	m_transform.clear();
 }
 
+void Object::operator=(const math::Quaternion& quat)
+{
+	m_qrotation = quat;
+}
+
 void Object::load_obj_file(const std::string& fname)
 {
 	std::ifstream readFile;
@@ -93,7 +99,7 @@ void Object::load_obj_file(const std::string& fname)
 			st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
 			vertices.emplace_back(vertex);
 		}
-		// indicates traingle face data
+		// indicates triangle face data
 		else if (line[0] == 'f')
 		{
 			st >> startingChar >> i1 >> i2 >> i3;

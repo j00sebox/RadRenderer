@@ -33,6 +33,7 @@ private:
 
 	float m_far, m_near, m_fov;
 	float m_angle_x = 0.f, m_angle_y = 0.f, m_angle_z = 0.f;
+	float m_rotation_speed = 0.001f;
 	float m_cam_movement = 0.f;
 
 	// transforms

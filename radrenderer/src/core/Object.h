@@ -5,6 +5,7 @@
 
 #include "math/Matrix.h"
 #include "math/Vector.h"
+#include "math/Quaternion.h"
 
 struct Pixel
 {
@@ -37,7 +38,10 @@ public:
 	void rotate_z(float rz);
 
 	const math::Mat4<float>& get_transform() const { return m_transform; }
+	const math::Quaternion& get_quaternion() const { return m_qrotation; }
 	void reset_transform();
+
+	void operator= (const math::Quaternion& quat);
 
 	inline std::vector<Triangle>::iterator begin() { return m_tris.begin(); }
 	inline std::vector<Triangle>::iterator end() { return m_tris.end(); }
@@ -50,4 +54,5 @@ private:
 
 	std::vector<Triangle> m_tris;
 	math::Mat4<float> m_transform;
+	math::Quaternion m_qrotation;
 };
