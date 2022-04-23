@@ -8,13 +8,13 @@ Camera::Camera()
 	m_right = { 1.f, 0.f, 0.f };
 }
 
-void Camera::set_pos(const math::Vec3<float>& pos)
+void Camera::set_pos(const math::Vec3& pos)
 {
 	m_forward = m_position - pos;
 	m_forward.normalize();
 
 	// Calculate the up vector in relation to the new camera direction
-	math::Vec3<float> tmp(0.f, 1.f, 0.f);
+	math::Vec3 tmp(0.f, 1.f, 0.f);
     tmp.cross(m_forward, m_right);
     m_right.normalize();
 //	m_forward.scalar_mul(temp, (m_up.dot(m_forward)));
@@ -33,14 +33,14 @@ void Camera::set_pos(const math::Vec3<float>& pos)
      m_position = pos;
 }
 
-void Camera::set_pos(math::Vec3<float>&& pos)
+void Camera::set_pos(math::Vec3&& pos)
 {
     m_position = pos;
     
 	m_forward = m_forward - pos;
     
 	// Calculate the up vector in relation to the new camera direction
-	math::Vec3<float> tmp(0.f, 1.f, 0.f);
+	math::Vec3 tmp(0.f, 1.f, 0.f);
     tmp.cross(m_forward, m_right);
     m_right.normalize();
 
@@ -56,7 +56,7 @@ void Camera::set_pos(math::Vec3<float>&& pos)
     m_forward.normalize();
 }
 
-const math::Vec3<float>& Camera::get_pos() const
+const math::Vec3& Camera::get_pos() const
 {
 	return m_position;
 }

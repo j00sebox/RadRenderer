@@ -8,15 +8,15 @@ public:
 	Camera();
 	~Camera() {}
 
-	void set_pos(const math::Vec3<float>& pos);
-	void set_pos(math::Vec3<float>&& pos);
-	const math::Vec3<float>& get_pos() const;
+	void set_pos(const math::Vec3& pos);
+	void set_pos(math::Vec3&& pos);
+	const math::Vec3& get_pos() const;
 
-	inline const math::Vec3<float>& get_forward() { return m_forward; }
-	const math::Mat4<float>& get_transform() { return m_transform; }
+	inline const math::Vec3& get_forward() { return m_forward; }
+	const math::Mat4& get_transform() { return m_transform; }
 
 private:
-	math::Vec3<float> m_position;
-	math::Vec3<float> m_forward, m_up, m_right;
-	math::Mat4<float> m_transform;
+	math::Vec3 m_position;
+	math::Vec3 m_forward, m_up, m_right;
+	math::Mat4 m_transform;
 };

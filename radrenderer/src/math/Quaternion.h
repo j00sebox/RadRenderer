@@ -14,7 +14,7 @@ namespace math
 		Quaternion(float _q, float _i, float _j, float _k)
 			: q(_q), i(_i), j(_j), k(_k) {}
 
-		Quaternion(float angle, Vec3<float> vec)
+		Quaternion(float angle, Vec3 vec)
 		{
 			vec.normalize();           
 
@@ -22,7 +22,7 @@ namespace math
 			set_axis(vec, sinf(angle * 0.5f));
 		}
 
-		void set_axis(const Vec3<float>& axis, float sine)
+		void set_axis(const Vec3& axis, float sine)
 		{
 			i = axis.x * sine;
 			j = axis.y * sine;
@@ -41,9 +41,9 @@ namespace math
 			k = -k;
 		}
 		
-		Mat4<float> convert_to_mat() const
+		Mat4 convert_to_mat() const
 		{
-			return Mat4<float>(
+			return Mat4(
 				1.f - 2.f * (pow(j, 2) + pow(k, 2)),	2.f * (i * j - q * k),					2.f * (i * k + q * j),					0.f,
 				2.f * (i * j + q * k),					1.f - 2.f * (pow(i, 2) + pow(k, 2)),	2.f * (j * k - q * i),					0.f,
 				2.f * (i * k - q * j),					2.f * (j * k + q * i),					1.f - 2.f * (pow(i, 2) + pow(j, 2)),	0.f,

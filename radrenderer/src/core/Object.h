@@ -18,8 +18,8 @@ struct Pixel
 
 struct Triangle
 {
-	math::Vec3<float> vertices[3];
-	math::Vec3<float> normal[3];
+	math::Vec3 vertices[3];
+	math::Vec3 normal[3];
 	float z[3] = {};
 	Pixel colours[3];
 };
@@ -37,7 +37,7 @@ public:
 	void rotate_y(float ry);
 	void rotate_z(float rz);
 
-	const math::Mat4<float>& get_transform() const { return m_transform; }
+	const math::Mat4& get_transform() const { return m_transform; }
 	const math::Quaternion& get_quaternion() const { return m_qrotation; }
 	void reset_transform();
 
@@ -53,6 +53,6 @@ private:
 	void load_obj_file(const std::string& fname);
 
 	std::vector<Triangle> m_tris;
-	math::Mat4<float> m_transform;
+	math::Mat4 m_transform;
 	math::Quaternion m_qrotation;
 };

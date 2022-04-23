@@ -51,7 +51,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 
 	m_cam_movement += cam_forward * elapsed_time * 0.001f;
 
-	m_camera->set_pos(math::Vec3<float>(0.f, 0.f, m_cam_movement));
+	m_camera->set_pos(math::Vec3(0.f, 0.f, m_cam_movement));
 
 	math::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * m_rotation_speed), { 1.f, 0.f, 0.f });
 	math::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * m_rotation_speed), { 0.f, 1.f, 0.f });
@@ -61,7 +61,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 	m_object.translate(0.f, -3.f, 6.f);
 
 	// camera transform
-	math::Mat4<float> cam_transform = m_camera->get_transform();
+	math::Mat4 cam_transform = m_camera->get_transform();
 	m_view = cam_transform.inverse();
 
 	// iterate through all triangles in the object
@@ -192,7 +192,7 @@ void RadRenderer::rasterize(const Triangle& t)
 
 				float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
 
-                math::Vec3<float> normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2; 
+                math::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2; 
                 
                 float lum = m_directional_light.dot(normal);
 
@@ -243,18 +243,18 @@ void RadRenderer::clear_depth_buffer()
 }
 
 // returns the point that the given plane and line intersect
-math::Vec3<float> RadRenderer::line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end)
+math::Vec3 RadRenderer::line_plane_intersect(math::Vec3& point, math::Vec3& plane_normal, math::Vec3& line_begin, math::Vec3& line_end)
 {
 	// using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
 	float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
 		(plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
-	math::Vec3<float> intersection_point = line_begin + (line_end - line_begin) * t;
+	math::Vec3 intersection_point = line_begin + (line_end - line_begin) * t;
 
 	return intersection_point;
 }
 
-bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<float>&& plane_normal, Triangle& t)
+bool RadRenderer::clip_triangle(math::Vec3&& plane_point, math::Vec3&& plane_normal, Triangle& t)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
@@ -263,13 +263,13 @@ bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<floa
 	int out_verts = 0;
 
 	// this will keep track of which vertices are in vs out
-	math::Vec3<float> in_vs[3];
-	math::Vec3<float> out_vs[3];
+	math::Vec3 in_vs[3];
+	math::Vec3 out_vs[3];
 
 	for (const auto& v : t.vertices)
 	{
-		math::Vec3<float> vert = { v.x, v.y, v.z };
-		math::Vec3<float> line = vert - plane_point;
+		math::Vec3 vert = { v.x, v.y, v.z };
+		math::Vec3 line = vert - plane_point;
 		line.normalize();
 		if (plane_normal.dot(line) > 0)
 		{
@@ -346,30 +346,30 @@ bool RadRenderer::clip_triangle(math::Vec3<float>&& plane_point, math::Vec3<floa
     return false;
 }
 
-void RadRenderer::transform_tri(Triangle& t, const math::Mat4<float>& transform)
+void RadRenderer::transform_tri(Triangle& t, const math::Mat4& transform)
 {
 	transform.mat_mul_vec(t.vertices[0]);
 	transform.mat_mul_vec(t.vertices[1]);
 	transform.mat_mul_vec(t.vertices[2]);
 }
 
-math::Vec3<float> RadRenderer::calculate_normal(Triangle& t)
+math::Vec3 RadRenderer::calculate_normal(Triangle& t)
 {
 	// construct line 1 of the triangle
-	math::Vec3<float> l0 = {
+	math::Vec3 l0 = {
 		t.vertices[1].x - t.vertices[0].x,
 		t.vertices[1].y - t.vertices[0].y,
 		t.vertices[1].z - t.vertices[0].z
 	};
 
 	// construct line 2 of the triangle
-	math::Vec3<float> l1 = {
+	math::Vec3 l1 = {
 		t.vertices[2].x - t.vertices[0].x,
 		t.vertices[2].y - t.vertices[0].y,
 		t.vertices[2].z - t.vertices[0].z
 	};
     
-    math::Vec3<float> face_normal;
+    math::Vec3 face_normal;
 	l1.cross(l0, face_normal);
 	face_normal.normalize();
     

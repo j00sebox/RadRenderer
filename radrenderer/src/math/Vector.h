@@ -60,13 +60,12 @@ namespace math {
 	@brief Class used to represent a vector in 3D
 			space.
 	************************************************/
-	template <typename T>
 	class Vec3
 	{
 	public:
 		Vec3() : x(0), y(0), z(0) {}
 
-		Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
+		Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
 		inline void cross(Vec3& line, Vec3& normal)
 		{
@@ -88,17 +87,10 @@ namespace math {
 			y /= normalize;
 			z /= normalize;
 		}
-        
-		inline void subtract(const Vec3& inputVec, Vec3& outVec) const
-		{
-			outVec.x = x - inputVec.x;
-			outVec.y = y - inputVec.y;
-			outVec.z = z - inputVec.z;
-		}
 
-		inline Vec3<T> operator + (const Vec3<T>& v)
+		inline Vec3 operator + (const Vec3& v)
 		{
-			Vec3<T> r;
+			Vec3 r;
 
 			r.x = x + v.x;
 			r.y = y + v.y;
@@ -107,9 +99,9 @@ namespace math {
 			return r;
 		}
 
-		inline Vec3<T> operator - (const Vec3<T>& v)
+		inline Vec3 operator - (const Vec3& v)
 		{
-			Vec3<T> r;
+			Vec3 r;
 
 			r.x = x - v.x;
 			r.y = y - v.y;
@@ -118,9 +110,9 @@ namespace math {
 			return r;
 		}
         
-        inline Vec3<T> operator * (float a) const 
+        inline Vec3 operator * (float a) const 
 		{
-			Vec3<T> r;
+			Vec3 r;
 
 			r.x = x * a;
 			r.y = y * a;
@@ -143,24 +135,9 @@ namespace math {
 			outVec.z = z + a.z;
 		}
 
-		T x, y, z;
-        
-#ifdef DEBUG
-        template<typename O>
-        friend std::ostream& operator<<(std::ostream& os, const Vec3<O>& v);
-#endif
-
+		float x, y, z;
 	};
-    
-#ifdef DEBUG
-    template<typename O>
-    std::ostream& operator<<(std::ostream& os, const Vec3<O>& v)
-    {
-        os << "\n" 
-        << v.x << v.y << v.z << "\n";
-        return os;
-    }
-#endif
+
 
 	template<typename T>
 	class Vec4
@@ -168,7 +145,7 @@ namespace math {
 	public:
 		Vec4() : x(0), y(0), z(0), w(0) {}
 
-		Vec4(const Vec3<T>& vec, int w)
+		Vec4(const Vec3& vec, int w)
 		{
 			x = vec.x;
 			y = vec.y;

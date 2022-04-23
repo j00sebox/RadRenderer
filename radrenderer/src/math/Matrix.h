@@ -12,16 +12,15 @@ namespace math {
 	class Mat4
 	@brief Class used to represent 4x4 matrices
 	************************************************/
-	template<typename T>
 	class Mat4
 	{
 	public:
 		Mat4() { }
 
-		Mat4(T m00, T m01, T m02, T m03,
-			T m10, T m11, T m12, T m13,
-			T m20, T m21, T m22, T m23,
-			T m30, T m31, T m32, T m33)
+		Mat4(float m00, float m01, float m02, float m03,
+			float m10, float m11, float m12, float m13,
+			float m20, float m21, float m22, float m23,
+			float m30, float m31, float m32, float m33)
 		{
 			mat[0][0] = m00; mat[0][1] = m01; mat[0][2] = m02; mat[0][3] = m03;
 			mat[1][0] = m10; mat[1][1] = m11; mat[1][2] = m12; mat[1][3] = m13;
@@ -30,7 +29,7 @@ namespace math {
 		};
 
 		// this constructor just makes setting up the tests easier
-		Mat4(std::vector< std::vector<T> > v)
+		Mat4(std::vector<std::vector<float>> v)
 		{
 			if (v.size() != 4 || v[0].size() != 4)
 				fprintf(stderr, "Passed in vector of wrong size! Must be  4x4.");
@@ -43,10 +42,10 @@ namespace math {
 		}
 
 		void set(
-			T m00, T m01, T m02, T m03,
-			T m10, T m11, T m12, T m13,
-			T m20, T m21, T m22, T m23,
-			T m30, T m31, T m32, T m33)
+			float m00, float m01, float m02, float m03,
+			float m10, float m11, float m12, float m13,
+			float m20, float m21, float m22, float m23,
+			float m30, float m31, float m32, float m33)
 		{
 			mat[0][0] = m00; mat[0][1] = m01; mat[0][2] = m02; mat[0][3] = m03;
 			mat[1][0] = m10; mat[1][1] = m11; mat[1][2] = m12; mat[1][3] = m13;
@@ -55,9 +54,9 @@ namespace math {
 		};
 
 		// swap rows are columns of the matrix
-		Mat4<T> transpose()
+		Mat4 transpose()
 		{
-			Mat4<T> result;
+			Mat4 result;
 
 			for (int i = 0; i < 4; i++)
 				for (int j = 0; j < 4; j++)
@@ -67,7 +66,7 @@ namespace math {
 		}
 
 		// computes the inverse of the matrix using the Gauss-Jordan elimination method
-		inline Mat4<T> inverse() const
+		inline Mat4 inverse() const
 		{
 			// an identity matrix is needed to keep track of all the operations done on the original matrix
 			// this ends up becoming the inverse
@@ -78,7 +77,7 @@ namespace math {
 			for (int i = 0; i < 4; i++)
 			{
 				// pivot points are the elements on the diagonal
-				T pivot = orig.mat[i][i];
+				float pivot = orig.mat[i][i];
 
 				// if a pivot is 0 it must be swapped with another row that is a value other than 0
 				if (pivot == 0)
@@ -102,7 +101,7 @@ namespace math {
 					}
 					else // otherwise swap the current row the best option row
 					{
-						T temp;
+						float temp;
 
 						for (int j = 0; j < 4; j++)
 						{
@@ -124,7 +123,7 @@ namespace math {
 				{
 					if (i != j)
 					{
-						T q = orig.mat[j][i] / orig.mat[i][i];
+						float q = orig.mat[j][i] / orig.mat[i][i];
 
 						if (q != 0)
 						{
@@ -152,14 +151,13 @@ namespace math {
 				}
 			}
 
-
 			return inv;
 		}
 
 		// add two matrices together
-		Mat4<T> operator + (Mat4<T> const& obj)
+		Mat4 operator + (Mat4 const& obj)
 		{
-			Mat4<T> res;
+			Mat4 res;
 
 			for (int row = 0; row < 4; row++)
 				for (int column = 0; column < 4; column++)
@@ -169,9 +167,9 @@ namespace math {
 		}
 
 		// subtract matrix from another
-		Mat4<T> operator - (Mat4<T> const& obj)
+		Mat4 operator - (Mat4 const& obj)
 		{
-			Mat4<T> res;
+			Mat4 res;
 
 			for (int row = 0; row < 4; row++)
 				for (int column = 0; column < 4; column++)
@@ -180,11 +178,11 @@ namespace math {
 			return res;
 		};
 
-		inline void mat_mul_vec(Vec3<T>& vec) const
+		inline void mat_mul_vec(Vec3& vec) const
 		{
 			float w;
 
-			Vec3<T> new_vec;
+			Vec3 new_vec;
 
 			new_vec.x = vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + mat[3][0];
 			new_vec.y = vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + mat[3][1];
@@ -202,7 +200,7 @@ namespace math {
 			vec = std::move(new_vec);
 		}
 
-		void mat_mul_mat(const Mat4<T>& mat1, Mat4<T>& resmat) const
+		void mat_mul_mat(const Mat4& mat1, Mat4& resmat) const
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -227,11 +225,11 @@ namespace math {
 		}
 
 		// allows value to be accessed easier
-		inline T& operator () (int i, int j) { return mat[i][j]; };
+		inline float& operator () (int i, int j) { return mat[i][j]; };
 
-		inline Mat4<T> operator * (const Mat4<T>& other_mat) const
+		inline Mat4 operator * (const Mat4& other_mat) const
 		{
-			Mat4<T> res_mat;
+			Mat4 res_mat;
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -247,9 +245,9 @@ namespace math {
 			return res_mat;
 		}
 
-		inline Mat4<T> operator * (Mat4<T>&& other_mat) const
+		inline Mat4 operator * (Mat4&& other_mat) const
 		{
-			Mat4<T> res_mat;
+			Mat4 res_mat;
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -265,9 +263,9 @@ namespace math {
 			return res_mat;
 		}
 
-		inline Mat4<T> operator * (float scalar) const
+		inline Mat4 operator * (float scalar) const
 		{
-			Mat4<T> res_mat;
+			Mat4 res_mat;
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -278,29 +276,11 @@ namespace math {
 
 			return res_mat;
 		}
-    
-#ifdef DEBUG
-        template<typename O>
-        friend std::ostream& operator<<(std::ostream& os, const Mat4<O>& m);
-#endif
 
 	private:
 		// default matrix is identity
-		T mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
+		float mat[4][4] = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
 	};
-    
-#ifdef DEBUG
-    template<typename O>
-    std::ostream& operator<<(std::ostream& os, const Mat4<O>& m)
-    {
-        os << "\n" 
-        << m.mat[0][0] << m.mat[0][1] << m.mat[0][2] << m.mat[0][3] << "\n"
-        << m.mat[1][0] << m.mat[1][1] << m.mat[1][2] << m.mat[1][3] << "\n"
-        << m.mat[2][0] << m.mat[2][1] << m.mat[2][2] << m.mat[2][3] << "\n"
-        << m.mat[3][0] << m.mat[3][1] << m.mat[3][2] << m.mat[3][3] << "\n";
-        return os;
-    }
-#endif
 
 }
 

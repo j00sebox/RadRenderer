@@ -13,7 +13,7 @@ void Object::translate(float x, float y, float z)
 {
 	m_transform = m_transform *
 
-		math::Mat4<float>({
+		math::Mat4({
 			1, 0, 0, 0,
 			0, 1, 0, 0,
 			0, 0, 1, 0,
@@ -26,7 +26,7 @@ void Object::rotate_x(float rx)
 
 	m_transform = m_transform *
 
-		math::Mat4<float>({
+		math::Mat4({
 			1, 0,			0,			0,
 			0, cosf(rx),	sinf(rx),	0,
 			0, -sinf(rx),	cosf(rx),	0,
@@ -38,7 +38,7 @@ void Object::rotate_y(float ry)
 {
 	m_transform = m_transform *
 
-		math::Mat4<float>({
+		math::Mat4({
 			cosf(ry),	0, sinf(ry),	0,
 			0,			1, 0,			0,
 			-sinf(ry),	0, cosf(ry),	0,
@@ -50,7 +50,7 @@ void Object::rotate_z(float rz)
 {
 	m_transform = m_transform *
 
-		math::Mat4<float>({
+		math::Mat4({
 			cosf(rz),	sinf(rz),	0, 0,
 			-sinf(rz),	cosf(rz),	0, 0,
 			0,			0,			1, 0,
@@ -78,8 +78,8 @@ void Object::load_obj_file(const std::string& fname)
 		std::cout << "Cannot open file!\n";
 	}
 
-	math::Vec3<float> vertex;
-	std::vector<math::Vec3<float>> vertices;
+	math::Vec3 vertex;
+	std::vector<math::Vec3> vertices;
 
 	std::string line;
 

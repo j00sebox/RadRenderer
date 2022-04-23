@@ -23,10 +23,10 @@ protected:
 	std::pair<int, int> imagesp_to_screensp(float x, float y);
 	void clear_frame_buffer();
 	void clear_depth_buffer();
-	math::Vec3<float> line_plane_intersect(math::Vec3<float>& point, math::Vec3<float>& plane_normal, math::Vec3<float>& line_begin, math::Vec3<float>& line_end);
-    bool clip_triangle(math::Vec3<float>&& point, math::Vec3<float>&& plane_normal, Triangle& t);
-	inline void transform_tri(Triangle& t, const math::Mat4<float>& transform);
-	inline math::Vec3<float> calculate_normal(Triangle& t);
+	math::Vec3 line_plane_intersect(math::Vec3& point, math::Vec3& plane_normal, math::Vec3& line_begin, math::Vec3& line_end);
+    bool clip_triangle(math::Vec3&& point, math::Vec3&& plane_normal, Triangle& t);
+	inline void transform_tri(Triangle& t, const math::Mat4& transform);
+	inline math::Vec3 calculate_normal(Triangle& t);
 
 private:
 	Object m_object;
@@ -39,10 +39,10 @@ private:
 	float m_cam_movement = 0.f;
 
 	// transforms
-	math::Mat4<float> m_view, m_perspective, m_orthographic;
+	math::Mat4 m_view, m_perspective, m_orthographic;
     
     // lighting
-	math::Vec3<float> m_directional_light;
+	math::Vec3 m_directional_light;
     float m_diffuse_constant = 0.75f; // make some kind of material class for this
 
 	std::vector<Triangle> m_render_triangles;
