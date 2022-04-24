@@ -74,6 +74,9 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 
         // convert to camera space
         transform_tri(o, m_view);
+
+		if(out_near_far_bounds(o))
+			continue;
         
         // remove when normals are attributes
         o.normal[0] = calculate_normal(o);
@@ -85,7 +88,6 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 			m_camera->get_forward().dot(o.normal[1]) > 0 &&
 			m_camera->get_forward().dot(o.normal[2]) > 0)
 		{
-
             o.z[0] = -o.vertices[0].z;
             o.z[1] = -o.vertices[1].z;
             o.z[2] = -o.vertices[2].z;
@@ -342,6 +344,13 @@ bool RadRenderer::clip_triangle(math::Vec3&& plane_point, math::Vec3&& plane_nor
 	}
     
     return false;
+}
+
+bool RadRenderer::out_near_far_bounds(const Triangle& t)
+{
+	return	(t.vertices[0].z < m_near || t.vertices[0].z > m_far) ||
+			(t.vertices[0].z < m_near || t.vertices[0].z > m_far) ||
+			(t.vertices[0].z < m_near || t.vertices[0].z > m_far);
 }
 
 void RadRenderer::transform_tri(Triangle& t, const math::Mat4& transform)

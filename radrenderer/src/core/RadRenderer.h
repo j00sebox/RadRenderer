@@ -25,6 +25,7 @@ protected:
 	void clear_depth_buffer();
 	math::Vec3 line_plane_intersect(math::Vec3& point, math::Vec3& plane_normal, math::Vec3& line_begin, math::Vec3& line_end);
     bool clip_triangle(math::Vec3&& point, math::Vec3&& plane_normal, Triangle& t);
+	bool out_near_far_bounds(const Triangle& t);
 	inline void transform_tri(Triangle& t, const math::Mat4& transform);
 	inline math::Vec3 calculate_normal(Triangle& t);
 
