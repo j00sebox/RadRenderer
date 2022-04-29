@@ -170,7 +170,7 @@ bin-int/*
 *.sln
 
 # SFML
-radrenderer/vendor/sfml/*
+rad_renderer/vendor/sfml/*
 
 # Makefiles
 Makefile
@@ -184,6 +184,6 @@ run.sh
 *.workspace
 *.project
 compile_flags.txt
-radrenderer.mk
-radrenderer.txt
+rad_renderer.mk
+rad_renderer.txt
 pch.h.gch

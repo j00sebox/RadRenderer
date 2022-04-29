@@ -1,5 +1,5 @@
-workspace "radrenderer"
-	startproject "radrenderer"
+workspace "rad_renderer"
+	startproject "rad_renderer"
 
 	configurations
 	{
@@ -9,14 +9,14 @@ workspace "radrenderer"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-project "radrenderer"
-	location "radrenderer"
+project "rad_renderer"
+	location "rad_renderer"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
 
 	pchheader "pch.h"
-	pchsource "radrenderer/src/pch.cpp"
+	pchsource "rad_renderer/src/pch.cpp"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")

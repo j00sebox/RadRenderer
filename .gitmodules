@@ -1,3 +1,3 @@
-[submodule "radrenderer/src/mathz"]
-	path = radrenderer/src/mathz
+[submodule "rad_renderer\\src\\mathz"]
+	path = rad_renderer\\src\\mathz
 	url = https://github.com/j00sebox/mathz.git
