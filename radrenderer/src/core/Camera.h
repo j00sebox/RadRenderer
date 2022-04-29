@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/Matrix.h"
+#include "mathz/Matrix.h"
 
 class Camera
 {
@@ -8,14 +8,14 @@ public:
 	Camera();
 	~Camera() {}
 
-	void set_pos(math::Vec3&& pos);
-	const math::Vec3& get_pos() const;
+	void set_pos(mathz::Vec3&& pos);
+	const mathz::Vec3& get_pos() const;
 
-	inline const math::Vec3& get_forward() { return m_forward; }
-	const math::Mat4& get_transform() { return m_transform; }
+	inline const mathz::Vec3& get_forward() { return m_forward; }
+	const mathz::Mat4& get_transform() { return m_transform; }
 
 private:
-	math::Vec3 m_position;
-	math::Vec3 m_forward, m_up, m_right;
-	math::Mat4 m_transform;
+	mathz::Vec3 m_position;
+	mathz::Vec3 m_forward, m_up, m_right;
+	mathz::Mat4 m_transform;
 };

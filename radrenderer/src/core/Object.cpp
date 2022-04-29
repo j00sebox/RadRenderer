@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Object.h"
 
-#include "math/Quaternion.h"
+#include "mathz/Quaternion.h"
 
 Object::Object(const std::string& fname)
 	: m_qrotation(1.f, 0.f, 0.f, 0.f)
@@ -13,7 +13,7 @@ void Object::translate(float x, float y, float z)
 {
 	m_transform = 
 
-		math::Mat4({
+		mathz::Mat4({
 			1, 0, 0, 0,
 			0, 1, 0, 0,
 			0, 0, 1, 0,
@@ -25,7 +25,7 @@ void Object::rotate_x(float rx)
 {
 	m_transform = m_transform *
 
-		math::Mat4({
+		mathz::Mat4({
 			1, 0,			0,			0,
 			0, cosf(rx),	sinf(rx),	0,
 			0, -sinf(rx),	cosf(rx),	0,
@@ -37,7 +37,7 @@ void Object::rotate_y(float ry)
 {
 	m_transform = m_transform *
 
-		math::Mat4({
+		mathz::Mat4({
 			cosf(ry),	0, sinf(ry),	0,
 			0,			1, 0,			0,
 			-sinf(ry),	0, cosf(ry),	0,
@@ -49,7 +49,7 @@ void Object::rotate_z(float rz)
 {
 	m_transform = m_transform *
 
-		math::Mat4({
+		mathz::Mat4({
 			cosf(rz),	sinf(rz),	0, 0,
 			-sinf(rz),	cosf(rz),	0, 0,
 			0,			0,			1, 0,
@@ -62,7 +62,7 @@ void Object::reset_transform()
 	m_transform.clear();
 }
 
-void Object::operator=(const math::Quaternion& quat)
+void Object::operator=(const mathz::Quaternion& quat)
 {
 	m_qrotation = quat;
 }
@@ -77,8 +77,8 @@ void Object::load_obj_file(const std::string& fname)
 		std::cout << "Cannot open file!\n";
 	}
 
-	math::Vec3 vertex;
-	std::vector<math::Vec3> vertices;
+	mathz::Vec3 vertex;
+	std::vector<mathz::Vec3> vertices;
 
 	std::string line;
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RadRenderer.h"
 
-#include "math/Quaternion.h"
+#include "mathz/Quaternion.h"
 
 #define DEG_TO_RAD(x) ( ( x / 180.0f ) * 3.14159f  )
 
@@ -51,17 +51,17 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 
 	m_cam_movement += cam_forward * elapsed_time * 0.001f;
 
-	m_camera->set_pos(math::Vec3(0.f, 0.f, m_cam_movement));
+	m_camera->set_pos(mathz::Vec3(0.f, 0.f, m_cam_movement));
 
-	math::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * m_rotation_speed), { 1.f, 0.f, 0.f });
-	math::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * m_rotation_speed), { 0.f, 1.f, 0.f });
+	mathz::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * m_rotation_speed), { 1.f, 0.f, 0.f });
+	mathz::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * m_rotation_speed), { 0.f, 1.f, 0.f });
 
 	m_object = m_object.get_quaternion() * qx * qy;
 
 	m_object.translate(0.f, -3.f, 6.f);
 
 	// camera transform
-	math::Mat4 cam_transform = m_camera->get_transform();
+	mathz::Mat4 cam_transform = m_camera->get_transform();
 	m_view = cam_transform.inverse();
 
 	// iterate through all triangles in the object
@@ -128,7 +128,7 @@ Pixel* RadRenderer::update(float elapsed_time, float cam_forward, float dx, floa
 
 void RadRenderer::reset_object()
 {
-	m_object = math::Quaternion(1.f, 0.f, 0.f, 0.f);
+	m_object = mathz::Quaternion(1.f, 0.f, 0.f, 0.f);
 }
 
 bool out_of_bounds(const Triangle& t)
@@ -151,9 +151,9 @@ void RadRenderer::rasterize(const Triangle& t)
 	int min_x, max_x;
 	int min_y, max_y;
 
-	math::Vec2<int> v0 = { imagesp_to_screensp(t.vertices[0].x, t.vertices[0].y) };
-	math::Vec2<int> v1 = { imagesp_to_screensp(t.vertices[1].x, t.vertices[1].y) };
-	math::Vec2<int> v2 = { imagesp_to_screensp(t.vertices[2].x, t.vertices[2].y) };
+	mathz::Vec2<int> v0 = { imagesp_to_screensp(t.vertices[0].x, t.vertices[0].y) };
+	mathz::Vec2<int> v1 = { imagesp_to_screensp(t.vertices[1].x, t.vertices[1].y) };
+	mathz::Vec2<int> v2 = { imagesp_to_screensp(t.vertices[2].x, t.vertices[2].y) };
 
 	// bounding box
 	min_x = std::min(v0.x, v1.x);
@@ -172,7 +172,7 @@ void RadRenderer::rasterize(const Triangle& t)
 	{
 		for (int x = min_x; x < max_x; x++)
 		{
-			math::Vec2<float> p = { x + 0.5f, y + 0.5f };
+			mathz::Vec2<float> p = { x + 0.5f, y + 0.5f };
 
 			float area0 = edge_function((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, p.x, p.y);
 			float area1 = edge_function((float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y, p.x, p.y);
@@ -192,7 +192,7 @@ void RadRenderer::rasterize(const Triangle& t)
 
 				float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
 
-                math::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2; 
+                mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2; 
                 
                 float lum = m_directional_light.dot(normal);
 
@@ -243,18 +243,18 @@ void RadRenderer::clear_depth_buffer()
 }
 
 // returns the point that the given plane and line intersect
-math::Vec3 RadRenderer::line_plane_intersect(math::Vec3& point, math::Vec3& plane_normal, math::Vec3& line_begin, math::Vec3& line_end)
+mathz::Vec3 RadRenderer::line_plane_intersect(mathz::Vec3& point, mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
 {
 	// using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
 	float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
 		(plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
-	math::Vec3 intersection_point = line_begin + (line_end - line_begin) * t;
+	mathz::Vec3 intersection_point = line_begin + (line_end - line_begin) * t;
 
 	return intersection_point;
 }
 
-bool RadRenderer::clip_triangle(math::Vec3&& plane_point, math::Vec3&& plane_normal, Triangle& t)
+bool RadRenderer::clip_triangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_normal, Triangle& t)
 {
 	// make sure it's normalized
 	plane_normal.normalize();
@@ -263,13 +263,13 @@ bool RadRenderer::clip_triangle(math::Vec3&& plane_point, math::Vec3&& plane_nor
 	int out_verts = 0;
 
 	// this will keep track of which vertices are in vs out
-	math::Vec3 in_vs[3];
-	math::Vec3 out_vs[3];
+	mathz::Vec3 in_vs[3];
+	mathz::Vec3 out_vs[3];
 
 	for (const auto& v : t.vertices)
 	{
-		math::Vec3 vert = { v.x, v.y, v.z };
-		math::Vec3 line = vert - plane_point;
+		mathz::Vec3 vert = { v.x, v.y, v.z };
+		mathz::Vec3 line = vert - plane_point;
 		line.normalize();
 		if (plane_normal.dot(line) > 0)
 		{
@@ -353,30 +353,30 @@ bool RadRenderer::out_near_far_bounds(const Triangle& t)
 			(t.vertices[0].z < m_near || t.vertices[0].z > m_far);
 }
 
-void RadRenderer::transform_tri(Triangle& t, const math::Mat4& transform)
+void RadRenderer::transform_tri(Triangle& t, const mathz::Mat4& transform)
 {
 	t.vertices[0] = transform * t.vertices[0];
 	t.vertices[1] = transform * t.vertices[1];
 	t.vertices[2] = transform * t.vertices[2];
 }
 
-math::Vec3 RadRenderer::calculate_normal(Triangle& t)
+mathz::Vec3 RadRenderer::calculate_normal(Triangle& t)
 {
 	// construct line 1 of the triangle
-	math::Vec3 l0 = {
+	mathz::Vec3 l0 = {
 		t.vertices[1].x - t.vertices[0].x,
 		t.vertices[1].y - t.vertices[0].y,
 		t.vertices[1].z - t.vertices[0].z
 	};
 
 	// construct line 2 of the triangle
-	math::Vec3 l1 = {
+	mathz::Vec3 l1 = {
 		t.vertices[2].x - t.vertices[0].x,
 		t.vertices[2].y - t.vertices[0].y,
 		t.vertices[2].z - t.vertices[0].z
 	};
     
-    math::Vec3 face_normal = l1.cross(l0);
+    mathz::Vec3 face_normal = l1.cross(l0);
 	face_normal.normalize();
     
     return face_normal;
