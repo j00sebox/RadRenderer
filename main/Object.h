@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "mathz/Matrix.h"
-#include "mathz/Vector.h"
-#include "mathz/Quaternion.h"
+#include "../mathz/matrix.hpp"
+#include "../mathz/vector.hpp"
+#include "../mathz/quaternion.hpp"
 
 struct Pixel
 {

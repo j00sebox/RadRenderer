@@ -23,10 +23,10 @@ void Camera::set_pos(mathz::Vec3&& pos)
     m_up.normalize();
 
 	// Set up camera direction matrix
-	m_transform(0, 0) = m_right.x;			m_transform(0, 1) = m_right.y;			m_transform(0, 2) = m_right.z;			m_transform(0, 3) = 0.0f;
-	m_transform(1, 0) = m_up.x;				m_transform(1, 1) = m_up.y;				m_transform(1, 2) = m_up.z;				m_transform(1, 3) = 0.0f;
-	m_transform(2, 0) = m_forward.x;		m_transform(2, 1) = m_forward.y;		m_transform(2, 2) = m_forward.z;		m_transform(2, 3) = 0.0f;
-	m_transform(3, 0) = m_position.x;		m_transform(3, 1) = m_position.y;		m_transform(3, 2) = m_position.z;		m_transform(3, 3) = 1.0f;
+	m_transform[0][0] = m_right.x;			m_transform[0][1] = m_right.y;			m_transform[0][2] = m_right.z;			m_transform[0][3] = 0.0f;
+	m_transform[1][0] = m_up.x;				m_transform[1][1] = m_up.y;				m_transform[1][2] = m_up.z;				m_transform[1][3] = 0.0f;
+	m_transform[2][0] = m_forward.x;		m_transform[2][1] = m_forward.y;		m_transform[2][2] = m_forward.z;		m_transform[2][3] = 0.0f;
+	m_transform[3][0] = m_position.x;		m_transform[3][1] = m_position.y;		m_transform[3][2] = m_position.z;		m_transform[3][3] = 1.0f;
     
     m_forward.normalize();
 }

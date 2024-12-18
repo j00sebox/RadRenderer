@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Object.h"
 
-#include "mathz/Quaternion.h"
-
 Object::Object(const std::string& fname)
 	: m_qrotation(1.f, 0.f, 0.f, 0.f)
 {
