@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RadRenderer.h"
 
-#include "mathz/Quaternion.h"
+#include "../mathz/quaternion.hpp"
 
 #define DEG_TO_RAD(x) ( ( x / 180.0f ) * 3.14159f  )
 
@@ -12,7 +12,7 @@ RadRenderer::RadRenderer(unsigned int screen_width, unsigned int screen_height, 
 	m_buffer_size(screen_width * screen_height),
 	m_near(rs.near), m_far(rs.far),
 	m_fov(rs.fov),
-	m_object(Object("res/objs/teapot.obj")),
+	m_object(Object("../assets/objs/teapot.obj")),
 	m_depth_buffer(m_buffer_size, -9999)
 {
 	clear_frame_buffer();
