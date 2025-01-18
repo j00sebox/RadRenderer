@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Camera.h"
+#include "camera.hpp"
 
 Camera::Camera()
 {
@@ -8,7 +8,7 @@ Camera::Camera()
 	m_right = { 1.f, 0.f, 0.f };
 }
 
-void Camera::set_pos(mathz::Vec3&& pos)
+void Camera::SetPosition(mathz::Vec3&& pos)
 {
     m_position = pos;
     
@@ -31,7 +31,7 @@ void Camera::set_pos(mathz::Vec3&& pos)
     m_forward.normalize();
 }
 
-const mathz::Vec3& Camera::get_pos() const
+const mathz::Vec3& Camera::GetPosition() const
 {
 	return m_position;
 }

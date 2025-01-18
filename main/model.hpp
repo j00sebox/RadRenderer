@@ -24,22 +24,21 @@ struct Triangle
 	Pixel colours[3];
 };
 
-class Object
+class Model 
 {
 public:
-	Object() = delete;
+	Model() = delete;
 
-	Object(const std::string& fname);
+	Model(std::string fname);
 
-	void translate(float x, float y, float z);
+	void Translate(float x, float y, float z);
+	void RotateX(float rx);
+	void RotateY(float ry);
+	void RotateZ(float rz);
 
-	void rotate_x(float rx);
-	void rotate_y(float ry);
-	void rotate_z(float rz);
-
-	const mathz::Mat4& get_transform() const { return m_transform; }
-	const mathz::Quaternion& get_quaternion() const { return m_qrotation; }
-	void reset_transform();
+	const mathz::Mat4& GetTransform() const { return m_transform; }
+	const mathz::Quaternion& GetQuaternion() const { return m_qrotation; }
+	void ResetTransform();
 
 	void operator= (const mathz::Quaternion& quat);
 
@@ -49,8 +48,8 @@ public:
 	inline std::vector<Triangle>::const_iterator end() const { return m_tris.end(); }
 
 private:
-	// loads vertex and face data from obj file
-	void load_obj_file(const std::string& fname);
+	// Loads vertex and face data from obj file
+	void LoadOBJFile(std::string&& fname);
 
 	std::vector<Triangle> m_tris;
 	mathz::Mat4 m_transform;

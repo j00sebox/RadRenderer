@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RadRenderer.h"
+#include "renderer.hpp"
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
@@ -10,16 +10,16 @@ public:
 	Window(unsigned int width, unsigned int height);
 	~Window();
 
-	void loop();
+	void Loop();
 
-	static inline Window* get() { return m_instance; }
-	inline unsigned int width() const { return m_width; }
-	inline unsigned int height() const { return m_height; }
+	static inline Window* Get() { return m_instance; }
+	inline unsigned int Width() const { return m_width; }
+	inline unsigned int Height() const { return m_height; }
 	
 	static Window* m_instance;
 
 private:
-	RadRenderer m_renderer;
+	Renderer m_renderer;
 	sf::RenderWindow m_window;
 	sf::Text m_fps;
 	sf::Font m_font;

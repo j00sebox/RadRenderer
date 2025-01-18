@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "Object.h"
+#include "model.hpp"
 
-Object::Object(const std::string& fname)
+Model::Model(std::string fname)
 	: m_qrotation(1.f, 0.f, 0.f, 0.f)
 {
-	load_obj_file(fname);
+	LoadOBJFile(std::move(fname));
 }
 
-void Object::translate(float x, float y, float z)
+void Model::Translate(float x, float y, float z)
 {
 	m_transform = 
 
@@ -19,7 +19,7 @@ void Object::translate(float x, float y, float z)
 		});
 }
 
-void Object::rotate_x(float rx)
+void Model::RotateX(float rx)
 {
 	m_transform = m_transform *
 
@@ -31,7 +31,7 @@ void Object::rotate_x(float rx)
 		});
 }
 
-void Object::rotate_y(float ry)
+void Model::RotateY(float ry)
 {
 	m_transform = m_transform *
 
@@ -43,7 +43,7 @@ void Object::rotate_y(float ry)
 		});
 }
 
-void Object::rotate_z(float rz)
+void Model::RotateZ(float rz)
 {
 	m_transform = m_transform *
 
@@ -55,17 +55,17 @@ void Object::rotate_z(float rz)
 		});
 }
 
-void Object::reset_transform()
+void Model::ResetTransform()
 {
 	m_transform.clear();
 }
 
-void Object::operator=(const mathz::Quaternion& quat)
+void Model::operator=(const mathz::Quaternion& quat)
 {
 	m_qrotation = quat;
 }
 
-void Object::load_obj_file(const std::string& fname)
+void Model::LoadOBJFile(std::string&& fname)
 {
 	std::ifstream readFile;
 	readFile.open(fname, std::ifstream::in);

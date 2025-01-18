@@ -13,4 +13,4 @@ file(GLOB SOURCES "${SOURCE_DIR}/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(mathz)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE mathz)
+target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)

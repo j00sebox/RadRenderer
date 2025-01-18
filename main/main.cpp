@@ -1,12 +1,12 @@
 #include "pch.h"
 
-#include "Window.h"
+#include "window.hpp"
 
 int main()
 {
 	Window window(1280, 720);
 
-	window.loop();
+	window.Loop();
 
 	return 0;
 }

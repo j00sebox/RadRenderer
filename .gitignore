@@ -187,3 +187,6 @@ compile_flags.txt
 rad_renderer.mk
 rad_renderer.txt
 pch.h.gch
+
+#Cache
+.cache/*

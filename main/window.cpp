@@ -1,8 +1,6 @@
 #include "pch.h"
 
-#include "Window.h"
-
-#include "RendererSettings.h"
+#include "window.hpp"
 
 Window* Window::m_instance = nullptr;
 
@@ -26,7 +24,7 @@ Window::Window(unsigned int width, unsigned int height)
 
     m_window.setVerticalSyncEnabled(true);
 
-    if (!m_font.loadFromFile("res/fonts/arial_narrow_7.ttf"))
+    if (!m_font.loadFromFile("../assets/fonts/arial_narrow_7.ttf"))
     {
 #ifdef PLATFORM_WINDOWS
           __debugbreak();
@@ -42,7 +40,7 @@ Window::Window(unsigned int width, unsigned int height)
 
 Window::~Window() {}
 
-void Window::loop()
+void Window::Loop()
 {
     bool mouse_down = false;
     int prev_x, prev_y;
@@ -112,7 +110,7 @@ void Window::loop()
 
         sf::Time elapsed = m_clock.restart();
 
-        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.update((float)elapsed.asMilliseconds(), forward, -dx, dy));
+        std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(m_renderer.Update((float)elapsed.asMilliseconds(), forward, -dx, dy));
 
         float fps = 1.f / elapsed.asSeconds();
 
