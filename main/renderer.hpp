@@ -1,12 +1,8 @@
 #include "camera.hpp"
 #include "model.hpp"
 
+#include <cstdint>
 #include <memory>
-
-struct RendererSettings
-{
-  float near, far, fov;
-};
 
 class Renderer
 {
@@ -14,7 +10,8 @@ public:
   Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far);
   ~Renderer() {}
 
-  Pixel* Render(const Model& model, const Camera& camera, float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
+  void Render(const Model& model, const Camera& camera);
+  std::uint8_t* GetFrameBuffer() const { return m_frame_buffer.get(); }
 
 private:
   void Rasterize(const Triangle& t);
@@ -45,6 +42,6 @@ private:
   // Screen stuff
   unsigned int m_screen_width, m_screen_height, m_buffer_size;
   int m_half_width, m_half_height; // caching these for later
-  std::unique_ptr<Pixel> m_frame_buffer;
+  std::unique_ptr<std::uint8_t> m_frame_buffer;
   std::vector<float> m_depth_buffer;
 };

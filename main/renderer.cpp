@@ -2,23 +2,26 @@
 #include "pch.h"
 #include "renderer.hpp"
 
+#include <cstdint>
+#include <cstring>
+
 #define DEG_TO_RAD(x) ((x / 180.0f) * 3.14159f)
 
 Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far)
 
     : m_screen_width(screen_width), m_screen_height(screen_height),
       m_half_width(screen_width / 2), m_half_height(screen_height / 2),
-      m_buffer_size(screen_width * screen_height),
+      m_buffer_size(screen_width * screen_height * 4), // RGBA
       m_near(near), m_far(far),
       m_depth_buffer(m_buffer_size, -9999)
 {
-  ClearFrameBuffer();
+  m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 
   m_directional_light = {0.0f, 4.0f, -1.0f};
   m_directional_light.normalize();
 }
 
-Pixel* Renderer::Render(const Model& model, const Camera& camera, float elapsed_time, float cam_forward, float dx, float dy)
+void Renderer::Render(const Model& model, const Camera& camera)
 {
   // Clear screen to redraw
   ClearFrameBuffer();
@@ -27,45 +30,45 @@ Pixel* Renderer::Render(const Model& model, const Camera& camera, float elapsed_
   mathz::Mat4 cam_transform = camera.GetTransform();
   m_view = cam_transform.inverse();
 
-  // iterate through all triangles in the object
-  for (auto o : model)
+  // Iterate through all triangles in the object
+  for (Triangle triangle : model)
   {
-    // rotate object
-    TransformTriangle(o, model.GetQuaternion().convert_to_mat());
-    TransformTriangle(o, model.GetTransform());
+    // Rotate object
+    TransformTriangle(triangle, model.GetQuaternion().convert_to_mat());
+    TransformTriangle(triangle, model.GetTransform());
 
-    // convert to camera space
-    TransformTriangle(o, m_view);
+    // Convert to camera space
+    TransformTriangle(triangle, m_view);
 
-    if (OutNearFarBounds(o))
+    if (OutNearFarBounds(triangle))
       continue;
 
-    // remove when normals are attributes
-    o.normal[0] = CalculateNormal(o);
-    o.normal[1] = o.normal[0];
-    o.normal[2] = o.normal[0];
+    // Remove when normals are attributes
+    triangle.normal[0] = CalculateNormal(triangle);
+    triangle.normal[1] = triangle.normal[0];
+    triangle.normal[2] = triangle.normal[0];
 
-    // check if triangle is visible
-    if (camera.GetForward().dot(o.normal[0]) > 0 &&
-        camera.GetForward().dot(o.normal[1]) > 0 &&
-        camera.GetForward().dot(o.normal[2]) > 0)
+    // Check if triangle is visible
+    if (camera.GetForward().dot(triangle.normal[0]) > 0 &&
+        camera.GetForward().dot(triangle.normal[1]) > 0 &&
+        camera.GetForward().dot(triangle.normal[2]) > 0)
     {
-      o.z[0] = -o.vertices[0].z;
-      o.z[1] = -o.vertices[1].z;
-      o.z[2] = -o.vertices[2].z;
+      triangle.z[0] = -triangle.vertices[0].z;
+      triangle.z[1] = -triangle.vertices[1].z;
+      triangle.z[2] = -triangle.vertices[2].z;
 
-      TransformTriangle(o, camera.GetPerspective());
+      TransformTriangle(triangle, camera.GetPerspective());
 
       bool clipped = false;
 
-      // plane point		 // plane normal
-      clipped |= ClipTriangle({-1.f, 0.f, 0.f}, {1.f, 0.f, 0.f}, o); // left plane
-      clipped |= ClipTriangle({1.f, 0.f, 0.f}, {-1.f, 0.f, 0.f}, o); // right plane
-      clipped |= ClipTriangle({0.f, 1.f, 0.f}, {0.f, -1.f, 0.f}, o); // top plane
-      clipped |= ClipTriangle({0.f, -1.f, 0.f}, {0.f, 1.f, 0.f}, o); // bottom plane
+      // First parameter is plane point, second is normal
+      clipped |= ClipTriangle({-1.f, 0.f, 0.f}, {1.f, 0.f, 0.f}, triangle); // Left plane
+      clipped |= ClipTriangle({1.f, 0.f, 0.f}, {-1.f, 0.f, 0.f}, triangle); // Right plane
+      clipped |= ClipTriangle({0.f, 1.f, 0.f}, {0.f, -1.f, 0.f}, triangle); // Top plane
+      clipped |= ClipTriangle({0.f, -1.f, 0.f}, {0.f, 1.f, 0.f}, triangle); // Bottom plane
 
       if (!clipped)
-        m_render_triangles.push_back(o);
+        m_render_triangles.push_back(triangle);
     }
   }
 
@@ -79,12 +82,10 @@ Pixel* Renderer::Render(const Model& model, const Camera& camera, float elapsed_
     Rasterize(t);
   }
 
-  // vectors needs to be empty for next redraw
+  // Vectors needs to be empty for next redraw
   m_render_triangles.clear();
   m_clipped_tris.clear();
   ClearDepthBuffer();
-
-  return m_frame_buffer.get();
 }
 
 bool out_of_bounds(const Triangle& t)
@@ -170,13 +171,15 @@ float Renderer::EdgeFunction(float x0, float y0, float x1, float y1, float x2, f
 
 Pixel Renderer::GetColour(float lum)
 {
-  Pixel p = {(std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255};
-  return p;
+  return {(std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255};
 }
 
-void Renderer::SetPixel(int x, int y, const Pixel& col)
+void Renderer::SetPixel(int x, int y, const Pixel& pixel)
 {
-  m_frame_buffer.get()[y * m_screen_width + x] = col;
+  // Calculate the index of the pixel in the framebuffer
+  int index = (y * m_screen_width + x) * 4;
+
+  std::memcpy(&m_frame_buffer.get()[index], &pixel, sizeof(Pixel));
 }
 
 std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
@@ -189,7 +192,7 @@ std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
 
 void Renderer::ClearFrameBuffer()
 {
-  m_frame_buffer.reset(new Pixel[m_buffer_size]);
+  std::memset(m_frame_buffer.get(), 0, m_buffer_size);
 }
 
 void Renderer::ClearDepthBuffer()

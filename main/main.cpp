@@ -106,9 +106,9 @@ int main()
     model = model.GetQuaternion() * qx * qy;
     model.Translate(0.f, -3.f, 6.f);
 
-    std::uint8_t* pixels = reinterpret_cast<std::uint8_t*>(renderer.Render(model, camera, elapsed_time, forward, -dx, dy));
+    renderer.Render(model, camera);
 
-    texture.update(pixels);
+    texture.update(renderer.GetFrameBuffer());
     window.draw(sprite);
     window.display();
     window.clear();
