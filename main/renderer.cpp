@@ -92,7 +92,7 @@ Pixel* Renderer::Update(float elapsed_time, float cam_forward, float dx, float d
             o.z[2] = -o.vertices[2].z;
 
             TransformTriangle(o, m_perspective);
-            TransformTriangle(o, m_orthographic);
+            // TransformTriangle(o, m_orthographic);
             
 			bool clipped = false;
 
