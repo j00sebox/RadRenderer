@@ -4,13 +4,12 @@
 
 #define DEG_TO_RAD(x) ((x / 180.0f) * 3.14159f)
 
-Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs)
+Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far)
 
     : m_screen_width(screen_width), m_screen_height(screen_height),
       m_half_width(screen_width / 2), m_half_height(screen_height / 2),
       m_buffer_size(screen_width * screen_height),
-      m_near(rs.near), m_far(rs.far),
-      m_fov(rs.fov),
+      m_near(near), m_far(far),
       m_depth_buffer(m_buffer_size, -9999)
 {
   ClearFrameBuffer();

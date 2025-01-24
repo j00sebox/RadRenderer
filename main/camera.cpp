@@ -1,8 +1,6 @@
 #include "camera.hpp"
 #include "pch.h"
 
-#define DEG_TO_RAD(x) ((x / 180.0f) * 3.14159f)
-
 Camera::Camera(CameraSettings&& camera_settings)
     : m_near(camera_settings.near),
       m_far(camera_settings.far),
@@ -12,7 +10,6 @@ Camera::Camera(CameraSettings&& camera_settings)
   m_up = {0.f, 1.f, 0.f};
   m_right = {1.f, 0.f, 0.f};
 
-  float fovRAD = DEG_TO_RAD(m_fov);
   float scaling_factor = 1.0f / tanf(m_fov * 0.5f);
   float aspect_ratio = (float)camera_settings.height / (float)camera_settings.width;
 

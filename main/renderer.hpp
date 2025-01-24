@@ -11,7 +11,7 @@ struct RendererSettings
 class Renderer
 {
 public:
-  Renderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs = {0.1f, 1000.f, 80.f});
+  Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far);
   ~Renderer() {}
 
   Pixel* Render(const Model& model, const Camera& camera, float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
@@ -30,13 +30,10 @@ private:
   inline void TransformTriangle(Triangle& t, const mathz::Mat4& transform);
   inline mathz::Vec3 CalculateNormal(Triangle& t);
 
-  float m_far, m_near, m_fov;
-  float m_angle_x = 0.f, m_angle_y = 0.f, m_angle_z = 0.f;
-  float m_rotation_speed = 0.001f;
-  float m_cam_movement = 0.f;
+  float m_far, m_near;
 
   // Transforms
-  mathz::Mat4 m_view, m_perspective, m_orthographic;
+  mathz::Mat4 m_view;
 
   // Lighting
   mathz::Vec3 m_directional_light;

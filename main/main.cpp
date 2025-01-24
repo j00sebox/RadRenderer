@@ -10,11 +10,12 @@
 int main()
 {
   const int width = 1280, height = 720;
+  const float near = 0.1f, far = 1000.f;
 
   Model model("../assets/objs/teapot.obj");
-  Camera camera({width, height, 0.1f, 1000.f, 80.f});
+  Camera camera({width, height, near, far, 80.f});
 
-  Renderer renderer(width, height);
+  Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
   sf::Sprite sprite;
   sf::Texture texture;
