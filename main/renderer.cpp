@@ -15,42 +15,17 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, Render
 {
   ClearFrameBuffer();
 
-  m_camera.reset(new Camera());
-
-  float m_fovRAD = DEG_TO_RAD(m_fov);
-  float scaling_factor = 1.0f / tanf(m_fov * 0.5f);
-  float aspect_ratio = (float)m_screen_height / (float)m_screen_width;
-
-  float q = m_far / (m_far - m_near);
-
-  // Create projection matrix
-  m_perspective.set(
-      aspect_ratio * scaling_factor, 0.f, 0.f, 0.f,
-      0.f, scaling_factor, 0.f, 0.f,
-      0.f, 0.f, q, 1.f,
-      0.f, 0.f, -m_near * q, 0.f);
-
-  m_orthographic.set(
-      1.f, 0.f, 0.f, 0.f,
-      0.f, 1.f, 0.f, 0.f,
-      0.f, 0.f, 1.f / (m_far - m_near), -m_near / (m_far - m_near),
-      0.f, 0.f, 0.f, 1.f);
-
   m_directional_light = {0.0f, 4.0f, -1.0f};
   m_directional_light.normalize();
 }
 
-Pixel* Renderer::Render(const Model& model, float elapsed_time, float cam_forward, float dx, float dy)
+Pixel* Renderer::Render(const Model& model, const Camera& camera, float elapsed_time, float cam_forward, float dx, float dy)
 {
   // Clear screen to redraw
   ClearFrameBuffer();
 
-  m_cam_movement += cam_forward * elapsed_time * 0.001f;
-
-  m_camera->SetPosition(mathz::Vec3(0.f, 0.f, m_cam_movement));
-
-  // camera transform
-  mathz::Mat4 cam_transform = m_camera->GetTransform();
+  // Camera transform
+  mathz::Mat4 cam_transform = camera.GetTransform();
   m_view = cam_transform.inverse();
 
   // iterate through all triangles in the object
@@ -72,16 +47,15 @@ Pixel* Renderer::Render(const Model& model, float elapsed_time, float cam_forwar
     o.normal[2] = o.normal[0];
 
     // check if triangle is visible
-    if (m_camera->GetForward().dot(o.normal[0]) > 0 &&
-        m_camera->GetForward().dot(o.normal[1]) > 0 &&
-        m_camera->GetForward().dot(o.normal[2]) > 0)
+    if (camera.GetForward().dot(o.normal[0]) > 0 &&
+        camera.GetForward().dot(o.normal[1]) > 0 &&
+        camera.GetForward().dot(o.normal[2]) > 0)
     {
       o.z[0] = -o.vertices[0].z;
       o.z[1] = -o.vertices[1].z;
       o.z[2] = -o.vertices[2].z;
 
-      TransformTriangle(o, m_perspective);
-      // TransformTriangle(o, m_orthographic);
+      TransformTriangle(o, camera.GetPerspective());
 
       bool clipped = false;
 

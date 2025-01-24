@@ -14,7 +14,7 @@ public:
   Renderer(unsigned int screen_width, unsigned int screen_height, RendererSettings rs = {0.1f, 1000.f, 80.f});
   ~Renderer() {}
 
-  Pixel* Render(const Model& model, float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
+  Pixel* Render(const Model& model, const Camera& camera, float elapsed_time, float cam_forward, float rotate_x, float rotate_y);
 
 private:
   void Rasterize(const Triangle& t);
@@ -29,8 +29,6 @@ private:
   bool OutNearFarBounds(const Triangle& t);
   inline void TransformTriangle(Triangle& t, const mathz::Mat4& transform);
   inline mathz::Vec3 CalculateNormal(Triangle& t);
-
-  std::unique_ptr<Camera> m_camera;
 
   float m_far, m_near, m_fov;
   float m_angle_x = 0.f, m_angle_y = 0.f, m_angle_z = 0.f;
