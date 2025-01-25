@@ -30,27 +30,27 @@ public:
   Model(const char* file_name);
   Model(std::vector<Triangle>&& triangles);
 
-  void Translate(float x, float y, float z);
-  void RotateX(float rx);
-  void RotateY(float ry);
-  void RotateZ(float rz);
+  void SetPosition(float x, float y, float z);
+  void SetRotation(const mathz::Quaternion& rotation); // Override rotation
+  void SetScale(float scale);
+
+  void ApplyRotation(const mathz::Quaternion& rotation); // Accumulate rotation
 
   const mathz::Mat4& GetTransform() const { return m_transform; }
-  const mathz::Quaternion& GetQuaternion() const { return m_qrotation; }
   void ResetTransform();
 
-  void operator=(const mathz::Quaternion& quat);
-
-  inline std::vector<Triangle>::iterator begin() { return m_tris.begin(); }
-  inline std::vector<Triangle>::iterator end() { return m_tris.end(); }
-  inline std::vector<Triangle>::const_iterator begin() const { return m_tris.begin(); }
-  inline std::vector<Triangle>::const_iterator end() const { return m_tris.end(); }
+  inline std::vector<Triangle>::iterator begin() { return m_triangles.begin(); }
+  inline std::vector<Triangle>::iterator end() { return m_triangles.end(); }
+  inline std::vector<Triangle>::const_iterator begin() const { return m_triangles.begin(); }
+  inline std::vector<Triangle>::const_iterator end() const { return m_triangles.end(); }
 
 private:
+  void UpdateTransform();
+
   // Loads vertex and face data from obj file
   void LoadOBJFile(const char* file_name);
 
-  std::vector<Triangle> m_tris;
+  std::vector<Triangle> m_triangles;
+  mathz::Mat4 m_translation, m_rotation, m_scale;
   mathz::Mat4 m_transform;
-  mathz::Quaternion m_qrotation;
 };

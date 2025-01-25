@@ -33,8 +33,8 @@ void Renderer::Render(const Model& model, const Camera& camera)
   // Iterate through all triangles in the object
   for (Triangle triangle : model)
   {
-    // Rotate object
-    TransformTriangle(triangle, model.GetQuaternion().convert_to_mat());
+    // Apply model transform
+    // TransformTriangle(triangle, model.GetQuaternion().convert_to_mat());
     TransformTriangle(triangle, model.GetTransform());
 
     // Convert to camera space

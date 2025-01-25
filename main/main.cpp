@@ -25,6 +25,9 @@ int main()
   texture.create(width, height);
   sprite.setTexture(texture);
 
+  model.SetPosition(0.f, -3.f, 6.f);
+  model.SetScale(1.2f);
+
   bool mouse_down = false;
   int prev_x, prev_y;
   float forward = 0.f;
@@ -102,9 +105,7 @@ int main()
     // Update model
     mathz::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * rotation_speed), {1.f, 0.f, 0.f});
     mathz::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * rotation_speed), {0.f, 1.f, 0.f});
-
-    model = model.GetQuaternion() * qx * qy;
-    model.Translate(0.f, -3.f, 6.f);
+    model.ApplyRotation(qx * qy);
 
     renderer.Render(model, camera);
 

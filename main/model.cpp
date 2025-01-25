@@ -2,57 +2,57 @@
 #include "pch.h"
 
 Model::Model(const char* file_name)
-    : m_qrotation(1.f, 0.f, 0.f, 0.f)
 {
   LoadOBJFile(std::move(file_name));
 }
 
 Model::Model(std::vector<Triangle>&& triangles)
-    : m_qrotation(1.f, 0.f, 0.f, 0.f),
-      m_tris(triangles)
+    : m_triangles(triangles)
 {
 }
 
-void Model::Translate(float x, float y, float z)
+void Model::SetPosition(float x, float y, float z)
 {
-  m_transform = mathz::Mat4({1, 0, 0, 0,
-                             0, 1, 0, 0,
-                             0, 0, 1, 0,
-                             x, y, z, 1});
+  m_translation = mathz::Mat4({1, 0, 0, 0,
+                               0, 1, 0, 0,
+                               0, 0, 1, 0,
+                               x, y, z, 1});
+
+  UpdateTransform();
 }
 
-void Model::RotateX(float rx)
+void Model::SetRotation(const mathz::Quaternion& rotation)
 {
-  m_transform = m_transform * mathz::Mat4({1, 0, 0, 0,
-                                           0, cosf(rx), sinf(rx), 0,
-                                           0, -sinf(rx), cosf(rx), 0,
-                                           0, 0, 0, 1});
+  m_rotation = rotation.convert_to_mat();
+
+  UpdateTransform();
 }
 
-void Model::RotateY(float ry)
+void Model::ApplyRotation(const mathz::Quaternion& rotation)
 {
-  m_transform = m_transform * mathz::Mat4({cosf(ry), 0, sinf(ry), 0,
-                                           0, 1, 0, 0,
-                                           -sinf(ry), 0, cosf(ry), 0,
-                                           0, 0, 0, 1});
+  m_rotation *= rotation.convert_to_mat();
+
+  UpdateTransform();
 }
 
-void Model::RotateZ(float rz)
+void Model::SetScale(float scale)
 {
-  m_transform = m_transform * mathz::Mat4({cosf(rz), sinf(rz), 0, 0,
-                                           -sinf(rz), cosf(rz), 0, 0,
-                                           0, 0, 1, 0,
-                                           0, 0, 0, 1});
+  m_scale = mathz::Mat4({scale, 0, 0, 0,
+                         0, scale, 0, 0,
+                         0, 0, scale, 0,
+                         0, 0, 0, 1});
+
+  UpdateTransform();
+}
+
+void Model::UpdateTransform()
+{
+  m_transform = m_scale * m_rotation * m_translation;
 }
 
 void Model::ResetTransform()
 {
   m_transform.clear();
-}
-
-void Model::operator=(const mathz::Quaternion& quat)
-{
-  m_qrotation = quat;
 }
 
 void Model::LoadOBJFile(const char* file_name)
@@ -90,7 +90,7 @@ void Model::LoadOBJFile(const char* file_name)
     else if (line[0] == 'f')
     {
       st >> startingChar >> i1 >> i2 >> i3;
-      m_tris.push_back(
+      m_triangles.push_back(
           {vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1]});
     }
   }
