@@ -23,14 +23,14 @@ void Model::SetPosition(float x, float y, float z)
 
 void Model::SetRotation(const mathz::Quaternion& rotation)
 {
-  m_rotation = rotation.convert_to_mat();
+  m_rotation = rotation.ConvertToMatrix();
 
   UpdateTransform();
 }
 
 void Model::ApplyRotation(const mathz::Quaternion& rotation)
 {
-  m_rotation *= rotation.convert_to_mat();
+  m_rotation *= rotation.ConvertToMatrix();
 
   UpdateTransform();
 }

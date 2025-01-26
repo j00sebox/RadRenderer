@@ -16,7 +16,7 @@ Camera::Camera(CameraSettings&& camera_settings)
   float q = m_far / (m_far - m_near);
 
   // Create projection matrix
-  m_perspective.set(
+  m_perspective.Set(
       aspect_ratio * scaling_factor, 0.f, 0.f, 0.f,
       0.f, scaling_factor, 0.f, 0.f,
       0.f, 0.f, q, 1.f,
@@ -31,11 +31,11 @@ void Camera::SetPosition(mathz::Vec3&& pos)
 
   // Calculate the up vector in relation to the new camera direction
   mathz::Vec3 tmp(0.f, 1.f, 0.f);
-  m_right = tmp.cross(m_forward);
-  m_right.normalize();
+  m_right = tmp.Cross(m_forward);
+  m_right.Normalize();
 
-  m_up = m_forward.cross(m_right);
-  m_up.normalize();
+  m_up = m_forward.Cross(m_right);
+  m_up.Normalize();
 
   // Set up camera direction matrix
   m_transform[0][0] = m_right.x;
@@ -55,7 +55,7 @@ void Camera::SetPosition(mathz::Vec3&& pos)
   m_transform[3][2] = m_position.z;
   m_transform[3][3] = 1.0f;
 
-  m_forward.normalize();
+  m_forward.Normalize();
 }
 
 const mathz::Vec3& Camera::GetPosition() const

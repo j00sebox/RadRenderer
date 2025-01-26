@@ -5,8 +5,6 @@
 #include <cstdint>
 #include <cstring>
 
-#define DEG_TO_RAD(x) ((x / 180.0f) * 3.14159f)
-
 Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far)
 
     : m_screen_width(screen_width), m_screen_height(screen_height),
@@ -18,7 +16,7 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 
   m_directional_light = {0.0f, 4.0f, -1.0f};
-  m_directional_light.normalize();
+  m_directional_light.Normalize();
 }
 
 void Renderer::Render(const Model& model, const Camera& camera)
@@ -28,7 +26,7 @@ void Renderer::Render(const Model& model, const Camera& camera)
 
   // Camera transform
   mathz::Mat4 cam_transform = camera.GetTransform();
-  m_view = cam_transform.inverse();
+  m_view = cam_transform.Inverse();
 
   // Iterate through all triangles in the object
   for (Triangle triangle : model)
@@ -49,9 +47,9 @@ void Renderer::Render(const Model& model, const Camera& camera)
     triangle.normal[2] = triangle.normal[0];
 
     // Check if triangle is visible
-    if (camera.GetForward().dot(triangle.normal[0]) > 0 &&
-        camera.GetForward().dot(triangle.normal[1]) > 0 &&
-        camera.GetForward().dot(triangle.normal[2]) > 0)
+    if (camera.GetForward().Dot(triangle.normal[0]) > 0 &&
+        camera.GetForward().Dot(triangle.normal[1]) > 0 &&
+        camera.GetForward().Dot(triangle.normal[2]) > 0)
     {
       triangle.z[0] = -triangle.vertices[0].z;
       triangle.z[1] = -triangle.vertices[1].z;
@@ -112,7 +110,7 @@ void Renderer::Rasterize(const Triangle& t)
   mathz::Vec2<int> v1 = {ImageToScreenSpace(t.vertices[1].x, t.vertices[1].y)};
   mathz::Vec2<int> v2 = {ImageToScreenSpace(t.vertices[2].x, t.vertices[2].y)};
 
-  // bounding box
+  // Bounding box
   min_x = std::min(v0.x, v1.x);
   min_x = std::min(min_x, v2.x);
 
@@ -142,7 +140,7 @@ void Renderer::Rasterize(const Triangle& t)
 
         float area_t = EdgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
 
-        // barycentric coordinates
+        // Barycentric coordinates
         float l0 = area0 / area_t;
         float l1 = area1 / area_t;
         float l2 = area2 / area_t;
@@ -151,7 +149,7 @@ void Renderer::Rasterize(const Triangle& t)
 
         mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
 
-        float lum = m_directional_light.dot(normal);
+        float lum = m_directional_light.Dot(normal);
 
         if (int_z > m_depth_buffer[y * m_screen_width + x])
         {
@@ -201,10 +199,10 @@ void Renderer::ClearDepthBuffer()
     f = -9999;
 }
 
-// returns the point that the given plane and line intersect
+// Returns the point that the given plane and line intersect
 mathz::Vec3 Renderer::LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
 {
-  // using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
+  // Using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
   float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
             (plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
@@ -215,13 +213,13 @@ mathz::Vec3 Renderer::LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_
 
 bool Renderer::ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_normal, Triangle& t)
 {
-  // make sure it's normalized
-  plane_normal.normalize();
+  // Make sure it's normalized
+  plane_normal.Normalize();
 
   int in_verts = 0;
   int out_verts = 0;
 
-  // this will keep track of which vertices are in vs out
+  // This will keep track of which vertices are in vs out
   mathz::Vec3 in_vs[3];
   mathz::Vec3 out_vs[3];
 
@@ -229,8 +227,8 @@ bool Renderer::ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_norma
   {
     mathz::Vec3 vert = {v.x, v.y, v.z};
     mathz::Vec3 line = vert - plane_point;
-    line.normalize();
-    if (plane_normal.dot(line) > 0)
+    line.Normalize();
+    if (plane_normal.Dot(line) > 0)
     {
       in_vs[in_verts++] = v;
     }
@@ -249,13 +247,13 @@ bool Renderer::ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_norma
 
     t2.vertices[0] = in_vs[1];
 
-    // the intersecting points to the plane will make up the rest of both triangles
+    // The intersecting points to the plane will make up the rest of both triangles
     t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vs[0], out_vs[0]);
 
     t2.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vs[1], out_vs[0]);
-    t2.vertices[2] = t1.vertices[2]; // both new triangles share this vertex
+    t2.vertices[2] = t1.vertices[2]; // Both new triangles share this vertex
 
-    // copy over attributes
+    // Copy over attributes
     t1.z[0] = t.z[0];
     t1.z[1] = t.z[1];
     t1.z[2] = t.z[2];
@@ -321,20 +319,20 @@ void Renderer::TransformTriangle(Triangle& t, const mathz::Mat4& transform)
 
 mathz::Vec3 Renderer::CalculateNormal(Triangle& t)
 {
-  // construct line 1 of the triangle
+  // Construct line 1 of the triangle
   mathz::Vec3 l0 = {
       t.vertices[1].x - t.vertices[0].x,
       t.vertices[1].y - t.vertices[0].y,
       t.vertices[1].z - t.vertices[0].z};
 
-  // construct line 2 of the triangle
+  // Construct line 2 of the triangle
   mathz::Vec3 l1 = {
       t.vertices[2].x - t.vertices[0].x,
       t.vertices[2].y - t.vertices[0].y,
       t.vertices[2].z - t.vertices[0].z};
 
-  mathz::Vec3 face_normal = l1.cross(l0);
-  face_normal.normalize();
+  mathz::Vec3 face_normal = l1.Cross(l0);
+  face_normal.Normalize();
 
   return face_normal;
 }
