@@ -19,9 +19,10 @@ public:
   Camera(CameraSettings&& camera_settings);
   ~Camera() {}
 
-  void SetPosition(mathz::Vec3&& pos);
-  const mathz::Vec3& GetPosition() const;
+  void Move(mathz::Vec3&& pos);
+  void Rotate(float pitch, float yaw);
 
+  const mathz::Vec3& GetPosition() const { return m_position; }
   inline const mathz::Vec3& GetForward() const { return m_forward; }
   const mathz::Mat4& GetTransform() const { return m_transform; }
   const mathz::Mat4& GetPerspective() const { return m_perspective; }

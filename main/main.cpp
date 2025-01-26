@@ -5,8 +5,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
-#define DEG_TO_RAD(x) ((x / 180.0f) * 3.14159f)
-
 int main()
 {
   const int width = 1280, height = 720;
@@ -51,7 +49,7 @@ int main()
       if (event.type == sf::Event::KeyPressed &&
           event.key.code == sf::Keyboard::W)
       {
-        forward = -1.f;
+        forward = 1.f;
       }
 
       if (event.type == sf::Event::KeyReleased &&
@@ -63,7 +61,7 @@ int main()
       if (event.type == sf::Event::KeyPressed &&
           event.key.code == sf::Keyboard::S)
       {
-        forward = 1.f;
+        forward = -1.f;
       }
 
       if (event.type == sf::Event::KeyReleased &&
@@ -100,12 +98,20 @@ int main()
 
     // Update camera
     cam_movement += forward * elapsed_time * 0.001f;
-    camera.SetPosition(mathz::Vec3(0.f, 0.f, cam_movement));
+    camera.Move(camera.GetForward() * cam_movement);
+
+    if (dx != 0.f || dy != 0.f)
+    {
+      float pitch = dy * rotation_speed * elapsed_time;
+      float yaw = dx * rotation_speed * elapsed_time;
+
+      camera.Rotate(pitch, yaw);
+    }
 
     // Update model
-    mathz::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * rotation_speed), {1.f, 0.f, 0.f});
-    mathz::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * rotation_speed), {0.f, 1.f, 0.f});
-    model.ApplyRotation(qx * qy);
+    // mathz::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * rotation_speed), {1.f, 0.f, 0.f});
+    // mathz::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * rotation_speed), {0.f, 1.f, 0.f});
+    // model.ApplyRotation(qx * qy);
 
     renderer.Render(model, camera);
 

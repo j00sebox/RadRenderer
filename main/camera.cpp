@@ -1,6 +1,9 @@
 #include "camera.hpp"
 #include "pch.h"
 
+#include "../mathz/misc.hpp"
+#include "../mathz/quaternion.hpp"
+
 Camera::Camera(CameraSettings&& camera_settings)
     : m_near(camera_settings.near),
       m_far(camera_settings.far),
@@ -23,42 +26,47 @@ Camera::Camera(CameraSettings&& camera_settings)
       0.f, 0.f, -m_near * q, 0.f);
 }
 
-void Camera::SetPosition(mathz::Vec3&& pos)
+void Camera::Move(mathz::Vec3&& postion)
 {
-  m_position = pos;
+  m_position = std::move(postion);
 
-  m_forward = m_forward - pos;
+  m_transform[3][0] = m_position.x;
+  m_transform[3][1] = m_position.y;
+  m_transform[3][2] = m_position.z;
+  m_transform[3][3] = 1.0f;
+}
 
-  // Calculate the up vector in relation to the new camera direction
-  mathz::Vec3 tmp(0.f, 1.f, 0.f);
-  m_right = tmp.Cross(m_forward);
+void Camera::Rotate(float pitch, float yaw)
+{
+  // Calculate rotation quaternion
+  mathz::Quaternion qPitch = mathz::Quaternion(mathz::Radians(pitch), {1.f, 0.f, 0.f});
+  mathz::Quaternion qYaw = mathz::Quaternion(mathz::Radians(yaw), {0.f, 1.f, 0.f});
+
+  // Apply rotations to the forward vector
+  m_forward = (qYaw * qPitch).ConvertToMatrix() * m_forward;
+  m_forward.Normalize();
+
+  // Recalculate right and up vectors
+  mathz::Vec3 world_up(0.f, 1.f, 0.f);
+  m_right = world_up.Cross(m_forward);
   m_right.Normalize();
 
   m_up = m_forward.Cross(m_right);
   m_up.Normalize();
 
-  // Set up camera direction matrix
+  // Update the transformation matrix
   m_transform[0][0] = m_right.x;
   m_transform[0][1] = m_right.y;
   m_transform[0][2] = m_right.z;
   m_transform[0][3] = 0.0f;
+
   m_transform[1][0] = m_up.x;
   m_transform[1][1] = m_up.y;
   m_transform[1][2] = m_up.z;
   m_transform[1][3] = 0.0f;
+
   m_transform[2][0] = m_forward.x;
   m_transform[2][1] = m_forward.y;
   m_transform[2][2] = m_forward.z;
   m_transform[2][3] = 0.0f;
-  m_transform[3][0] = m_position.x;
-  m_transform[3][1] = m_position.y;
-  m_transform[3][2] = m_position.z;
-  m_transform[3][3] = 1.0f;
-
-  m_forward.Normalize();
-}
-
-const mathz::Vec3& Camera::GetPosition() const
-{
-  return m_position;
 }

@@ -19,6 +19,21 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_directional_light.Normalize();
 }
 
+bool OutOfBounds(const Triangle& t)
+{
+  return (t.vertices[0].x < -1.f || t.vertices[0].x > 1.f) ||
+         (t.vertices[1].x < -1.f || t.vertices[1].x > 1.f) ||
+         (t.vertices[2].x < -1.f || t.vertices[2].x > 1.f) ||
+
+         (t.vertices[0].y < -1.f || t.vertices[0].y > 1.f) ||
+         (t.vertices[1].y < -1.f || t.vertices[1].y > 1.f) ||
+         (t.vertices[2].y < -1.f || t.vertices[2].y > 1.f) ||
+
+         (t.vertices[0].z < -1.f || t.vertices[0].z > 1.f) ||
+         (t.vertices[1].z < -1.f || t.vertices[1].z > 1.f) ||
+         (t.vertices[2].z < -1.f || t.vertices[2].z > 1.f);
+}
+
 void Renderer::Render(const Model& model, const Camera& camera)
 {
   // Clear screen to redraw
@@ -32,7 +47,6 @@ void Renderer::Render(const Model& model, const Camera& camera)
   for (Triangle triangle : model)
   {
     // Apply model transform
-    // TransformTriangle(triangle, model.GetQuaternion().convert_to_mat());
     TransformTriangle(triangle, model.GetTransform());
 
     // Convert to camera space
@@ -56,6 +70,9 @@ void Renderer::Render(const Model& model, const Camera& camera)
       triangle.z[2] = -triangle.vertices[2].z;
 
       TransformTriangle(triangle, camera.GetPerspective());
+
+      if (OutOfBounds(triangle))
+        continue;
 
       bool clipped = false;
 
@@ -84,21 +101,6 @@ void Renderer::Render(const Model& model, const Camera& camera)
   m_render_triangles.clear();
   m_clipped_tris.clear();
   ClearDepthBuffer();
-}
-
-bool out_of_bounds(const Triangle& t)
-{
-  return (t.vertices[0].x < -1.f || t.vertices[0].x > 1.f) ||
-         (t.vertices[1].x < -1.f || t.vertices[1].x > 1.f) ||
-         (t.vertices[2].x < -1.f || t.vertices[2].x > 1.f) ||
-
-         (t.vertices[0].y < -1.f || t.vertices[0].y > 1.f) ||
-         (t.vertices[1].y < -1.f || t.vertices[1].y > 1.f) ||
-         (t.vertices[2].y < -1.f || t.vertices[2].y > 1.f) ||
-
-         (t.vertices[0].z < -1.f || t.vertices[0].z > 1.f) ||
-         (t.vertices[1].z < -1.f || t.vertices[1].z > 1.f) ||
-         (t.vertices[2].z < -1.f || t.vertices[2].z > 1.f);
 }
 
 void Renderer::Rasterize(const Triangle& t)
@@ -151,11 +153,11 @@ void Renderer::Rasterize(const Triangle& t)
 
         float lum = m_directional_light.Dot(normal);
 
-        if (int_z > m_depth_buffer[y * m_screen_width + x])
+        // if (int_z > m_depth_buffer[y * m_screen_width + x])
         {
           SetPixel(x, y, GetColour(lum));
 
-          m_depth_buffer[y * m_screen_width + x] = int_z;
+          // m_depth_buffer[y * m_screen_width + x] = int_z;
         }
       }
     }
@@ -169,7 +171,7 @@ float Renderer::EdgeFunction(float x0, float y0, float x1, float y1, float x2, f
 
 Pixel Renderer::GetColour(float lum)
 {
-  return {(std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255};
+  return {(std::uint8_t)(255), (std::uint8_t)(255), (std::uint8_t)(255), 255};
 }
 
 void Renderer::SetPixel(int x, int y, const Pixel& pixel)
@@ -182,6 +184,8 @@ void Renderer::SetPixel(int x, int y, const Pixel& pixel)
 
 std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
 {
+  std::cout << "xy (" << x << ", " << y << ")\n";
+
   x = m_half_width * x + m_half_width;
   y = m_half_height * y + m_half_height;
 
