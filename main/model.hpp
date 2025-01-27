@@ -31,10 +31,8 @@ public:
   Model(std::vector<Triangle>&& triangles);
 
   void SetPosition(float x, float y, float z);
-  void SetRotation(const mathz::Quaternion& rotation); // Override rotation
+  void SetRotation(const mathz::Quaternion& rotation);
   void SetScale(float scale);
-
-  void ApplyRotation(const mathz::Quaternion& rotation); // Accumulate rotation
 
   const mathz::Mat4& GetTransform() const { return m_transform; }
   void ResetTransform();

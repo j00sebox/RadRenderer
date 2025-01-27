@@ -28,13 +28,6 @@ void Model::SetRotation(const mathz::Quaternion& rotation)
   UpdateTransform();
 }
 
-void Model::ApplyRotation(const mathz::Quaternion& rotation)
-{
-  m_rotation *= rotation.ConvertToMatrix();
-
-  UpdateTransform();
-}
-
 void Model::SetScale(float scale)
 {
   m_scale = mathz::Mat4({scale, 0, 0, 0,

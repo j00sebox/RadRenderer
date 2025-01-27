@@ -1,6 +1,7 @@
 #include "model.hpp"
 #include "pch.h"
 #include "renderer.hpp"
+#include "vector.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -11,7 +12,7 @@ int main()
   const float near = 0.1f, far = 1000.f;
 
   Model model("../assets/objs/teapot.obj");
-  Camera camera({width, height, near, far, 80.f});
+  Camera camera({width, height, near, far, 90.f});
 
   Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
@@ -29,8 +30,10 @@ int main()
   bool mouse_down = false;
   int prev_x, prev_y;
   float forward = 0.f;
+  float right = 0.f;
   float rotation_speed = 0.001f;
   float cam_movement = 0.f;
+  float cam_x_movement;
 
   while (window.isOpen())
   {
@@ -49,7 +52,7 @@ int main()
       if (event.type == sf::Event::KeyPressed &&
           event.key.code == sf::Keyboard::W)
       {
-        forward = 1.f;
+        forward = -1.f;
       }
 
       if (event.type == sf::Event::KeyReleased &&
@@ -61,13 +64,37 @@ int main()
       if (event.type == sf::Event::KeyPressed &&
           event.key.code == sf::Keyboard::S)
       {
-        forward = -1.f;
+        forward = 1.f;
       }
 
       if (event.type == sf::Event::KeyReleased &&
           event.key.code == sf::Keyboard::S)
       {
         forward = 0.f;
+      }
+
+      if (event.type == sf::Event::KeyPressed &&
+          event.key.code == sf::Keyboard::A)
+      {
+        right = -1.f;
+      }
+
+      if (event.type == sf::Event::KeyReleased &&
+          event.key.code == sf::Keyboard::A)
+      {
+        right = 0.f;
+      }
+
+      if (event.type == sf::Event::KeyPressed &&
+          event.key.code == sf::Keyboard::D)
+      {
+        right = 1.f;
+      }
+
+      if (event.type == sf::Event::KeyReleased &&
+          event.key.code == sf::Keyboard::D)
+      {
+        right = 0.f;
       }
 
       if (event.type == sf::Event::MouseButtonPressed)
@@ -98,7 +125,8 @@ int main()
 
     // Update camera
     cam_movement += forward * elapsed_time * 0.001f;
-    camera.Move(camera.GetForward() * cam_movement);
+    cam_x_movement += right * elapsed_time * 0.001f;
+    camera.Move((camera.GetForward() * cam_movement) + (camera.GetRight() * cam_x_movement));
 
     if (dx != 0.f || dy != 0.f)
     {
@@ -107,11 +135,6 @@ int main()
 
       camera.Rotate(pitch, yaw);
     }
-
-    // Update model
-    // mathz::Quaternion qx(DEG_TO_RAD(dy * elapsed_time * rotation_speed), {1.f, 0.f, 0.f});
-    // mathz::Quaternion qy(DEG_TO_RAD(dx * elapsed_time * rotation_speed), {0.f, 1.f, 0.f});
-    // model.ApplyRotation(qx * qy);
 
     renderer.Render(model, camera);
 

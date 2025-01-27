@@ -16,11 +16,9 @@ public:
 private:
   void Rasterize(const Triangle& t);
   float EdgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
-  Pixel GetColour(float lum);
   void SetPixel(int x, int y, const Pixel& col);
   std::pair<int, int> ImageToScreenSpace(float x, float y);
   void ClearFrameBuffer();
-  void ClearDepthBuffer();
   mathz::Vec3 LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
   bool ClipTriangle(mathz::Vec3&& point, mathz::Vec3&& plane_normal, Triangle& t);
   bool OutNearFarBounds(const Triangle& t);
@@ -29,19 +27,11 @@ private:
 
   float m_far, m_near;
 
-  // Transforms
   mathz::Mat4 m_view;
-
-  // Lighting
-  mathz::Vec3 m_directional_light;
-  float m_diffuse_constant = 0.75f; // make some kind of material class for this
-
   std::vector<Triangle> m_render_triangles;
-  std::vector<Triangle> m_clipped_tris;
+  std::vector<Triangle> m_clipped_triangles;
 
   // Screen stuff
   unsigned int m_screen_width, m_screen_height, m_buffer_size;
-  int m_half_width, m_half_height; // caching these for later
   std::unique_ptr<std::uint8_t> m_frame_buffer;
-  std::vector<float> m_depth_buffer;
 };
