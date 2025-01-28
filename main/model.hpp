@@ -6,21 +6,10 @@
 
 #include <vector>
 
-struct Pixel
-{
-  Pixel() : r(0), g(0), b(0), a(0) {}
-
-  Pixel(std::uint8_t _r, std::uint8_t _g, std::uint8_t _b, std::uint8_t _a) : r(_r), g(_g), b(_b), a(_a) {}
-
-  std::uint8_t r, g, b, a;
-};
-
 struct Triangle
 {
   mathz::Vec3 vertices[3];
   mathz::Vec3 normal[3];
-  float z[3] = {};
-  Pixel colours[3];
 };
 
 class Model

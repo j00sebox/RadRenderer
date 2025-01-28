@@ -86,9 +86,9 @@ public:
     return normal;
   }
 
-  inline float Dot(Vec3& vec) const
+  inline float Dot(const Vec3& other_vector) const
   {
-    return x * vec.x + y * vec.y + z * vec.z;
+    return x * other_vector.x + y * other_vector.y + z * other_vector.z;
   }
 
   inline void Normalize()
@@ -147,14 +147,14 @@ class Vec4
 class Vec4
 {
 public:
-  Vec4() : x(0), y(0), z(0), w(0) {}
+  Vec4() : x(0), y(0), z(0), w(1.f) {}
 
-  Vec4(const Vec3& vec, float w)
+  Vec4(const Vec3& vec)
   {
     x = vec.x;
     y = vec.y;
     z = vec.z;
-    this->w = w;
+    w = 1.f;
   }
 
   Vec4(float x, float y, float z, float w)
@@ -175,18 +175,6 @@ public:
       y /= divisor;
       z /= divisor;
       w /= divisor;
-    }
-  }
-
-  inline void NormalizeXYZ()
-  {
-    float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f));
-
-    if (divisor > 0.f)
-    {
-      x /= divisor;
-      y /= divisor;
-      z /= divisor;
     }
   }
 

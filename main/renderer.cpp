@@ -1,7 +1,8 @@
-#include "../mathz/quaternion.hpp"
 #include "pch.h"
 #include "renderer.hpp"
+#include "vector.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 
@@ -12,21 +13,6 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
       m_near(near), m_far(far)
 {
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
-}
-
-bool OutOfBounds(const Triangle& t)
-{
-  return (t.vertices[0].x < -1.f || t.vertices[0].x > 1.f) ||
-         (t.vertices[1].x < -1.f || t.vertices[1].x > 1.f) ||
-         (t.vertices[2].x < -1.f || t.vertices[2].x > 1.f) ||
-
-         (t.vertices[0].y < -1.f || t.vertices[0].y > 1.f) ||
-         (t.vertices[1].y < -1.f || t.vertices[1].y > 1.f) ||
-         (t.vertices[2].y < -1.f || t.vertices[2].y > 1.f) ||
-
-         (t.vertices[0].z < -1.f || t.vertices[0].z > 1.f) ||
-         (t.vertices[1].z < -1.f || t.vertices[1].z > 1.f) ||
-         (t.vertices[2].z < -1.f || t.vertices[2].z > 1.f);
 }
 
 void Renderer::Render(const Model& model, const Camera& camera)
@@ -57,28 +43,34 @@ void Renderer::Render(const Model& model, const Camera& camera)
         camera.GetForward().Dot(triangle.normal[1]) > 0 &&
         camera.GetForward().Dot(triangle.normal[2]) > 0)
     {
-      TransformTriangle(triangle, camera.GetPerspective());
-
-      if (OutOfBounds(triangle))
-        continue;
 
       bool clipped = false;
 
       // First parameter is plane point, second is normal
-      clipped |= ClipTriangle({-1.f, 0.f, 0.f}, {-1.f, 0.f, 0.f}, triangle); // Left plane
-      clipped |= ClipTriangle({1.f, 0.f, 0.f}, {-1.f, 0.f, 0.f}, triangle);  // Right plane
-      clipped |= ClipTriangle({0.f, 1.f, 0.f}, {0.f, -1.f, 0.f}, triangle);  // Top plane
-      clipped |= ClipTriangle({0.f, -1.f, 0.f}, {0.f, 1.f, 0.f}, triangle);  // Bottom plane
+      clipped |= ClipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
+      clipped |= ClipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
 
       if (!clipped)
+      {
+        TransformTriangle(triangle, camera.GetPerspective());
         m_render_triangles.push_back(triangle);
+      }
     }
   }
 
-  for (const auto& t : m_clipped_triangles)
+  for (Triangle& triangle : m_clipped_triangles)
   {
-    m_render_triangles.push_back(t);
+
+    TransformTriangle(triangle, camera.GetPerspective());
+    m_render_triangles.push_back(triangle);
   }
+
+  std::sort(m_render_triangles.begin(), m_render_triangles.end(), [](const Triangle& t1, const Triangle& t2)
+            {
+              float t1_average_z = (t1.vertices[0].z + t1.vertices[1].z + t1.vertices[2].z) / 3.f;
+              float t2_average_z = (t2.vertices[0].z + t2.vertices[1].z + t2.vertices[2].z) / 3.f;
+
+              return t1_average_z < t2_average_z; });
 
   for (const auto& t : m_render_triangles)
   {
@@ -134,8 +126,6 @@ void Renderer::Rasterize(const Triangle& t)
         float l1 = area1 / area_t;
         float l2 = area2 / area_t;
 
-        float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
-
         mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
 
         SetPixel(x, y, {255, 255, 255, 255});
@@ -166,8 +156,8 @@ std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
 
   // Then scale to screen dimensions
   // Note: Y is flipped because screen coordinates typically have 0 at the top
-  const int screenX = std::floor(normalizedX * m_screen_width);
-  const int screenY = std::floor((1.0 - normalizedY) * m_screen_height);
+  const int screenX = std::clamp((int)std::floor(normalizedX * m_screen_width), 0, (int)m_screen_width);
+  const int screenY = std::clamp((int)std::floor((1.0 - normalizedY) * m_screen_height), 0, (int)m_screen_height);
 
   return {screenX, screenY};
 }
@@ -191,73 +181,76 @@ mathz::Vec3 Renderer::LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_
 
 bool Renderer::ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_normal, Triangle& t)
 {
-  plane_normal.Normalize();
-
-  int in_vertices = 0;
-  int out_verts = 0;
+  int in_count = 0;
+  int out_count = 0;
 
   // This will keep track of which vertices are in vs out
-  mathz::Vec3 in_vs[3];
-  mathz::Vec3 out_vs[3];
+  mathz::Vec3 in_vertices[3];
+  mathz::Vec3 out_vertices[3];
 
   for (const mathz::Vec3& vertex : t.vertices)
   {
     mathz::Vec3 line = vertex - plane_point;
-    if (plane_normal.Dot(line) >= 0) // Check side of the plane
+    if (plane_normal.Dot(line) >= 0)
     {
-      in_vs[in_vertices++] = vertex;
+      in_vertices[in_count++] = vertex;
     }
     else
     {
-      out_vs[out_verts++] = vertex;
+      out_vertices[out_count++] = vertex;
     }
   }
 
-  // Fully outside
-  if (in_vertices == 0)
-    return false;
-
-  // Fully inside
-  if (in_vertices == 3)
+  if (in_count == 2)
   {
-    m_clipped_triangles.push_back(t);
-    return true;
-  }
+    Triangle t1, t2;
 
-  // Partially inside
-  Triangle t1, t2;
-  if (in_vertices == 2)
-  {
-    // Two inside, one outside
-    t1.vertices[0] = in_vs[0];
-    t1.vertices[1] = in_vs[1];
-    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vs[0], out_vs[0]);
+    t1.vertices[0] = in_vertices[0];
+    t1.vertices[1] = in_vertices[1];
 
-    t2.vertices[0] = in_vs[1];
-    t2.vertices[1] = t1.vertices[2];
-    t2.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vs[1], out_vs[0]);
+    t2.vertices[0] = in_vertices[1];
+
+    // The intersecting points to the plane will make up the rest of both triangles
+    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+
+    t2.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
+    t2.vertices[2] = t1.vertices[2]; // Both new triangles share this vertex
+
+    t1.normal[0] = t.normal[0];
+    t1.normal[1] = t.normal[1];
+    t1.normal[2] = t.normal[2];
+
+    t2.normal[0] = t.normal[0];
+    t2.normal[1] = t.normal[1];
+    t2.normal[2] = t.normal[2];
 
     m_clipped_triangles.push_back(t1);
     m_clipped_triangles.push_back(t2);
+
+    return true;
   }
-  else if (in_vertices == 1)
+  else if (in_count == 1)
   {
-    // One inside, two outside
-    t1.vertices[0] = in_vs[0];
-    t1.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vs[0], out_vs[0]);
-    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vs[0], out_vs[1]);
+    Triangle t1;
+    t1.vertices[0] = in_vertices[0];
+
+    t1.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
+
+    t1.normal[0] = t.normal[0];
+    t1.normal[1] = t.normal[1];
+    t1.normal[2] = t.normal[2];
 
     m_clipped_triangles.push_back(t1);
+
+    return true;
+  }
+  else if (in_count == 0)
+  {
+    return true;
   }
 
-  return true;
-}
-
-bool Renderer::OutNearFarBounds(const Triangle& t)
-{
-  return (t.vertices[0].z < m_near || t.vertices[0].z > m_far) ||
-         (t.vertices[0].z < m_near || t.vertices[0].z > m_far) ||
-         (t.vertices[0].z < m_near || t.vertices[0].z > m_far);
+  return false;
 }
 
 void Renderer::TransformTriangle(Triangle& t, const mathz::Mat4& transform)

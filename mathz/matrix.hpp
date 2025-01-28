@@ -236,28 +236,40 @@ public:
     return res_mat;
   }
 
+  inline Vec4 operator*(const Vec4& vector) const
+  {
+    Vec4 new_vector;
+
+    new_vector.x = vector.x * mat[0][0] + vector.y * mat[1][0] + vector.z * mat[2][0] + vector.w * mat[3][0];
+    new_vector.y = vector.x * mat[0][1] + vector.y * mat[1][1] + vector.z * mat[2][1] + vector.w * mat[3][1];
+    new_vector.z = vector.x * mat[0][2] + vector.y * mat[1][2] + vector.z * mat[2][2] + vector.w * mat[3][2];
+    new_vector.w = vector.x * mat[0][3] + vector.y * mat[1][3] + vector.z * mat[2][3] + vector.w * mat[3][3];
+
+    return new_vector;
+  }
+
   // Multiply by a 4D vector [x, y, z, 1]
   // Will automatically convert it back to a 3D vector
-  inline Vec3 operator*(const Vec3& vec) const
+  inline Vec3 operator*(const Vec3& vector) const
   {
     float w = 0.f;
 
-    Vec3 new_vec;
+    Vec3 new_vector;
 
-    new_vec.x = vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + mat[3][0];
-    new_vec.y = vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + mat[3][1];
-    new_vec.z = vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + mat[3][2];
+    new_vector.x = vector.x * mat[0][0] + vector.y * mat[1][0] + vector.z * mat[2][0] + mat[3][0];
+    new_vector.y = vector.x * mat[0][1] + vector.y * mat[1][1] + vector.z * mat[2][1] + mat[3][1];
+    new_vector.z = vector.x * mat[0][2] + vector.y * mat[1][2] + vector.z * mat[2][2] + mat[3][2];
 
-    w = vec.x * mat[0][3] + vec.y * mat[1][3] + vec.z * mat[2][3] + mat[3][3];
+    w = vector.x * mat[0][3] + vector.y * mat[1][3] + vector.z * mat[2][3] + mat[3][3];
 
     if (w != 0)
     {
-      new_vec.x /= w;
-      new_vec.y /= w;
-      new_vec.z /= w;
+      new_vector.x /= w;
+      new_vector.y /= w;
+      new_vector.z /= w;
     }
 
-    return new_vec;
+    return new_vector;
   }
 
   constexpr Mat4 operator*(float scalar) const
