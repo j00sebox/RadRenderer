@@ -33,19 +33,16 @@ void Renderer::Render(const Model& model, const Camera& camera)
     // Convert to camera space
     TransformTriangle(triangle, m_view);
 
-    // Remove when normals are attributes
     triangle.normal[0] = CalculateNormal(triangle);
     triangle.normal[1] = triangle.normal[0];
     triangle.normal[2] = triangle.normal[0];
 
     // Check if triangle is visible
-    if (camera.GetForward().Dot(triangle.normal[0]) > 0 &&
-        camera.GetForward().Dot(triangle.normal[1]) > 0 &&
-        camera.GetForward().Dot(triangle.normal[2]) > 0)
+    if (triangle.normal[0].Dot(triangle.Center()) >= 0)
     {
-
       bool clipped = false;
 
+      // Clip on near and far planes
       // First parameter is plane point, second is normal
       clipped |= ClipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
       clipped |= ClipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
@@ -60,7 +57,6 @@ void Renderer::Render(const Model& model, const Camera& camera)
 
   for (Triangle& triangle : m_clipped_triangles)
   {
-
     TransformTriangle(triangle, camera.GetPerspective());
     m_render_triangles.push_back(triangle);
   }

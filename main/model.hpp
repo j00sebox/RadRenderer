@@ -10,6 +10,11 @@ struct Triangle
 {
   mathz::Vec3 vertices[3];
   mathz::Vec3 normal[3];
+
+  mathz::Vec3 Center()
+  {
+    return (vertices[0] + vertices[1] + vertices[2]) * 0.3333f;
+  }
 };
 
 class Model
