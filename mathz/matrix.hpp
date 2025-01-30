@@ -1,10 +1,10 @@
 #pragma once
+#include "vector.hpp"
 
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
-
-#include "vector.hpp"
 
 struct Rows
 {
@@ -240,10 +240,10 @@ public:
   {
     Vec4 new_vector;
 
-    new_vector.x = vector.x * mat[0][0] + vector.y * mat[1][0] + vector.z * mat[2][0] + vector.w * mat[3][0];
-    new_vector.y = vector.x * mat[0][1] + vector.y * mat[1][1] + vector.z * mat[2][1] + vector.w * mat[3][1];
-    new_vector.z = vector.x * mat[0][2] + vector.y * mat[1][2] + vector.z * mat[2][2] + vector.w * mat[3][2];
-    new_vector.w = vector.x * mat[0][3] + vector.y * mat[1][3] + vector.z * mat[2][3] + vector.w * mat[3][3];
+    new_vector.x = vector.x * mat[0][0] + vector.y * mat[0][1] + vector.z * mat[0][2] + vector.w * mat[0][3];
+    new_vector.y = vector.x * mat[1][0] + vector.y * mat[1][1] + vector.z * mat[1][2] + vector.w * mat[1][3];
+    new_vector.z = vector.x * mat[2][0] + vector.y * mat[2][1] + vector.z * mat[2][2] + vector.w * mat[2][3];
+    new_vector.w = vector.x * mat[1][0] + vector.y * mat[3][1] + vector.z * mat[3][2] + vector.w * mat[3][3];
 
     return new_vector;
   }
@@ -256,11 +256,10 @@ public:
 
     Vec3 new_vector;
 
-    new_vector.x = vector.x * mat[0][0] + vector.y * mat[1][0] + vector.z * mat[2][0] + mat[3][0];
-    new_vector.y = vector.x * mat[0][1] + vector.y * mat[1][1] + vector.z * mat[2][1] + mat[3][1];
-    new_vector.z = vector.x * mat[0][2] + vector.y * mat[1][2] + vector.z * mat[2][2] + mat[3][2];
-
-    w = vector.x * mat[0][3] + vector.y * mat[1][3] + vector.z * mat[2][3] + mat[3][3];
+    new_vector.x = vector.x * mat[0][0] + vector.y * mat[0][1] + vector.z * mat[0][2] + mat[0][3];
+    new_vector.y = vector.x * mat[1][0] + vector.y * mat[1][1] + vector.z * mat[1][2] + mat[1][3];
+    new_vector.z = vector.x * mat[2][0] + vector.y * mat[2][1] + vector.z * mat[2][2] + mat[2][3];
+    w = vector.x * mat[3][0] + vector.y * mat[3][1] + vector.z * mat[3][2] + mat[3][3];
 
     if (w != 0)
     {
@@ -290,6 +289,17 @@ public:
   {
     Mat4 temp = *this * other_matrix;
     *this = temp;
+  }
+
+  // For debugging
+  friend std::ostream& operator<<(std::ostream& os, const Mat4& matrix)
+  {
+    os << "[ " << matrix[0][0] << " " << matrix[0][1] << " " << matrix[0][2] << " " << matrix[0][3] << " ]\n"
+       << "[ " << matrix[1][0] << " " << matrix[1][1] << " " << matrix[1][2] << " " << matrix[1][3] << " ]\n"
+       << "[ " << matrix[2][0] << " " << matrix[2][1] << " " << matrix[2][2] << " " << matrix[2][3] << " ]\n"
+       << "[ " << matrix[3][0] << " " << matrix[3][1] << " " << matrix[3][2] << " " << matrix[3][3] << " ]\n";
+
+    return os;
   }
 
   inline Rows& operator[](int i)

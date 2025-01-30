@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <math.h>
 
 namespace mathz
@@ -134,6 +135,12 @@ public:
     r.z = z * scalar;
 
     return r;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Vec3& vector)
+  {
+    os << "[ " << vector.x << " " << vector.y << " " << vector.z << " ]\n";
+    return os;
   }
 
   float x, y, z;
