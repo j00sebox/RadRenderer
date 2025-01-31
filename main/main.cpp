@@ -4,7 +4,6 @@
 #include "vector.hpp"
 
 #include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 
 int main()
 {
@@ -12,7 +11,7 @@ int main()
   const float near = 0.1f, far = 1000.f;
 
   Model model("../assets/objs/teapot.obj");
-  Camera camera({width, height, near, far, 100.f});
+  Camera camera({width, height, near, far, 60.f});
 
   Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
@@ -24,7 +23,7 @@ int main()
   texture.create(width, height);
   sprite.setTexture(texture);
 
-  model.SetPosition(0.f, -3.f, 6.f);
+  model.SetPosition(0.f, -3.f, 10.f);
   model.SetScale(1.2f);
 
   bool mouse_down = false;
@@ -33,12 +32,40 @@ int main()
   float right = 0.f;
   float rotation_speed = 0.001f;
   float cam_movement = 0.f;
-  float cam_x_movement;
+  float cam_x_movement = 0.f;
 
   while (window.isOpen())
   {
     float dx = 0.f;
     float dy = 0.f;
+
+    // Handle forward movement
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+    {
+      forward = -1.f;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+    {
+      forward = 1.f;
+    }
+    else
+    {
+      forward = 0.f;
+    }
+
+    // Handle side movement
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    {
+      right = -1.f;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    {
+      right = 1.f;
+    }
+    else
+    {
+      right = 0.f;
+    }
 
     // Events
     sf::Event event;
@@ -48,54 +75,6 @@ int main()
           (event.type == sf::Event::KeyPressed &&
            event.key.code == sf::Keyboard::Escape))
         window.close();
-
-      if (event.type == sf::Event::KeyPressed &&
-          event.key.code == sf::Keyboard::W)
-      {
-        forward = -1.f;
-      }
-
-      if (event.type == sf::Event::KeyReleased &&
-          event.key.code == sf::Keyboard::W)
-      {
-        forward = 0.f;
-      }
-
-      if (event.type == sf::Event::KeyPressed &&
-          event.key.code == sf::Keyboard::S)
-      {
-        forward = 1.f;
-      }
-
-      if (event.type == sf::Event::KeyReleased &&
-          event.key.code == sf::Keyboard::S)
-      {
-        forward = 0.f;
-      }
-
-      if (event.type == sf::Event::KeyPressed &&
-          event.key.code == sf::Keyboard::A)
-      {
-        right = -1.f;
-      }
-
-      if (event.type == sf::Event::KeyReleased &&
-          event.key.code == sf::Keyboard::A)
-      {
-        right = 0.f;
-      }
-
-      if (event.type == sf::Event::KeyPressed &&
-          event.key.code == sf::Keyboard::D)
-      {
-        right = 1.f;
-      }
-
-      if (event.type == sf::Event::KeyReleased &&
-          event.key.code == sf::Keyboard::D)
-      {
-        right = 0.f;
-      }
 
       if (event.type == sf::Event::MouseButtonPressed)
       {
@@ -124,8 +103,8 @@ int main()
     float elapsed_time = clock.restart().asMilliseconds();
 
     // Update camera
-    cam_movement += forward * elapsed_time * 0.001f;
-    cam_x_movement += right * elapsed_time * 0.001f;
+    cam_movement += forward * elapsed_time * 0.01f;
+    cam_x_movement += right * elapsed_time * 0.01f;
     camera.Move((camera.GetForward() * cam_movement) + (camera.GetRight() * cam_x_movement));
 
     if (dx != 0.f || dy != 0.f)
