@@ -124,7 +124,14 @@ public:
     return {w * scalar, x * scalar, y * scalar, z * scalar};
   }
 
-private:
+  bool operator==(const Quaternion& other) const
+  {
+    return (w == other.w &&
+            x == other.x &&
+            y == other.y &&
+            z == other.z);
+  }
+
   float w, x, y, z;
 };
 } // Namespace mathz
