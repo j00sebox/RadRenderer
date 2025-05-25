@@ -2,7 +2,6 @@
 #include "pch.h"
 
 #include "../mathz/misc.hpp"
-#include "../mathz/quaternion.hpp"
 #include <cmath>
 
 Camera::Camera(CameraSettings&& camera_settings)
@@ -10,7 +9,7 @@ Camera::Camera(CameraSettings&& camera_settings)
       m_far(camera_settings.far),
       m_fov(camera_settings.fov)
 {
-  m_forward = {0.f, 0.f, -1.f};
+  m_forward = {0.f, 0.f, 1.f};
   m_up = {0.f, 1.f, 0.f};
   m_right = {1.f, 0.f, 0.f};
 
@@ -41,12 +40,15 @@ void Camera::Move(mathz::Vec3&& postion)
 
 void Camera::Rotate(float pitch, float yaw)
 {
-  // Calculate rotation quaternion
-  mathz::Quaternion qPitch = mathz::Quaternion(mathz::Radians(pitch), {1.f, 0.f, 0.f});
-  mathz::Quaternion qYaw = mathz::Quaternion(mathz::Radians(yaw), {0.f, 1.f, 0.f});
+  float cos_pitch = cos(mathz::Radians(pitch));
 
-  // Apply rotations to the forward vector
-  m_forward = (qYaw * qPitch).ConvertToMatrix() * m_forward;
+  float sin_pitch = sin(mathz::Radians(pitch));
+
+  float cos_yaw = cos(mathz::Radians(yaw));
+
+  float sin_yaw = sin(mathz::Radians(yaw));
+
+  m_forward = {sin_yaw * cos_pitch, sin_pitch, -cos_pitch * cos_yaw};
   m_forward.Normalize();
 
   // Recalculate right and up vectors

@@ -15,7 +15,7 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 }
 
-void Renderer::Render(const Model& model, const Camera& camera)
+void Renderer::Render(const Model& model, Camera& camera)
 {
   // Clear screen to redraw
   ClearFrameBuffer();

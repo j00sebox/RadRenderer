@@ -23,7 +23,7 @@ void Model::SetPosition(float x, float y, float z)
 
 void Model::SetRotation(const mathz::Quaternion& rotation)
 {
-  m_rotation = rotation.ConvertToMatrix();
+  m_rotation = rotation.ToMatrix();
 
   UpdateTransform();
 }

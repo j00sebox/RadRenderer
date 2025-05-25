@@ -19,7 +19,7 @@ public:
   Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far);
   ~Renderer() {}
 
-  void Render(const Model& model, const Camera& camera);
+  void Render(const Model& model, Camera& camera);
   std::uint8_t* GetFrameBuffer() const { return m_frame_buffer.get(); }
 
 private:

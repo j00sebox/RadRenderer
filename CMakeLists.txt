@@ -11,14 +11,6 @@ file(GLOB SOURCES "${SOURCE_DIR}/*.cpp")
 
 include(FetchContent)
 FetchContent_Declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 0.9.9.8  # Change this to the latest stable version if needed
-)
-FetchContent_MakeAvailable(glm)
-
-include(FetchContent)
-FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG v3.4.0 # Use the latest stable version
@@ -35,7 +27,7 @@ add_executable(tests ${TESTS})
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(mathz)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 # Add the tests to CTest
