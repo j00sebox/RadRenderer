@@ -6,7 +6,7 @@ Model::Model(const char* file_name)
   LoadOBJFile(std::move(file_name));
 }
 
-Model::Model(std::vector<Triangle>&& triangles)
+Model::Model(const std::vector<Triangle>& triangles)
     : m_triangles(triangles)
 {
 }
@@ -50,41 +50,42 @@ void Model::ResetTransform()
 
 void Model::LoadOBJFile(const char* file_name)
 {
-  std::ifstream readFile;
-  readFile.open(file_name, std::ifstream::in);
-
-  if (!readFile.is_open())
-  {
-    std::cout << "Cannot open file!\n";
-  }
-
-  mathz::Vec3 vertex;
+  std::ifstream file(file_name);
   std::vector<mathz::Vec3> vertices;
 
-  std::string line;
-
-  char startingChar; // Stores the starting character of the line
-
-  int i1, i2, i3; // Indexes of the vertices
-
-  // Iterate through all lines in file
-  while (std::getline(readFile, line))
+  if (!file.is_open())
   {
-    std::stringstream st;
-    st << line;
+    std::cerr << "Failed to open " << file_name << std::endl;
+  }
 
-    // Indicates vertex data
-    if (line[0] == 'v')
+  std::string line;
+  while (std::getline(file, line))
+  {
+    std::istringstream ss(line);
+    std::string type;
+    ss >> type;
+
+    if (type == "v")
     {
-      st >> startingChar >> vertex.x >> vertex.y >> vertex.z;
-      vertices.emplace_back(vertex);
+      mathz::Vec3 v;
+      ss >> v.x >> v.y >> v.z;
+      vertices.push_back(v);
     }
-    // Indicates triangle face data
-    else if (line[0] == 'f')
+    // Gives the indices of the vertices that make up each triangle
+    // Denoted by f for face
+    else if (type == "f")
     {
-      st >> startingChar >> i1 >> i2 >> i3;
-      m_triangles.push_back(
-          {vertices[i1 - 1], vertices[i2 - 1], vertices[i3 - 1]});
+      int index[3];
+      for (int i = 0; i < 3; ++i)
+      {
+        std::string token;
+        ss >> token;
+        std::istringstream tokenStream(token);
+        std::string indexStr;
+        std::getline(tokenStream, indexStr, '/'); // Only read vertex index
+        index[i] = std::stoi(indexStr) - 1;       // OBJ indices start at 1
+      }
+      m_triangles.push_back({vertices[index[0]], vertices[index[1]], vertices[index[2]]});
     }
   }
 }

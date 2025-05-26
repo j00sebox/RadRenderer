@@ -27,8 +27,8 @@ private:
   float EdgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
   void SetPixel(int x, int y, const Pixel& col);
   std::pair<int, int> ImageToScreenSpace(float x, float y);
-  mathz::Vec3 LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
-  bool ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_normal, Triangle& t);
+  mathz::Vec3 LinePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
+  bool ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t);
   inline void TransformTriangle(Triangle& t, const mathz::Mat4& transform);
   inline mathz::Vec3 CalculateNormal(Triangle& t);
   void ClearFrameBuffer();

@@ -4,17 +4,17 @@
 #include "../mathz/misc.hpp"
 #include <cmath>
 
-Camera::Camera(CameraSettings&& camera_settings)
-    : m_near(camera_settings.near),
-      m_far(camera_settings.far),
-      m_fov(camera_settings.fov)
+Camera::Camera(int width, int height, float near, float far, float fov)
+    : m_near(near),
+      m_far(far),
+      m_fov(fov)
 {
   m_forward = {0.f, 0.f, 1.f};
   m_up = {0.f, 1.f, 0.f};
   m_right = {1.f, 0.f, 0.f};
 
   float cotan_half_fov = 1.0f / std::tan(mathz::Radians(m_fov * 0.5f));
-  float aspect_ratio_inverse = (float)camera_settings.height / (float)camera_settings.width;
+  float aspect_ratio_inverse = (float)height / (float)width;
 
   // Create projection matrix
   m_perspective[0][0] = cotan_half_fov * aspect_ratio_inverse;
@@ -28,7 +28,7 @@ Camera::Camera(CameraSettings&& camera_settings)
   Rotate(0.f, 0.f);
 }
 
-void Camera::Move(mathz::Vec3&& postion)
+void Camera::Move(const mathz::Vec3& postion)
 {
   m_position = std::move(postion);
 

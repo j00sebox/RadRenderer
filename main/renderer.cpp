@@ -164,7 +164,7 @@ void Renderer::ClearFrameBuffer()
 }
 
 // Returns the point that the given plane and line intersect
-mathz::Vec3 Renderer::LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
+mathz::Vec3 Renderer::LinePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
 {
   // Using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
   float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
@@ -175,7 +175,7 @@ mathz::Vec3 Renderer::LinePlaneIntersect(mathz::Vec3& point, mathz::Vec3& plane_
   return intersection_point;
 }
 
-bool Renderer::ClipTriangle(mathz::Vec3&& plane_point, mathz::Vec3&& plane_normal, Triangle& t)
+bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t)
 {
   int in_count = 0;
   int out_count = 0;

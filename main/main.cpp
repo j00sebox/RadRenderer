@@ -14,7 +14,7 @@ int main()
   const float near = 0.1f, far = 1000.f;
 
   Model model("../assets/objs/teapot.obj");
-  Camera camera({width, height, near, far, 60.f});
+  Camera camera(width, height, near, far, 60.f);
 
   Renderer renderer(width, height, near, far);
   sf::RenderWindow window;

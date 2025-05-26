@@ -18,10 +18,10 @@ class Camera
 {
 public:
   Camera() = delete;
-  Camera(CameraSettings&& camera_settings);
+  Camera(int width, int height, float near, float far, float fov);
   ~Camera() {}
 
-  void Move(mathz::Vec3&& pos);
+  void Move(const mathz::Vec3& pos);
   void Rotate(float pitch, float yaw);
 
   const mathz::Vec3& GetPosition() const { return m_position; }

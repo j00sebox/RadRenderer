@@ -22,7 +22,7 @@ class Model
 public:
   Model() = delete;
   Model(const char* file_name);
-  Model(std::vector<Triangle>&& triangles);
+  Model(const std::vector<Triangle>& triangles);
 
   void SetPosition(float x, float y, float z);
   void SetRotation(const mathz::Quaternion& rotation);
