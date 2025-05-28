@@ -48,11 +48,11 @@ int main()
     // Handle forward movement
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
     {
-      forward = 1.f;
+      forward = -1.f;
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
     {
-      forward = -1.f;
+      forward = 1.f;
     }
     else
     {

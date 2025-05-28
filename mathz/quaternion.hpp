@@ -23,7 +23,6 @@ public:
   Quaternion(float w, float x, float y, float z)
       : w(w), x(x), y(y), z(z)
   {
-    Normalize();
   }
 
   // Expects angle to be in radians
@@ -70,7 +69,7 @@ public:
         0.f, 0.f, 0.f, 1.f);
   }
 
-  static mathz::Quaternion Slerp(const Quaternion& q1, const Quaternion& q2, float t)
+  static Quaternion Slerp(const Quaternion& q1, const Quaternion& q2, float t)
   {
     float dot = q1.Dot(q2);
 

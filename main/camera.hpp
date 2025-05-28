@@ -5,15 +5,6 @@
 
 #include <SFML/Window/Keyboard.hpp>
 
-struct CameraSettings
-{
-  int width;
-  int height;
-  float near;
-  float far;
-  float fov;
-};
-
 class Camera
 {
 public:
