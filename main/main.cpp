@@ -7,6 +7,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
+#include <signal.h>
 
 int main()
 {
@@ -21,6 +22,13 @@ int main()
   sf::Sprite sprite;
   sf::Texture texture;
   sf::Clock clock;
+
+  sf::Font font;
+  if (!font.loadFromFile("../assets/fonts/arial_narrow_7.ttf"))
+    raise(SIGTRAP);
+
+  sf::Text fps_text = sf::Text("0", font, 25);
+  fps_text.setFillColor(sf::Color::Red);
 
   window.create(sf::VideoMode(width, height), "Rad Renderer", sf::Style::Default);
   texture.create(width, height);
@@ -43,7 +51,7 @@ int main()
   {
     float dx = 0.f;
     float dy = 0.f;
-    float elapsed_time = clock.restart().asMilliseconds();
+    sf::Time elapsed_time = clock.restart();
 
     // Handle forward movement
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
@@ -100,23 +108,27 @@ int main()
 
       if (delta.x != 0 || delta.y != 0)
       {
-        yaw += delta.x * rotation_speed * elapsed_time;
-        pitch += delta.y * rotation_speed * elapsed_time;
+        yaw += delta.x * rotation_speed * elapsed_time.asMilliseconds();
+        pitch += delta.y * rotation_speed * elapsed_time.asMilliseconds();
 
         camera.Rotate(pitch, yaw);
       }
 
       sf::Mouse::setPosition(window_center, window); // Reset cursor to center
 
-      cam_movement += forward * elapsed_time * 0.01f;
-      cam_x_movement += right * elapsed_time * 0.01f;
+      cam_movement += forward * elapsed_time.asMilliseconds() * 0.01f;
+      cam_x_movement += right * elapsed_time.asMilliseconds() * 0.01f;
       camera.Move((camera.GetForward() * cam_movement) + (camera.GetRight() * cam_x_movement));
     }
 
     renderer.Render(model, camera);
 
+    float fps = 1.f / elapsed_time.asSeconds();
+    fps_text.setString(std::to_string(fps) + " FPS");
+
     texture.update(renderer.GetFrameBuffer());
     window.draw(sprite);
+    window.draw(fps_text);
     window.display();
     window.clear();
   }

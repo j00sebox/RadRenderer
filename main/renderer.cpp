@@ -147,15 +147,15 @@ std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
 {
   // NDC coordinates are in range [-1, 1]
   // Screen coordinates are in range [0, screenWidth] for x and [0, screenHeight] for y
-  const float normalizedX = (x + 1.0) * 0.5;
-  const float normalizedY = (y + 1.0) * 0.5;
+  const float normalized_x = (x + 1.0) * 0.5;
+  const float normalized_y = (y + 1.0) * 0.5;
 
   // Then scale to screen dimensions
   // Note: Y is flipped because screen coordinates typically have 0 at the top
-  const int screenX = std::clamp((int)std::floor(normalizedX * m_screen_width), 0, (int)m_screen_width);
-  const int screenY = std::clamp((int)std::floor((1.0 - normalizedY) * m_screen_height), 0, (int)m_screen_height);
+  const int screen_x = std::clamp((int)std::floor(normalized_x * m_screen_width), 0, (int)m_screen_width);
+  const int screen_y = std::clamp((int)std::floor((1.0 - normalized_y) * m_screen_height), 0, (int)m_screen_height);
 
-  return {screenX, screenY};
+  return {screen_x, screen_y};
 }
 
 void Renderer::ClearFrameBuffer()
