@@ -26,6 +26,7 @@ private:
   void Rasterize(const Triangle& t);
   float EdgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
   void SetPixel(int x, int y, const Pixel& col);
+  Pixel GetColour(float lum);
   std::pair<int, int> ImageToScreenSpace(float x, float y);
   mathz::Vec3 LinePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
   bool ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t);
@@ -38,6 +39,10 @@ private:
   mathz::Mat4 m_view;
   std::vector<Triangle> m_render_triangles;
   std::vector<Triangle> m_clipped_triangles;
+
+  // Lighting stuff
+  mathz::Vec3 m_directional_light;
+  float m_diffuse_constant = 0.75f;
 
   // Screen stuff
   unsigned int m_screen_width, m_screen_height, m_buffer_size;

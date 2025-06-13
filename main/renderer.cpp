@@ -13,6 +13,9 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
       m_near(near), m_far(far)
 {
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
+
+  m_directional_light = { 0.f, 4.f, -1.f };
+  m_directional_light.Normalize();
 }
 
 void Renderer::Render(const Model& model, Camera& camera)
@@ -78,6 +81,12 @@ void Renderer::Render(const Model& model, Camera& camera)
   m_clipped_triangles.clear();
 }
 
+Pixel Renderer::GetColour(float lum)
+{
+    Pixel p = { (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255 };
+    return p;
+}
+
 void Renderer::Rasterize(const Triangle& t)
 {
   int min_x, max_x;
@@ -123,8 +132,9 @@ void Renderer::Rasterize(const Triangle& t)
         float l2 = area2 / area_t;
 
         mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
-
-        SetPixel(x, y, {255, 255, 255, 255});
+     
+        float lum = normal.Dot(m_directional_light);
+        SetPixel(x, y, GetColour(lum));
       }
     }
   }
