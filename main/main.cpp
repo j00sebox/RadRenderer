@@ -51,6 +51,12 @@ int main()
   float cam_movement = 0.f;
   float cam_x_movement = 0.f;
 
+  // FPS timing stuff
+  float fps_timer = 0.0f;
+  int frame_count = 0;
+  float fps_update_interval = 1.0f; // Seconds
+  float current_fps = 0.0f;
+
   while (window.isOpen())
   {
     float dx = 0.f;
@@ -129,8 +135,17 @@ int main()
 
     renderer.Render(model, camera);
 
-    float fps = 1.f / elapsed_time.asSeconds();
-    fps_text.setString(std::to_string(fps) + " FPS");
+    fps_timer += elapsed_time.asSeconds();
+    ++frame_count;
+
+    if (fps_timer >= fps_update_interval) 
+    {
+        current_fps = frame_count / fps_timer;
+        fps_timer = 0.0f;
+        frame_count = 0;
+
+        fps_text.setString("FPS: " + std::to_string(static_cast<int>(current_fps)));
+    }
 
     texture.update(renderer.GetFrameBuffer());
     window.draw(sprite);
