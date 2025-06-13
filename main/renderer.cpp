@@ -10,7 +10,8 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
 
     : m_screen_width(screen_width), m_screen_height(screen_height),
       m_buffer_size(screen_width * screen_height * 4), // RGBA
-      m_near(near), m_far(far)
+      m_near(near), m_far(far),
+      m_depth_buffer(screen_width * screen_height, -1.f)
 {
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 
@@ -53,6 +54,11 @@ void Renderer::Render(const Model& model, Camera& camera)
       if (!clipped)
       {
         TransformTriangle(triangle, camera.GetPerspective());
+
+        triangle.z[0] = triangle.vertices[0].z;
+        triangle.z[1] = triangle.vertices[1].z;
+        triangle.z[2] = triangle.vertices[2].z;
+
         m_render_triangles.push_back(triangle);
       }
     }
@@ -61,15 +67,13 @@ void Renderer::Render(const Model& model, Camera& camera)
   for (Triangle& triangle : m_clipped_triangles)
   {
     TransformTriangle(triangle, camera.GetPerspective());
+
+    triangle.z[0] = triangle.vertices[0].z;
+    triangle.z[1] = triangle.vertices[1].z;
+    triangle.z[2] = triangle.vertices[2].z;
+
     m_render_triangles.push_back(triangle);
   }
-
-  std::sort(m_render_triangles.begin(), m_render_triangles.end(), [](const Triangle& t1, const Triangle& t2)
-            {
-              float t1_average_z = (t1.vertices[0].z + t1.vertices[1].z + t1.vertices[2].z) / 3.f;
-              float t2_average_z = (t2.vertices[0].z + t2.vertices[1].z + t2.vertices[2].z) / 3.f;
-
-              return t1_average_z < t2_average_z; });
 
   for (const auto& t : m_render_triangles)
   {
@@ -132,9 +136,15 @@ void Renderer::Rasterize(const Triangle& t)
         float l2 = area2 / area_t;
 
         mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
-     
-        float lum = normal.Dot(m_directional_light);
-        SetPixel(x, y, GetColour(lum));
+        float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
+
+        int index = (y * m_screen_width + x);
+        if (int_z > m_depth_buffer[index])
+        {
+            float lum = normal.Dot(m_directional_light);
+            SetPixel(x, y, GetColour(lum));
+            m_depth_buffer[index] = int_z;
+        }
       }
     }
   }
@@ -171,6 +181,7 @@ std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
 void Renderer::ClearFrameBuffer()
 {
   std::memset(m_frame_buffer.get(), 0, m_buffer_size);
+  std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), -1.0f);
 }
 
 // Returns the point that the given plane and line intersect

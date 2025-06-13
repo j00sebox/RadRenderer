@@ -47,4 +47,5 @@ private:
   // Screen stuff
   unsigned int m_screen_width, m_screen_height, m_buffer_size;
   std::unique_ptr<std::uint8_t> m_frame_buffer;
+  std::vector<float> m_depth_buffer;
 };

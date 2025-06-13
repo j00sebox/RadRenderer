@@ -10,6 +10,7 @@ struct Triangle
 {
   mathz::Vec3 vertices[3];
   mathz::Vec3 normal[3];
+  float z[3] = {};
 
   mathz::Vec3 Center()
   {
