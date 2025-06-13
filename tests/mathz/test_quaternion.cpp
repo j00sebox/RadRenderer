@@ -1,5 +1,4 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include "../../mathz/quaternion.hpp"
@@ -25,7 +24,7 @@ TEST_CASE("Default quaternion is identity", "[mathz][Quaternion]")
 TEST_CASE("Quaternion from angle and axis normalizes", "[mathz][Quaternion]")
 {
   mathz::Vec3 axis = {1.f, 0.f, 0.f};
-  mathz::Quaternion q(static_cast<float>(M_PI), axis);
+  mathz::Quaternion q(static_cast<float>(PI), axis);
   REQUIRE(AlmostEqual(q.w, 0.f, 1e-5f));
   REQUIRE(AlmostEqual(q.x, 1.f, 1e-5f));
   REQUIRE(AlmostEqual(q.y, 0.f));

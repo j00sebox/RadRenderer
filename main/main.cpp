@@ -19,20 +19,24 @@ int main()
 
   Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
-  sf::Sprite sprite;
-  sf::Texture texture;
+  
+  sf::Texture texture(sf::Vector2u( width, height ));
   sf::Clock clock;
 
   sf::Font font;
-  if (!font.loadFromFile("../assets/fonts/arial_narrow_7.ttf"))
-    raise(SIGTRAP);
+  if (!font.openFromFile("../assets/fonts/arial_narrow_7.ttf"))
+#ifdef _MSC_VER
+      __debugbreak();
+#else
+      raise(SIGTRAP);
+#endif
 
-  sf::Text fps_text = sf::Text("0", font, 25);
+  sf::Text fps_text = sf::Text(font, "0", 25);
   fps_text.setFillColor(sf::Color::Red);
 
-  window.create(sf::VideoMode(width, height), "Rad Renderer", sf::Style::Default);
-  texture.create(width, height);
-  sprite.setTexture(texture);
+  window.create(sf::VideoMode(sf::Vector2u(width, height)), "Rad Renderer", sf::Style::Default);
+
+  sf::Sprite sprite(texture);
   sf::Vector2i window_center(width / 2, height / 2);
 
   model.SetPosition(0.f, -3.f, 10.f);
@@ -54,11 +58,11 @@ int main()
     sf::Time elapsed_time = clock.restart();
 
     // Handle forward movement
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
     {
       forward = -1.f;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
     {
       forward = 1.f;
     }
@@ -68,11 +72,11 @@ int main()
     }
 
     // Handle side movement
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
     {
       right = -1.f;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
     {
       right = 1.f;
     }
@@ -82,21 +86,23 @@ int main()
     }
 
     // Events
-    sf::Event event;
-    while (window.pollEvent(event))
+    while (auto event_optional = window.pollEvent())
     {
-      if (event.type == sf::Event::Closed ||
-          (event.type == sf::Event::KeyPressed &&
-           event.key.code == sf::Keyboard::Escape))
-        window.close();
+        const sf::Event& event = *event_optional;
 
-      if (event.type == sf::Event::MouseButtonPressed)
+      if (event.is<sf::Event::Closed>())
+        window.close();
+      else if (auto keyEv = event.getIf<sf::Event::KeyPressed>()) 
+      {
+          if (keyEv->scancode == sf::Keyboard::Scancode::Escape) 
+              window.close();
+      }
+      else if (event.is<sf::Event::MouseButtonPressed>())
       {
         mouse_down = true;
         sf::Mouse::setPosition(window_center, window); // Lock cursor
       }
-
-      if (event.type == sf::Event::MouseButtonReleased)
+      else if (event.is<sf::Event::MouseButtonReleased>())
         mouse_down = false;
     }
 

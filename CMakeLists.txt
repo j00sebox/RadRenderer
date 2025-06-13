@@ -17,6 +17,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+
+FetchContent_Declare(
+  CPM
+  GIT_REPOSITORY https://github.com/cpm-cmake/CPM.cmake
+  GIT_TAG origin/master
+)
+
+FetchContent_MakeAvailable(CPM)
+
+CPMAddPackage(
+  NAME SFML
+  GITHUB_REPOSITORY SFML/SFML
+  GIT_TAG 3.0.0
+  OPTIONS
+    "SFML_BUILD_EXAMPLES OFF"
+    "SFML_BUILD_DOC OFF"
+    "SFML_BUILD_TEST_SUITE OFF"
+)
+
 # Add the test source files
 set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 file(GLOB_RECURSE TESTS "${TEST_DIR}/*.cpp")
@@ -27,6 +46,7 @@ add_executable(tests ${TESTS})
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(mathz)
 
+find_package(SFML 3.0 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
