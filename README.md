@@ -9,10 +9,11 @@ window and display the image; I also use it to handle events.
 ## How it Works
 
 1. Creates triangles based off the data from the .obj file. 
-2. Applies transformations to object
+2. Applies model and view transformations to object
 3. Does all necessary clipping
 4. Performs a perpective projection on all vertices
-6. Rasterizes each triangle from back to front using an edge function
+5. Does back face culling of triangles
+6. Rasterizes each triangle using an edge function to figure out what pixels are in the triangle
 7. Determines if pixels should be drawn using a depth buffer
 8. Writes pixels to a frame buffer that is displayed by SFML
 
@@ -20,10 +21,4 @@ End Result:
 
 ![Teapot](/screenshots/teapot.png)
 
-## Things I Want To Do
-
-- SIMD math operations
-- Anti-aliasing
-- Textures
-- Raytracing
 
