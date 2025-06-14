@@ -40,33 +40,45 @@ void Renderer::Render(const Model& model, Camera& camera)
     triangle.normal[0] = CalculateNormal(triangle);
     triangle.normal[1] = triangle.normal[0];
     triangle.normal[2] = triangle.normal[0];
+    
+    bool clipped = false;
 
-    // Check if triangle is visible
-    if (triangle.normal[0].Dot(triangle.Center()) >= 0)
+    // Clip on near and far planes
+    // First parameter is plane point, second is normal
+    clipped |= ClipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
+    clipped |= ClipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
+
+    if (!clipped)
     {
-      bool clipped = false;
-
-      // Clip on near and far planes
-      // First parameter is plane point, second is normal
-      clipped |= ClipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
-      clipped |= ClipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
-
-      if (!clipped)
-      {
         TransformTriangle(triangle, camera.GetPerspective());
+
+        mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
+        mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
+        float sign = ab.x * ac.y - ac.x * ab.y;
+
+        // Check if triangle is visible
+        if (sign < 0)
+            continue;
 
         triangle.z[0] = triangle.vertices[0].z;
         triangle.z[1] = triangle.vertices[1].z;
         triangle.z[2] = triangle.vertices[2].z;
 
         m_render_triangles.push_back(triangle);
-      }
+      
     }
   }
 
   for (Triangle& triangle : m_clipped_triangles)
   {
     TransformTriangle(triangle, camera.GetPerspective());
+
+    mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
+    mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
+    float sign = ab.x * ac.y - ac.x * ab.y;
+
+    if (sign < 0)
+        continue;
 
     triangle.z[0] = triangle.vertices[0].z;
     triangle.z[1] = triangle.vertices[1].z;
