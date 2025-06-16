@@ -43,7 +43,7 @@ void Model::SetScale(float scale)
 
 void Model::UpdateTransform()
 {
-  m_transform = m_scale * m_rotation * m_translation;
+    m_transform = m_translation * m_rotation * m_scale;
 }
 
 void Model::ResetTransform()
