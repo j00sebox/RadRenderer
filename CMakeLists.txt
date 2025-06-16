@@ -9,6 +9,24 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/main)
 # Collect all .cpp files in the source directory
 file(GLOB SOURCES "${SOURCE_DIR}/*.cpp")
 
+# Download submodules
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    option(GIT_SUBMODULE "Grab submodules during build" ON)
+    if(GIT_SUBMODULE)
+        message(STATUS "Submodule update")
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_RESULT
+                    )
+        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}")
+        endif()
+    endif()
+endif()
+
+add_subdirectory(submodules/json)
+
 include(FetchContent)
 FetchContent_Declare(
     Catch2
@@ -49,6 +67,10 @@ add_subdirectory(mathz)
 find_package(SFML 3.0 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+
+target_precompile_headers(${PROJECT_NAME} PUBLIC main/pch.h)
+
+target_include_directories(${PROJECT_NAME} PUBLIC submodules/json/include)
 
 # Add the tests to CTest
 include(CTest)

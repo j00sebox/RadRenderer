@@ -1,3 +1,6 @@
 [submodule "rad_renderer\\src\\mathz"]
 	path = rad_renderer\\src\\mathz
 	url = https://github.com/j00sebox/mathz.git
+[submodule "submodules/json"]
+	path = submodules/json
+	url = https://github.com/nlohmann/json.git

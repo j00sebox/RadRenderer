@@ -37,11 +37,14 @@ public:
   inline std::vector<Triangle>::const_iterator begin() const { return m_triangles.begin(); }
   inline std::vector<Triangle>::const_iterator end() const { return m_triangles.end(); }
 
+  void LoadGLTFFile(const char* file_name);
+
 private:
   void UpdateTransform();
 
   // Loads vertex and face data from obj file
   void LoadOBJFile(const char* file_name);
+  
 
   std::vector<Triangle> m_triangles;
   mathz::Mat4 m_translation, m_rotation, m_scale;

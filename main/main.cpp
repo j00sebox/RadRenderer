@@ -14,7 +14,8 @@ int main()
   const int width = 1280, height = 720;
   const float near = 0.1f, far = 1000.f;
 
-  Model model("../assets/objs/teapot.obj");
+  Model model("../assets/objs/avocado/Avocado.gltf");
+  // Model model("../assets/objs/teapot.obj");
   Camera camera(width, height, near, far, 60.f);
 
   Renderer renderer(width, height, near, far);
@@ -39,8 +40,8 @@ int main()
   sf::Sprite sprite(texture);
   sf::Vector2i window_center(width / 2, height / 2);
 
-  model.SetPosition(0.f, -3.f, 10.f);
-  model.SetScale(1.2f);
+  model.SetPosition(0.f, 0.f, 10.f);
+  model.SetScale(100.f);
 
   bool mouse_down = false;
   int prev_x, prev_y;

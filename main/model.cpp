@@ -1,9 +1,12 @@
-#include "model.hpp"
 #include "pch.h"
+
+#include "model.hpp"
+#include "gltfloader.hpp"
 
 Model::Model(const char* file_name)
 {
-  LoadOBJFile(std::move(file_name));
+  // LoadOBJFile(file_name);
+   LoadGLTFFile(file_name);
 }
 
 Model::Model(const std::vector<Triangle>& triangles)
@@ -88,4 +91,40 @@ void Model::LoadOBJFile(const char* file_name)
       m_triangles.push_back({vertices[index[0]], vertices[index[1]], vertices[index[2]]});
     }
   }
+}
+
+void Model::LoadGLTFFile(const char* file_name)
+{
+    GLTFLoader loader;
+    loader.ReadFile(file_name);
+
+    std::vector<float> vertices = loader.GetPositions();
+    std::vector<unsigned int> indices = loader.GetIndices();
+
+    for (int i = 0; i < indices.size(); i += 3)
+    {
+        int index1 = indices[i] * 3;
+        int index2 = indices[i + 1] * 3;
+        int index3 = indices[i + 2] * 3;
+
+        mathz::Vec3 vertex1 = {
+            vertices[index1],
+            vertices[index1 + 1],
+            vertices[index1 + 2]
+        };
+
+        mathz::Vec3 vertex2 = {
+            vertices[index2],
+            vertices[index2 + 1],
+            vertices[index2 + 2]
+        };
+
+        mathz::Vec3 vertex3 = {
+            vertices[index3],
+            vertices[index3 + 1],
+            vertices[index3 + 2]
+        };
+
+        m_triangles.push_back({ vertex1, vertex2, vertex3 });
+    }
 }
