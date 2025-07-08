@@ -6,7 +6,7 @@
 Model::Model(const char* file_name)
 {
   // LoadOBJFile(file_name);
-   LoadGLTFFile(file_name);
+   loadGLTF(file_name);
 }
 
 Model::Model(const std::vector<Triangle>& triangles)
@@ -14,44 +14,44 @@ Model::Model(const std::vector<Triangle>& triangles)
 {
 }
 
-void Model::SetPosition(float x, float y, float z)
+void Model::setPosition(float x, float y, float z)
 {
   m_translation = mathz::Mat4({1, 0, 0, x,
                                0, 1, 0, y,
                                0, 0, 1, z,
                                0, 0, 0, 1});
 
-  UpdateTransform();
+  updateTransform();
 }
 
-void Model::SetRotation(const mathz::Quaternion& rotation)
+void Model::setRotation(const mathz::Quaternion& rotation)
 {
   m_rotation = rotation.ToMatrix();
 
-  UpdateTransform();
+  updateTransform();
 }
 
-void Model::SetScale(float scale)
+void Model::setScale(float scale)
 {
   m_scale = mathz::Mat4({scale, 0, 0, 0,
                          0, scale, 0, 0,
                          0, 0, scale, 0,
                          0, 0, 0, 1});
 
-  UpdateTransform();
+  updateTransform();
 }
 
-void Model::UpdateTransform()
+void Model::updateTransform()
 {
     m_transform = m_translation * m_rotation * m_scale;
 }
 
-void Model::ResetTransform()
+void Model::resetTransform()
 {
   m_transform.clear();
 }
 
-void Model::LoadOBJFile(const char* file_name)
+void Model::loadOBJ(const char* file_name)
 {
   std::ifstream file(file_name);
   std::vector<mathz::Vec3> vertices;
@@ -93,13 +93,13 @@ void Model::LoadOBJFile(const char* file_name)
   }
 }
 
-void Model::LoadGLTFFile(const char* file_name)
+void Model::loadGLTF(const char* file_name)
 {
     GLTFLoader loader;
-    loader.ReadFile(file_name);
+    loader.readFile(file_name);
 
-    std::vector<float> vertices = loader.GetPositions();
-    std::vector<unsigned int> indices = loader.GetIndices();
+    std::vector<float> vertices = loader.getPositions();
+    std::vector<unsigned int> indices = loader.getIndices();
 
     for (int i = 0; i < indices.size(); i += 3)
     {

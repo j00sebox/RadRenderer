@@ -10,22 +10,22 @@ public:
     GLTFLoader() {}
     explicit GLTFLoader(const char* path);
 
-    void ReadFile(const char* path);
+    void readFile(const char* path);
 
-    [[nodiscard]] std::vector<float> GetPositions() const;
-    [[nodiscard]] std::vector<float> GetNormals() const;
-    [[nodiscard]] std::vector<float> GetTexCoords() const;
-    [[nodiscard]] std::vector<unsigned int> GetIndices() const;
+    [[nodiscard]] std::vector<float> getPositions() const;
+    [[nodiscard]] std::vector<float> getNormals() const;
+    [[nodiscard]] std::vector<float> getTexCoords() const;
+    [[nodiscard]] std::vector<unsigned int> getIndices() const;
 
-    [[nodiscard]] std::vector<std::string> GetTextures() const;
-    [[nodiscard]] std::string GetBaseColourTexture() const;
-    [[nodiscard]] std::string GetSpecularTexture() const;
-    [[nodiscard]] std::string GetNormalTexture() const;
-    [[nodiscard]] std::string GetOcclusionTexture() const;
+    [[nodiscard]] std::vector<std::string> getTextures() const;
+    [[nodiscard]] std::string getBaseColourTexture() const;
+    [[nodiscard]] std::string getSpecularTexture() const;
+    [[nodiscard]] std::string getNormalTexture() const;
+    [[nodiscard]] std::string getOcclusionTexture() const;
 
 private:
-    void LoadBin(const char* file_path);
-    void ExtractFloats(const json& accessor, std::vector<float>& flts) const;
+    void loadBin(const char* file_path);
+    void extractFloats(const json& accessor, std::vector<float>& flts) const;
 
     json m_json;
     std::string m_base_dir;

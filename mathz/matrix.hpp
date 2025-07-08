@@ -95,7 +95,7 @@ public:
   };
 
   // Swap rows are columns of the matrix
-  constexpr Mat4 Transpose()
+  constexpr Mat4 transpose()
   {
     Mat4 result;
 
@@ -107,7 +107,7 @@ public:
   }
 
   // Computes the inverse of the matrix using the Gauss-Jordan elimination method
-  constexpr Mat4 Inverse() const
+  constexpr Mat4 inverse() const
   {
     // An identity matrix is needed to keep track of all the operations done on the original matrix
     // This ends up becoming the inverse

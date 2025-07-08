@@ -16,28 +16,28 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 
   m_directional_light = { 0.f, 4.f, -1.f };
-  m_directional_light.Normalize();
+  m_directional_light.normalize();
 }
 
-void Renderer::Render(const Model& model, Camera& camera)
+void Renderer::render(const Model& model, Camera& camera)
 {
   // Clear screen to redraw
-  ClearFrameBuffer();
+  clearFrameBuffer();
 
   // Camera transform
-  mathz::Mat4 cam_transform = camera.GetTransform();
-  m_view = cam_transform.Inverse();
+  mathz::Mat4 cam_transform = camera.getTransform();
+  m_view = cam_transform.inverse();
 
   // Iterate through all triangles in the object
   for (Triangle triangle : model)
   {
     // Apply model transform
-    TransformTriangle(triangle, model.GetTransform());
+    transformTriangle(triangle, model.getTransform());
 
     // Convert to camera space
-    TransformTriangle(triangle, m_view);
+    transformTriangle(triangle, m_view);
 
-    triangle.normal[0] = CalculateNormal(triangle);
+    triangle.normal[0] = calculateNormal(triangle);
     triangle.normal[1] = triangle.normal[0];
     triangle.normal[2] = triangle.normal[0];
     
@@ -45,12 +45,12 @@ void Renderer::Render(const Model& model, Camera& camera)
 
     // Clip on near and far planes
     // First parameter is plane point, second is normal
-    clipped |= ClipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
-    clipped |= ClipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
+    clipped |= clipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
+    clipped |= clipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
 
     if (!clipped)
     {
-        TransformTriangle(triangle, camera.GetPerspective());
+        transformTriangle(triangle, camera.getPerspective());
 
         mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
         mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
@@ -71,7 +71,7 @@ void Renderer::Render(const Model& model, Camera& camera)
 
   for (Triangle& triangle : m_clipped_triangles)
   {
-    TransformTriangle(triangle, camera.GetPerspective());
+    transformTriangle(triangle, camera.getPerspective());
 
     mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
     mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
@@ -89,7 +89,7 @@ void Renderer::Render(const Model& model, Camera& camera)
 
   for (const auto& t : m_render_triangles)
   {
-    Rasterize(t);
+    rasterize(t);
   }
 
   // Vectors needs to be empty for next redraw
@@ -97,20 +97,20 @@ void Renderer::Render(const Model& model, Camera& camera)
   m_clipped_triangles.clear();
 }
 
-Pixel Renderer::GetColour(float lum)
+Pixel Renderer::getColour(float lum)
 {
     Pixel p = { (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255 };
     return p;
 }
 
-void Renderer::Rasterize(const Triangle& t)
+void Renderer::rasterize(const Triangle& t)
 {
   int min_x, max_x;
   int min_y, max_y;
 
-  mathz::Vec2<int> v0 = {ImageToScreenSpace(t.vertices[0].x, t.vertices[0].y)};
-  mathz::Vec2<int> v1 = {ImageToScreenSpace(t.vertices[1].x, t.vertices[1].y)};
-  mathz::Vec2<int> v2 = {ImageToScreenSpace(t.vertices[2].x, t.vertices[2].y)};
+  mathz::Vec2<int> v0 = {imageToScreenSpace(t.vertices[0].x, t.vertices[0].y)};
+  mathz::Vec2<int> v1 = {imageToScreenSpace(t.vertices[1].x, t.vertices[1].y)};
+  mathz::Vec2<int> v2 = {imageToScreenSpace(t.vertices[2].x, t.vertices[2].y)};
 
   // Bounding box
   min_x = std::min(v0.x, v1.x);
@@ -131,16 +131,16 @@ void Renderer::Rasterize(const Triangle& t)
     {
       mathz::Vec2<float> p = {x + 0.5f, y + 0.5f};
 
-      float area0 = EdgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, p.x, p.y);
-      float area1 = EdgeFunction((float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y, p.x, p.y);
-      float area2 = EdgeFunction((float)v2.x, (float)v2.y, (float)v0.x, (float)v0.y, p.x, p.y);
+      float area0 = edgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, p.x, p.y);
+      float area1 = edgeFunction((float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y, p.x, p.y);
+      float area2 = edgeFunction((float)v2.x, (float)v2.y, (float)v0.x, (float)v0.y, p.x, p.y);
 
       if (area0 >= 0 &&
           area1 >= 0 &&
           area2 >= 0)
       {
 
-        float area_t = EdgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
+        float area_t = edgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
 
         // Barycentric coordinates
         float l0 = area0 / area_t;
@@ -153,8 +153,8 @@ void Renderer::Rasterize(const Triangle& t)
         int index = (y * m_screen_width + x);
         if (int_z > m_depth_buffer[index])
         {
-            float lum = normal.Dot(m_directional_light);
-            SetPixel(x, y, GetColour(lum));
+            float lum = normal.dot(m_directional_light);
+            setPixel(x, y, getColour(lum));
             m_depth_buffer[index] = int_z;
         }
       }
@@ -162,12 +162,12 @@ void Renderer::Rasterize(const Triangle& t)
   }
 }
 
-float Renderer::EdgeFunction(float x0, float y0, float x1, float y1, float x2, float y2)
+float Renderer::edgeFunction(float x0, float y0, float x1, float y1, float x2, float y2)
 {
   return ((x2 - x0) * (y1 - y0) - (y2 - y0) * (x1 - x0));
 }
 
-void Renderer::SetPixel(int x, int y, const Pixel& pixel)
+void Renderer::setPixel(int x, int y, const Pixel& pixel)
 {
   // Calculate the index of the pixel in the framebuffer
   int index = (y * m_screen_width + x) * 4;
@@ -175,7 +175,7 @@ void Renderer::SetPixel(int x, int y, const Pixel& pixel)
   std::memcpy(&m_frame_buffer.get()[index], &pixel, sizeof(Pixel));
 }
 
-std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
+std::pair<int, int> Renderer::imageToScreenSpace(float x, float y)
 {
   // NDC coordinates are in range [-1, 1]
   // Screen coordinates are in range [0, screenWidth] for x and [0, screenHeight] for y
@@ -190,14 +190,14 @@ std::pair<int, int> Renderer::ImageToScreenSpace(float x, float y)
   return {screen_x, screen_y};
 }
 
-void Renderer::ClearFrameBuffer()
+void Renderer::clearFrameBuffer()
 {
   std::memset(m_frame_buffer.get(), 0, m_buffer_size);
   std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), -1.0f);
 }
 
 // Returns the point that the given plane and line intersect
-mathz::Vec3 Renderer::LinePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
+mathz::Vec3 Renderer::linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
 {
   // Using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
   float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
@@ -208,7 +208,7 @@ mathz::Vec3 Renderer::LinePlaneIntersect(const mathz::Vec3& point, const mathz::
   return intersection_point;
 }
 
-bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t)
+bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t)
 {
   int in_count = 0;
   int out_count = 0;
@@ -220,7 +220,7 @@ bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
   for (const mathz::Vec3& vertex : t.vertices)
   {
     mathz::Vec3 line = vertex - plane_point;
-    if (plane_normal.Dot(line) >= 0)
+    if (plane_normal.dot(line) >= 0)
     {
       in_vertices[in_count++] = vertex;
     }
@@ -240,9 +240,9 @@ bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     t2.vertices[0] = in_vertices[1];
 
     // The intersecting points to the plane will make up the rest of both triangles
-    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    t1.vertices[2] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
 
-    t2.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
+    t2.vertices[1] = linePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
     t2.vertices[2] = t1.vertices[2]; // Both new triangles share this vertex
 
     t1.normal[0] = t.normal[0];
@@ -263,8 +263,8 @@ bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     Triangle t1;
     t1.vertices[0] = in_vertices[0];
 
-    t1.vertices[1] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
-    t1.vertices[2] = LinePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
+    t1.vertices[1] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    t1.vertices[2] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
 
     t1.normal[0] = t.normal[0];
     t1.normal[1] = t.normal[1];
@@ -282,14 +282,14 @@ bool Renderer::ClipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
   return false;
 }
 
-void Renderer::TransformTriangle(Triangle& t, const mathz::Mat4& transform)
+void Renderer::transformTriangle(Triangle& t, const mathz::Mat4& transform)
 {
   t.vertices[0] = transform * t.vertices[0];
   t.vertices[1] = transform * t.vertices[1];
   t.vertices[2] = transform * t.vertices[2];
 }
 
-mathz::Vec3 Renderer::CalculateNormal(Triangle& t)
+mathz::Vec3 Renderer::calculateNormal(Triangle& t)
 {
   // Construct line 1 of the triangle
   mathz::Vec3 l0 = {
@@ -303,8 +303,8 @@ mathz::Vec3 Renderer::CalculateNormal(Triangle& t)
       t.vertices[2].y - t.vertices[0].y,
       t.vertices[2].z - t.vertices[0].z};
 
-  mathz::Vec3 face_normal = l1.Cross(l0);
-  face_normal.Normalize();
+  mathz::Vec3 face_normal = l1.cross(l0);
+  face_normal.normalize();
 
   return face_normal;
 }

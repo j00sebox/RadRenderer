@@ -25,17 +25,17 @@ public:
     y = pair.second;
   }
 
-  float Cross(Vec2& line)
+  float cross(Vec2& line)
   {
     return (x * line.y) - (y * line.x);
   }
 
-  float Dot(Vec2& vec)
+  float dot(Vec2& vec)
   {
     return x * vec.x + y * vec.y;
   }
 
-  void Normalize()
+  void normalize()
   {
     float normalize = sqrtf(pow(x, 2) + pow(y, 2));
 
@@ -43,19 +43,19 @@ public:
     y /= normalize;
   }
 
-  void Subtract(Vec2& inputVec, Vec2& outVec)
+  void subtract(Vec2& inputVec, Vec2& outVec)
   {
     outVec.x = x - inputVec.x;
     outVec.y = y - inputVec.y;
   }
 
-  void ScalarMultiply(Vec2& outVec, float scalar)
+  void scalarMultiply(Vec2& outVec, float scalar)
   {
     outVec.x = scalar * x;
     outVec.y = scalar * y;
   }
 
-  void Add(Vec2& a, Vec2& outVec)
+  void add(Vec2& a, Vec2& outVec)
   {
     outVec.x = x + a.x;
     outVec.y = y + a.y;
@@ -76,7 +76,7 @@ public:
 
   Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
-  inline Vec3 Cross(const Vec3& line) const
+  inline Vec3 cross(const Vec3& line) const
   {
     Vec3 normal;
 
@@ -87,12 +87,12 @@ public:
     return normal;
   }
 
-  inline float Dot(const Vec3& other_vector) const
+  inline float dot(const Vec3& other_vector) const
   {
     return x * other_vector.x + y * other_vector.y + z * other_vector.z;
   }
 
-  inline void Normalize()
+  inline void normalize()
   {
     float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f));
 
@@ -172,7 +172,7 @@ public:
     this->w = w;
   }
 
-  inline void Normalize()
+  inline void normalize()
   {
     float divisor = sqrtf(powf(x, 2.f) + powf(y, 2.f) + powf(z, 2.f) + powf(w, 2.f));
 

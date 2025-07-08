@@ -9,7 +9,7 @@ Camera::Camera(int width, int height, float near, float far, float fov)
       m_far(far),
       m_fov(fov)
 {
-  m_forward = {0.f, 0.f, 1.f};
+  m_forward = {0.f, 0.f, -1.f};
   m_up = {0.f, 1.f, 0.f};
   m_right = {1.f, 0.f, 0.f};
 
@@ -24,13 +24,13 @@ Camera::Camera(int width, int height, float near, float far, float fov)
   m_perspective[3][2] = -1.f;
   m_perspective[3][3] = 0.f;
 
-  Move({0.f, 3.f, 0.f});
-  Rotate(0.f, 0.f);
+  move({0.f, 0.f, 0.f});
+  rotate(0.f, 0.f);
 }
 
-void Camera::Move(const mathz::Vec3& postion)
+void Camera::move(const mathz::Vec3& postion)
 {
-  m_position = std::move(postion);
+  m_position = postion;
 
   m_transform[0][3] = m_position.x;
   m_transform[1][3] = m_position.y;
@@ -38,7 +38,7 @@ void Camera::Move(const mathz::Vec3& postion)
   m_transform[3][3] = 1.0f;
 }
 
-void Camera::Rotate(float pitch, float yaw)
+void Camera::rotate(float pitch, float yaw)
 {
   float cos_pitch = cos(mathz::Radians(pitch));
 
@@ -49,15 +49,15 @@ void Camera::Rotate(float pitch, float yaw)
   float sin_yaw = sin(mathz::Radians(yaw));
 
   m_forward = {sin_yaw * cos_pitch, sin_pitch, -cos_pitch * cos_yaw};
-  m_forward.Normalize();
+  m_forward.normalize();
 
   // Recalculate right and up vectors
   mathz::Vec3 world_up(0.f, 1.f, 0.f);
-  m_right = world_up.Cross(m_forward);
-  m_right.Normalize();
+  m_right = world_up.cross(m_forward);
+  m_right.normalize();
 
-  m_up = m_forward.Cross(m_right);
-  m_up.Normalize();
+  m_up = m_forward.cross(m_right);
+  m_up.normalize();
 
   // Update the transformation matrix
   m_transform[0][0] = m_right.x;

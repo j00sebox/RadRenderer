@@ -39,8 +39,8 @@ int main()
   sf::Sprite sprite(texture);
   sf::Vector2i window_center(width / 2, height / 2);
 
-  model.SetPosition(0.f, 0.f, 10.f);
-  model.SetScale(100.f);
+  model.setPosition(0.f, 0.f, 1.f);
+  model.setScale(3.f);
 
   bool mouse_down = false;
   int prev_x, prev_y;
@@ -123,17 +123,17 @@ int main()
         yaw += delta.x * rotation_speed * elapsed_time.asMilliseconds();
         pitch += delta.y * rotation_speed * elapsed_time.asMilliseconds();
 
-        camera.Rotate(pitch, yaw);
+        camera.rotate(pitch, yaw);
       }
 
       sf::Mouse::setPosition(window_center, window); // Reset cursor to center
 
       cam_movement += forward * elapsed_time.asMilliseconds() * 0.01f;
       cam_x_movement += right * elapsed_time.asMilliseconds() * 0.01f;
-      camera.Move((camera.GetForward() * cam_movement) + (camera.GetRight() * cam_x_movement));
+      camera.move((camera.getForward() * cam_movement) + (camera.getRight() * cam_x_movement));
     }
 
-    renderer.Render(model, camera);
+    renderer.render(model, camera);
 
     fps_timer += elapsed_time.asSeconds();
     ++frame_count;
@@ -147,7 +147,7 @@ int main()
         fps_text.setString("FPS: " + std::to_string(static_cast<int>(current_fps)));
     }
 
-    texture.update(renderer.GetFrameBuffer());
+    texture.update(renderer.getFrameBuffer());
     window.draw(sprite);
     window.draw(fps_text);
     window.display();

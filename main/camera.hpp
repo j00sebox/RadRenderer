@@ -12,14 +12,14 @@ public:
   Camera(int width, int height, float near, float far, float fov);
   ~Camera() {}
 
-  void Move(const mathz::Vec3& pos);
-  void Rotate(float pitch, float yaw);
+  void move(const mathz::Vec3& pos);
+  void rotate(float pitch, float yaw);
 
-  const mathz::Vec3& GetPosition() const { return m_position; }
-  inline const mathz::Vec3& GetForward() const { return m_forward; }
-  inline const mathz::Vec3& GetRight() const { return m_right; }
-  const mathz::Mat4& GetTransform() const { return m_transform; }
-  const mathz::Mat4& GetPerspective() const { return m_perspective; }
+  const mathz::Vec3& getPosition() const { return m_position; }
+  inline const mathz::Vec3& getForward() const { return m_forward; }
+  inline const mathz::Vec3& getRight() const { return m_right; }
+  const mathz::Mat4& getTransform() const { return m_transform; }
+  const mathz::Mat4& getPerspective() const { return m_perspective; }
 
 private:
   mathz::Vec3 m_position;
