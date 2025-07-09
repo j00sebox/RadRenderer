@@ -61,6 +61,37 @@ public:
     outVec.y = y + a.y;
   }
 
+  inline Vec2 operator+(const Vec2& v) const
+  {
+      Vec2 r;
+
+      r.x = x + v.x;
+      r.y = y + v.y;
+      
+      return r;
+  }
+
+  inline Vec2 operator*(float scalar) const
+  {
+      Vec2 r;
+
+      r.x = x * scalar;
+      r.y = y * scalar;
+
+      return r;
+  }
+
+  inline Vec2 operator/(float scalar) const
+  {
+      if (scalar == 0.f)
+          return {};
+
+      Vec2 r;
+
+      r.x = x / scalar;
+      r.y = y / scalar;
+  }
+
   T x, y;
 };
 

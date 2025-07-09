@@ -89,7 +89,7 @@ void Renderer::render(const Model& model, Camera& camera)
 
   for (const auto& t : m_render_triangles)
   {
-    rasterize(t);
+    rasterize(t, model.getTexture());
   }
 
   // Vectors needs to be empty for next redraw
@@ -103,7 +103,7 @@ Pixel Renderer::getColour(float lum)
     return p;
 }
 
-void Renderer::rasterize(const Triangle& t)
+void Renderer::rasterize(const Triangle& t, const Texture& texture)
 {
   int min_x, max_x;
   int min_y, max_y;
@@ -148,13 +148,24 @@ void Renderer::rasterize(const Triangle& t)
         float l2 = area2 / area_t;
 
         mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
+        mathz::Vec2<float> uv = t.uv[0] * l0 + t.uv[1] * l1 + t.uv[2] * l2;
         float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
+
+        Colour colour = texture.sample(uv.x, uv.y);
+
+        // std::cout << colour.r << " " << colour.g << " " << colour.b << " " << colour.a << "\n";
 
         int index = (y * m_screen_width + x);
         if (int_z > m_depth_buffer[index])
         {
             float lum = normal.dot(m_directional_light);
-            setPixel(x, y, getColour(lum));
+            Pixel pixel = {
+            std::uint8_t(colour.r * 255),
+            std::uint8_t(colour.g * 255),
+            std::uint8_t(colour.b * 255),
+            std::uint8_t(colour.a * 255)
+            };
+            setPixel(x, y, pixel);
             m_depth_buffer[index] = int_z;
         }
       }

@@ -64,13 +64,13 @@ add_executable(tests ${TESTS})
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(mathz)
 
+target_precompile_headers(${PROJECT_NAME} PUBLIC main/pch.h)
+
+target_include_directories(${PROJECT_NAME} PUBLIC submodules/json/include submodules/stb)
+
 find_package(SFML 3.0 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-
-target_precompile_headers(${PROJECT_NAME} PUBLIC main/pch.h)
-
-target_include_directories(${PROJECT_NAME} PUBLIC submodules/json/include)
 
 # Add the tests to CTest
 include(CTest)

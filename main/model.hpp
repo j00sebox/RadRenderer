@@ -1,5 +1,7 @@
 #pragma once
 
+#include "texture.hpp"
+
 #include "../mathz/matrix.hpp"
 #include "../mathz/quaternion.hpp"
 #include "../mathz/vector.hpp"
@@ -10,6 +12,7 @@ struct Triangle
 {
   mathz::Vec3 vertices[3];
   mathz::Vec3 normal[3];
+  mathz::Vec2<float> uv[3];
   float z[3] = {};
 
   mathz::Vec3 center()
@@ -32,6 +35,10 @@ public:
   const mathz::Mat4& getTransform() const { return m_transform; }
   void resetTransform();
 
+  const Texture& getTexture(int index = 0) const { return m_textures[index]; }
+
+  Colour sampleTexture(int u, int v, int index = 0);
+
   inline std::vector<Triangle>::iterator begin() { return m_triangles.begin(); }
   inline std::vector<Triangle>::iterator end() { return m_triangles.end(); }
   inline std::vector<Triangle>::const_iterator begin() const { return m_triangles.begin(); }
@@ -45,8 +52,8 @@ private:
   // Loads vertex and face data from obj file
   void loadOBJ(const char* file_name);
   
-
   std::vector<Triangle> m_triangles;
   mathz::Mat4 m_translation, m_rotation, m_scale;
   mathz::Mat4 m_transform;
+  Texture m_textures[4];
 };

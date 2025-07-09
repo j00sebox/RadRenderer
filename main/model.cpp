@@ -5,7 +5,7 @@
 
 Model::Model(const char* file_name)
 {
-  // LoadOBJFile(file_name);
+   // LoadOBJFile(file_name);
    loadGLTF(file_name);
 }
 
@@ -49,6 +49,11 @@ void Model::updateTransform()
 void Model::resetTransform()
 {
   m_transform.clear();
+}
+
+Colour Model::sampleTexture(int u, int v, int index)
+{
+    return m_textures[index].sample(u, v);
 }
 
 void Model::loadOBJ(const char* file_name)
@@ -100,31 +105,59 @@ void Model::loadGLTF(const char* file_name)
 
     std::vector<float> vertices = loader.getPositions();
     std::vector<unsigned int> indices = loader.getIndices();
+    std::vector<float> uvs = loader.getTexCoords();
 
     for (int i = 0; i < indices.size(); i += 3)
     {
-        int index1 = indices[i] * 3;
-        int index2 = indices[i + 1] * 3;
-        int index3 = indices[i + 2] * 3;
+        int index1 = indices[i];
+        int index2 = indices[i + 1];
+        int index3 = indices[i + 2];
 
         mathz::Vec3 vertex1 = {
-            vertices[index1],
-            vertices[index1 + 1],
-            vertices[index1 + 2]
+            vertices[index1 * 3],
+            vertices[index1 * 3 + 1],
+            vertices[index1 * 3 + 2]
         };
 
         mathz::Vec3 vertex2 = {
-            vertices[index2],
-            vertices[index2 + 1],
-            vertices[index2 + 2]
+            vertices[index2 * 3],
+            vertices[index2 * 3 + 1],
+            vertices[index2 * 3 + 2]
         };
 
         mathz::Vec3 vertex3 = {
-            vertices[index3],
-            vertices[index3 + 1],
-            vertices[index3 + 2]
+            vertices[index3 * 3],
+            vertices[index3 * 3 + 1],
+            vertices[index3 * 3 + 2]
         };
 
-        m_triangles.push_back({ vertex1, vertex2, vertex3 });
+        mathz::Vec2<float> uv1 = {
+            uvs[index1 * 2],
+            uvs[index1 * 2 + 1]
+        };
+
+        mathz::Vec2<float> uv2 = {
+            uvs[index2 * 2],
+            uvs[index2 * 2 + 1]
+        };
+
+        mathz::Vec2<float> uv3 = {
+            uvs[index3 * 2],
+            uvs[index3 * 2 + 1]
+        };
+
+        m_triangles.push_back({
+            .vertices = { vertex1, vertex2, vertex3 },
+            .uv = { uv1, uv2, uv3 }
+        });
+    }
+
+    std::vector<std::string> texture_paths = loader.getTextures();
+
+    int i = 0;
+    for (std::string texture_path : texture_paths)
+    {
+        m_textures[i] = Texture(texture_path.c_str());
+        ++i;
     }
 }

@@ -259,7 +259,7 @@ void GLTFLoader::extractFloats(const json& accessor, std::vector<float>& flts) c
     std::string type = accessor["type"];
 
     json buffer = m_json["bufferViews"][index];
-    unsigned int buffer_offset = buffer["byteOffset"];
+    unsigned int buffer_offset = buffer.value("byteOffset", 0); // buffer["byteOffset"];
     unsigned int buffer_byte_offset = buffer_offset + byte_offset;
     unsigned int length = count * GetVertexCount(type) * 4;
 
