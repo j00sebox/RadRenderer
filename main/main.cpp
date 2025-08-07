@@ -92,6 +92,11 @@ int main()
       right = 0.f;
     }
 
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
+    {
+        model = Model(OpenFileDialog().c_str());
+    }
+
     // Events
     while (auto event_optional = window.pollEvent())
     {
