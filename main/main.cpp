@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "renderer.hpp"
 #include "vector.hpp"
+#include "file.hpp"
 
 #include "../mathz/misc.hpp"
 
@@ -12,12 +13,12 @@
 int main()
 {
   const int width = 1280, height = 720;
-  const float near = 0.1f, far = 1000.f;
+  const float _near = 0.1f, _far = 1000.f;
 
-  Model model("../assets/objs/avocado/Avocado.gltf");
-  Camera camera(width, height, near, far, 60.f);
+  Model model(OpenFileDialog().c_str());
+  Camera camera(width, height, _near, _far, 60.f);
 
-  Renderer renderer(width, height, near, far);
+  Renderer renderer(width, height, _near, _far);
   sf::RenderWindow window;
   
   sf::Texture texture(sf::Vector2u( width, height ));

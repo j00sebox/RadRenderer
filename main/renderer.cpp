@@ -153,8 +153,6 @@ void Renderer::rasterize(const Triangle& t, const Texture& texture)
 
         Colour colour = texture.sample(uv.x, uv.y);
 
-        // std::cout << colour.r << " " << colour.g << " " << colour.b << " " << colour.a << "\n";
-
         int index = (y * m_screen_width + x);
         if (int_z > m_depth_buffer[index])
         {
