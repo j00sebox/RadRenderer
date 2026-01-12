@@ -15,7 +15,7 @@ int main()
   const int width = 1280, height = 720;
   const float _near = 0.1f, _far = 1000.f;
 
-  Model model(OpenFileDialog().c_str());
+  Model model("../assets/objs/avocado/Avocado.gltf");
   Camera camera(width, height, _near, _far, 60.f);
 
   Renderer renderer(width, height, _near, _far);

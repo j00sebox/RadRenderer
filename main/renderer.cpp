@@ -143,13 +143,13 @@ void Renderer::rasterize(const Triangle& t, const Texture& texture)
         float area_t = edgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
 
         // Barycentric coordinates
-        float l0 = area0 / area_t;
-        float l1 = area1 / area_t;
-        float l2 = area2 / area_t;
+        float w0 = area1 / area_t;
+        float w1 = area2 / area_t;
+        float w2 = area0 / area_t;
 
-        mathz::Vec3 normal = t.normal[0] * l0 + t.normal[1] * l1 + t.normal[2] * l2;
-        mathz::Vec2<float> uv = t.uv[0] * l0 + t.uv[1] * l1 + t.uv[2] * l2;
-        float int_z = l0 * t.z[0] + l1 * t.z[1] + l2 * t.z[2];
+        mathz::Vec3 normal = t.normal[0] * w0 + t.normal[1] * w1 + t.normal[2] * w2;
+        mathz::Vec2<float> uv = t.uv[0] * w0 + t.uv[1] * w1 + t.uv[2] * w2;
+        float int_z = w0 * t.z[0] + w1 * t.z[1] + w2 * t.z[2];
 
         Colour colour = texture.sample(uv.x, uv.y);
 

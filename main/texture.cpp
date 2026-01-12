@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "texture.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 Texture::Texture(const char* image_path)
 {
-    stbi_set_flip_vertically_on_load(1);
     unsigned char* rawData = stbi_load(image_path, &m_width, &m_height, &m_channels, 4);
     if (!rawData) 
     {
