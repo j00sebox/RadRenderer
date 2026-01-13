@@ -44,7 +44,6 @@ int main()
   model.setScale(3.f);
 
   bool mouse_down = false;
-  int prev_x, prev_y;
   float pitch = 0.f, yaw = 0.f;
   float forward = 0.f;
   float right = 0.f;
@@ -112,10 +111,16 @@ int main()
       else if (event.is<sf::Event::MouseButtonPressed>())
       {
         mouse_down = true;
-        sf::Mouse::setPosition(window_center, window); // Lock cursor
+        window.setMouseCursorGrabbed(true);
+        window.setMouseCursorVisible(false);
+        sf::Mouse::setPosition(window_center, window);
       }
       else if (event.is<sf::Event::MouseButtonReleased>())
+      {
         mouse_down = false;
+        window.setMouseCursorGrabbed(false);
+        window.setMouseCursorVisible(true);
+      }
     }
 
     // Update camera
@@ -127,7 +132,11 @@ int main()
       if (delta.x != 0 || delta.y != 0)
       {
         yaw += delta.x * rotation_speed * elapsed_time.asMilliseconds();
-        pitch += delta.y * rotation_speed * elapsed_time.asMilliseconds();
+        pitch -= delta.y * rotation_speed * elapsed_time.asMilliseconds();
+
+        // Clamp pitch
+        if (pitch > 89.f) pitch = 89.f;
+        if (pitch < -89.f) pitch = -89.f;
 
         camera.rotate(pitch, yaw);
       }

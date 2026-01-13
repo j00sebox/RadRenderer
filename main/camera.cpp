@@ -2,6 +2,8 @@
 #include "pch.h"
 
 #include "../mathz/misc.hpp"
+#include "../mathz/quaternion.hpp"
+#include <algorithm>
 #include <cmath>
 
 Camera::Camera(int width, int height, float near, float far, float fov)
@@ -40,15 +42,16 @@ void Camera::move(const mathz::Vec3& postion)
 
 void Camera::rotate(float pitch, float yaw)
 {
+  // Clamp pitch to prevent gimbal lock
+  if (pitch > 89.f) pitch = 89.f;
+  if (pitch < -89.f) pitch = -89.f;
+
   float cos_pitch = cos(mathz::Radians(pitch));
-
   float sin_pitch = sin(mathz::Radians(pitch));
-
   float cos_yaw = cos(mathz::Radians(yaw));
-
   float sin_yaw = sin(mathz::Radians(yaw));
 
-  m_forward = {sin_yaw * cos_pitch, sin_pitch, -cos_pitch * cos_yaw};
+  m_forward = {sin_yaw * cos_pitch, -sin_pitch, -cos_pitch * cos_yaw};
   m_forward.normalize();
 
   // Recalculate right and up vectors
