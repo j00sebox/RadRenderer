@@ -48,8 +48,7 @@ int main()
   float forward = 0.f;
   float right = 0.f;
   float rotation_speed = 0.005f;
-  float cam_movement = 0.f;
-  float cam_x_movement = 0.f;
+  float move_speed = 0.01f;
 
   // FPS timing stuff
   float fps_timer = 0.0f;
@@ -143,9 +142,16 @@ int main()
 
       sf::Mouse::setPosition(window_center, window); // Reset cursor to center
 
-      cam_movement += forward * elapsed_time.asMilliseconds() * 0.01f;
-      cam_x_movement += right * elapsed_time.asMilliseconds() * 0.01f;
-      camera.move((camera.getForward() * cam_movement) + (camera.getRight() * cam_x_movement));
+      float delta_forward = forward * elapsed_time.asMilliseconds() * move_speed;
+      float delta_right = right * elapsed_time.asMilliseconds() * move_speed;
+
+      if (delta_forward != 0.f || delta_right != 0.f)
+      {
+        mathz::Vec3 new_pos = camera.getPosition()
+            + (camera.getForward() * delta_forward)
+            + (camera.getRight() * delta_right);
+        camera.move(new_pos);
+      }
     }
 
     renderer.render(model, camera);

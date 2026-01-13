@@ -125,6 +125,12 @@ void Renderer::rasterize(const Triangle& t, const Texture& texture)
   max_y = std::max(v0.y, v1.y);
   max_y = std::max(max_y, v2.y);
 
+  // Clamp bounding box to screen bounds
+  min_x = std::max(min_x, 0);
+  min_y = std::max(min_y, 0);
+  max_x = std::min(max_x, (int)m_screen_width);
+  max_y = std::min(max_y, (int)m_screen_height);
+
   for (int y = min_y; y < max_y; y++)
   {
     for (int x = min_x; x < max_x; x++)
@@ -193,8 +199,8 @@ std::pair<int, int> Renderer::imageToScreenSpace(float x, float y)
 
   // Then scale to screen dimensions
   // Note: Y is flipped because screen coordinates typically have 0 at the top
-  const int screen_x = std::clamp((int)std::floor(normalized_x * m_screen_width), 0, (int)m_screen_width);
-  const int screen_y = std::clamp((int)std::floor((1.0 - normalized_y) * m_screen_height), 0, (int)m_screen_height);
+  const int screen_x = (int)std::floor(normalized_x * m_screen_width);
+  const int screen_y = (int)std::floor((1.0 - normalized_y) * m_screen_height);
 
   return {screen_x, screen_y};
 }
