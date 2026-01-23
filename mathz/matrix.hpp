@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <iostream>
-#include <stdexcept>
 #include <vector>
 
 struct Rows
@@ -243,7 +242,7 @@ public:
     new_vector.x = vector.x * mat[0][0] + vector.y * mat[0][1] + vector.z * mat[0][2] + vector.w * mat[0][3];
     new_vector.y = vector.x * mat[1][0] + vector.y * mat[1][1] + vector.z * mat[1][2] + vector.w * mat[1][3];
     new_vector.z = vector.x * mat[2][0] + vector.y * mat[2][1] + vector.z * mat[2][2] + vector.w * mat[2][3];
-    new_vector.w = vector.x * mat[1][0] + vector.y * mat[3][1] + vector.z * mat[3][2] + vector.w * mat[3][3];
+    new_vector.w = vector.x * mat[3][0] + vector.y * mat[3][1] + vector.z * mat[3][2] + vector.w * mat[3][3];
 
     return new_vector;
   }

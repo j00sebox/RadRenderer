@@ -64,6 +64,7 @@ void Model::loadOBJ(const char* file_name)
   if (!file.is_open())
   {
     std::cerr << "Failed to open " << file_name << std::endl;
+    return;
   }
 
   std::string line;
