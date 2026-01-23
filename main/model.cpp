@@ -5,8 +5,23 @@
 
 Model::Model(const char* file_name)
 {
-   // LoadOBJFile(file_name);
-   loadGLTF(file_name);
+    std::string path(file_name);
+    std::string ext = path.substr(path.find_last_of('.') + 1);
+
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    if (ext == "obj") 
+    {
+        loadOBJ(file_name);
+    } 
+    else if (ext == "gltf") 
+    {
+        loadGLTF(file_name);
+    } 
+    else 
+    {
+        std::cerr << "Unknown file format: " << ext << std::endl;
+    }
 }
 
 Model::Model(const std::vector<Triangle>& triangles)

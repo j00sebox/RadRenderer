@@ -65,7 +65,6 @@ void Renderer::render(const Model& model, Camera& camera)
         triangle.z[2] = triangle.vertices[2].z;
 
         m_render_triangles.push_back(triangle);
-      
     }
   }
 
@@ -164,10 +163,10 @@ void Renderer::rasterize(const Triangle& t, const Texture& texture)
         {
             float lum = normal.dot(m_directional_light);
             Pixel pixel = {
-            std::uint8_t(colour.r * 255),
-            std::uint8_t(colour.g * 255),
-            std::uint8_t(colour.b * 255),
-            std::uint8_t(colour.a * 255)
+              std::uint8_t(colour.r * 255),
+              std::uint8_t(colour.g * 255),
+              std::uint8_t(colour.b * 255),
+              std::uint8_t(colour.a * 255)
             };
             setPixel(x, y, pixel);
             m_depth_buffer[index] = int_z;

@@ -54,6 +54,14 @@ CPMAddPackage(
     "SFML_BUILD_TEST_SUITE OFF"
 )
 
+# tinyfiledialogs for cross-platform file dialogs
+FetchContent_Declare(
+  tinyfiledialogs
+  GIT_REPOSITORY https://github.com/native-toolkit/tinyfiledialogs.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(tinyfiledialogs)
+
 # Add the test source files
 set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 file(GLOB_RECURSE TESTS "${TEST_DIR}/*.cpp")
@@ -61,12 +69,15 @@ file(GLOB_RECURSE TESTS "${TEST_DIR}/*.cpp")
 add_executable(tests ${TESTS})
 
 # Add the executable target with all the collected sources
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c)
 add_subdirectory(mathz)
+
+# Skip precompiled headers for C file
+set_source_files_properties(${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC main/pch.h)
 
-target_include_directories(${PROJECT_NAME} PUBLIC submodules/json/include submodules/stb)
+target_include_directories(${PROJECT_NAME} PUBLIC submodules/json/include submodules/stb ${tinyfiledialogs_SOURCE_DIR})
 
 find_package(SFML 3.0 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE mathz sfml-graphics sfml-window sfml-system)

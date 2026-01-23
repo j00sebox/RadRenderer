@@ -1,50 +1,22 @@
 #include "file.hpp"
+#include "tinyfiledialogs.h"
 
-// Needed for Windows backslash shenanigans
-std::string NormalizePath(const std::string& path) 
+std::string OpenFileDialog()
 {
-    std::string normalized = path;
-    std::replace(normalized.begin(), normalized.end(), '\\', '/');
-    return normalized;
-}
+    const char* filterPatterns[] = { "*.gltf", "*.glb", "*.obj" };
 
-#ifdef _WIN32
+    const char* result = tinyfd_openFileDialog(
+        "Open Model",                    // title
+        "",                              // default path
+        3,                               // number of filter patterns
+        filterPatterns,                  // filter patterns
+        "3D Models (*.gltf, *.glb, *.obj)",  // filter description
+        0                                // allow multiple selects
+    );
 
-#include <windows.h>
-std::string OpenFileDialog() 
-{
-    OPENFILENAMEA ofn;
-    CHAR szFile[260] = { 0 };
-    ZeroMemory(&ofn, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = nullptr;
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "GLTF Files\0*.gltf;*.glb\0All Files\0*.*\0";
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-    std::string result;
-    if (GetOpenFileNameA(&ofn))
-    {
-        result = std::string(szFile);
+    if (result) {
+        return std::string(result);
     }
 
-    return NormalizePath(result);
-}
-
-#elif defined(__linux__)
-#include <cstdlib>
-
-std::string OpenFileDialog() 
-{
-  
-}
-#else
-std::string OpenFileDialog() 
-{
     return "";
 }
-#endif
-

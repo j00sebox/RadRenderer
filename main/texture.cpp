@@ -3,6 +3,11 @@
 
 #include <stb_image.h>
 
+Texture::Texture()
+    : m_width(1), m_height(1), m_channels(4), m_data{255, 255, 255, 255}
+{
+}
+
 Texture::Texture(const char* image_path)
 {
     unsigned char* rawData = stbi_load(image_path, &m_width, &m_height, &m_channels, 4);

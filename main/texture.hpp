@@ -10,7 +10,7 @@ struct Colour
 class Texture
 {
 public:
-    Texture() {}
+    Texture();
     Texture(const char* image_path);
     ~Texture();
 
