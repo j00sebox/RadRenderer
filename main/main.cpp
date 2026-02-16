@@ -9,7 +9,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
-#include <signal.h>
 
 int main()
 {
@@ -26,25 +25,23 @@ int main()
   sf::Clock clock;
 
   sf::Font font;
-  if (!font.openFromMemory(silkscreen_font, silkscreen_font_len))
-#ifdef _MSC_VER
-      __debugbreak();
-#else
-      raise(SIGTRAP);
-#endif
+  if(!font.openFromMemory(silkscreen_font, silkscreen_font_len))
+    return 0;
 
-  sf::Text fps_text = sf::Text(font, "0", 18);
+  const unsigned int font_size = 18;
+
+  sf::Text fps_text = sf::Text(font, "0", font_size);
   fps_text.setFillColor(sf::Color::White);
 
-  sf::Text frametime_text = sf::Text(font, "0", 18);
+  sf::Text frametime_text = sf::Text(font, "0", font_size);
   frametime_text.setFillColor(sf::Color::White);
   frametime_text.setPosition({0.f, 20.f});
 
-  sf::Text model_tri_text = sf::Text(font, "0", 18);
+  sf::Text model_tri_text = sf::Text(font, "0", font_size);
   model_tri_text.setFillColor(sf::Color::White);
   model_tri_text.setPosition({0.f, 40.f});
 
-  sf::Text rendered_tri_text = sf::Text(font, "0", 18);
+  sf::Text rendered_tri_text = sf::Text(font, "0", font_size);
   rendered_tri_text.setFillColor(sf::Color::White);
   rendered_tri_text.setPosition({0.f, 60.f});
 
