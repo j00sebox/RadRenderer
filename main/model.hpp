@@ -43,6 +43,7 @@ public:
   inline std::vector<Triangle>::iterator end() { return m_triangles.end(); }
   inline std::vector<Triangle>::const_iterator begin() const { return m_triangles.begin(); }
   inline std::vector<Triangle>::const_iterator end() const { return m_triangles.end(); }
+  inline std::size_t size() const { return m_triangles.size(); }
 
   void loadGLTF(const char* file_name);
 

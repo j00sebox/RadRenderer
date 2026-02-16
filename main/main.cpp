@@ -3,6 +3,7 @@
 #include "renderer.hpp"
 #include "vector.hpp"
 #include "file.hpp"
+#include "embedded_font.hpp"
 
 #include "../mathz/misc.hpp"
 
@@ -13,27 +14,42 @@
 int main()
 {
   const int width = 1280, height = 720;
-  const float _near = 0.1f, _far = 1000.f;
+  const float near = 0.1f, far = 1000.f;
 
   Model model("../assets/objs/avocado/Avocado.gltf");
-  Camera camera(width, height, _near, _far, 60.f);
+  Camera camera(width, height, near, far, 60.f);
 
-  Renderer renderer(width, height, _near, _far);
+  Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
   
   sf::Texture texture(sf::Vector2u( width, height ));
   sf::Clock clock;
 
   sf::Font font;
-  if (!font.openFromFile("../assets/fonts/arial_narrow_7.ttf"))
+  if (!font.openFromMemory(silkscreen_font, silkscreen_font_len))
 #ifdef _MSC_VER
       __debugbreak();
 #else
       raise(SIGTRAP);
 #endif
 
-  sf::Text fps_text = sf::Text(font, "0", 25);
-  fps_text.setFillColor(sf::Color::Red);
+  sf::Text fps_text = sf::Text(font, "0", 18);
+  fps_text.setFillColor(sf::Color::White);
+
+  sf::Text frametime_text = sf::Text(font, "0", 18);
+  frametime_text.setFillColor(sf::Color::White);
+  frametime_text.setPosition({0.f, 20.f});
+
+  sf::Text model_tri_text = sf::Text(font, "0", 18);
+  model_tri_text.setFillColor(sf::Color::White);
+  model_tri_text.setPosition({0.f, 40.f});
+
+  sf::Text rendered_tri_text = sf::Text(font, "0", 18);
+  rendered_tri_text.setFillColor(sf::Color::White);
+  rendered_tri_text.setPosition({0.f, 60.f});
+
+  sf::RectangleShape stats_background(sf::Vector2f(320.f, 85.f));
+  stats_background.setFillColor(sf::Color(50, 50, 50, 180));
 
   window.create(sf::VideoMode(sf::Vector2u(width, height)), "Rad Renderer", sf::Style::Default);
 
@@ -50,7 +66,6 @@ int main()
   float rotation_speed = 0.005f;
   float move_speed = 0.01f;
 
-  // FPS timing stuff
   float fps_timer = 0.0f;
   int frame_count = 0;
   float fps_update_interval = 1.0f; // Seconds
@@ -159,18 +174,25 @@ int main()
     fps_timer += elapsed_time.asSeconds();
     ++frame_count;
 
-    if (fps_timer >= fps_update_interval) 
+    if (fps_timer >= fps_update_interval)
     {
         current_fps = frame_count / fps_timer;
         fps_timer = 0.0f;
         frame_count = 0;
 
         fps_text.setString("FPS: " + std::to_string(static_cast<int>(current_fps)));
+        frametime_text.setString("Frame: " + std::to_string(elapsed_time.asMilliseconds()) + " ms");
+        model_tri_text.setString("Model triangles: " + std::to_string(model.size()));
+        rendered_tri_text.setString("Rendered triangles: " + std::to_string(renderer.getStats().triangles_rendered));
     }
 
     texture.update(renderer.getFrameBuffer());
     window.draw(sprite);
+    window.draw(stats_background);
     window.draw(fps_text);
+    window.draw(frametime_text);
+    window.draw(model_tri_text);
+    window.draw(rendered_tri_text);
     window.display();
     window.clear();
   }

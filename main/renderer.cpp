@@ -91,6 +91,8 @@ void Renderer::render(const Model& model, Camera& camera)
     rasterize(t, model.getTexture());
   }
 
+  m_stats.triangles_rendered = static_cast<int>(m_render_triangles.size());
+
   // Vectors needs to be empty for next redraw
   m_render_triangles.clear();
   m_clipped_triangles.clear();

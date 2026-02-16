@@ -4,6 +4,11 @@
 #include <cstdint>
 #include <memory>
 
+struct RenderStats
+{
+  int triangles_rendered = 0;
+};
+
 struct Pixel
 {
   Pixel() : r(0), g(0), b(0), a(0) {}
@@ -20,6 +25,7 @@ public:
 
   void render(const Model& model, Camera& camera);
   std::uint8_t* getFrameBuffer() const { return m_frame_buffer.get(); }
+  const RenderStats& getStats() const { return m_stats; }
 
 private:
   void rasterize(const Triangle& t, const Texture& texture = {});
@@ -47,4 +53,5 @@ private:
   unsigned int m_screen_width, m_screen_height, m_buffer_size;
   std::unique_ptr<std::uint8_t> m_frame_buffer;
   std::vector<float> m_depth_buffer;
+  RenderStats m_stats;
 };
