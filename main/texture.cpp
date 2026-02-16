@@ -4,7 +4,7 @@
 #include <stb_image.h>
 
 Texture::Texture()
-    : m_width(1), m_height(1), m_channels(4), m_data{255, 255, 255, 255}
+    : m_width(1), m_height(1), m_channels(4), m_data{255, 0, 255, 255}
 {
 }
 

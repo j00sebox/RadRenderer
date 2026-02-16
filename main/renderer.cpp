@@ -24,17 +24,12 @@ void Renderer::render(const Model& model, Camera& camera)
   // Clear screen to redraw
   clearFrameBuffer();
 
-  // Camera transform
   mathz::Mat4 cam_transform = camera.getTransform();
   m_view = cam_transform.inverse();
 
-  // Iterate through all triangles in the object
   for (Triangle triangle : model)
   {
-    // Apply model transform
     transformTriangle(triangle, model.getTransform());
-
-    // Convert to camera space
     transformTriangle(triangle, m_view);
 
     triangle.normal[0] = calculateNormal(triangle);
@@ -56,7 +51,6 @@ void Renderer::render(const Model& model, Camera& camera)
         mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
         float sign = ab.x * ac.y - ac.x * ab.y;
 
-        // Check if triangle is visible
         if (sign < 0)
             continue;
 
@@ -86,9 +80,10 @@ void Renderer::render(const Model& model, Camera& camera)
     m_render_triangles.push_back(triangle);
   }
 
+  const auto& textures = model.getTextures();
   for (const auto& t : m_render_triangles)
   {
-    rasterize(t, model.getTexture());
+    rasterize(t, textures);
   }
 
   m_stats.triangles_rendered = static_cast<int>(m_render_triangles.size());
@@ -104,7 +99,7 @@ Pixel Renderer::getColour(float lum)
     return p;
 }
 
-void Renderer::rasterize(const Triangle& t, const Texture& texture)
+void Renderer::rasterize(const Triangle& t, const std::vector<Texture>& textures)
 {
   int min_x, max_x;
   int min_y, max_y;
@@ -131,6 +126,8 @@ void Renderer::rasterize(const Triangle& t, const Texture& texture)
   min_y = std::max(min_y, 0);
   max_x = std::min(max_x, (int)m_screen_width);
   max_y = std::min(max_y, (int)m_screen_height);
+
+  const Texture& texture = textures[t.material_index];
 
   for (int y = min_y; y < max_y; y++)
   {
@@ -185,7 +182,6 @@ float Renderer::edgeFunction(float x0, float y0, float x1, float y1, float x2, f
 
 void Renderer::setPixel(int x, int y, const Pixel& pixel)
 {
-  // Calculate the index of the pixel in the framebuffer
   int index = (y * m_screen_width + x) * 4;
 
   std::memcpy(&m_frame_buffer.get()[index], &pixel, sizeof(Pixel));
@@ -264,10 +260,12 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     t1.normal[0] = t.normal[0];
     t1.normal[1] = t.normal[1];
     t1.normal[2] = t.normal[2];
+    t1.material_index = t.material_index;
 
     t2.normal[0] = t.normal[0];
     t2.normal[1] = t.normal[1];
     t2.normal[2] = t.normal[2];
+    t2.material_index = t.material_index;
 
     m_clipped_triangles.push_back(t1);
     m_clipped_triangles.push_back(t2);
@@ -285,6 +283,7 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     t1.normal[0] = t.normal[0];
     t1.normal[1] = t.normal[1];
     t1.normal[2] = t.normal[2];
+    t1.material_index = t.material_index;
 
     m_clipped_triangles.push_back(t1);
 

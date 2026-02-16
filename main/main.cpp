@@ -13,9 +13,9 @@
 int main()
 {
   const int width = 1280, height = 720;
-  const float near = 0.1f, far = 1000.f;
+  const float near = 0.1f, far = 10000.f;
 
-  Model model("../assets/objs/avocado/Avocado.gltf");
+  Model model("../assets/objs/Sponza/glTF/Sponza.gltf");
   Camera camera(width, height, near, far, 60.f);
 
   Renderer renderer(width, height, near, far);
@@ -53,15 +53,15 @@ int main()
   sf::Sprite sprite(texture);
   sf::Vector2i window_center(width / 2, height / 2);
 
-  model.setPosition(0.f, 0.f, 1.f);
-  model.setScale(3.f);
+  model.setPosition(0.f, 0.f, 0.f);
+  model.setScale(0.01f);
 
   bool mouse_down = false;
   float pitch = 0.f, yaw = 0.f;
   float forward = 0.f;
   float right = 0.f;
   float rotation_speed = 0.005f;
-  float move_speed = 0.01f;
+  float move_speed = 0.1f;
 
   float fps_timer = 0.0f;
   int frame_count = 0;

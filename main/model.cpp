@@ -122,8 +122,10 @@ void Model::loadGLTF(const char* file_name)
     std::vector<float> vertices = loader.getPositions();
     std::vector<unsigned int> indices = loader.getIndices();
     std::vector<float> uvs = loader.getTexCoords();
+    std::vector<int> material_indices = loader.getMaterialIndices();
 
-    for (int i = 0; i < indices.size(); i += 3)
+    int triangle_index = 0;
+    for (size_t i = 0; i < indices.size(); i += 3)
     {
         int index1 = indices[i];
         int index2 = indices[i + 1];
@@ -164,16 +166,31 @@ void Model::loadGLTF(const char* file_name)
 
         m_triangles.push_back({
             .vertices = { vertex1, vertex2, vertex3 },
-            .uv = { uv1, uv2, uv3 }
+            .uv = { uv1, uv2, uv3 },
+            .material_index = material_indices[triangle_index]
         });
+
+        ++triangle_index;
     }
 
     std::vector<std::string> texture_paths = loader.getTextures();
 
-    int i = 0;
-    for (std::string texture_path : texture_paths)
+    for (const std::string& texture_path : texture_paths)
     {
-        m_textures[i] = Texture(texture_path.c_str());
-        ++i;
+        if (!texture_path.empty())
+            m_textures.emplace_back(texture_path.c_str());
+        else
+            m_textures.emplace_back(); 
+    }
+
+    // Add default pink texture at the end for triangles with no material
+    int default_material_index = static_cast<int>(m_textures.size());
+    m_textures.emplace_back(); 
+
+    // Fix up any invalid material indices
+    for (Triangle& tri : m_triangles)
+    {
+        if (tri.material_index < 0 || tri.material_index >= default_material_index)
+            tri.material_index = default_material_index;
     }
 }

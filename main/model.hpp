@@ -14,6 +14,7 @@ struct Triangle
   mathz::Vec3 normal[3];
   mathz::Vec2<float> uv[3];
   float z[3] = {};
+  int material_index = -1;
 
   mathz::Vec3 center()
   {
@@ -35,7 +36,9 @@ public:
   const mathz::Mat4& getTransform() const { return m_transform; }
   void resetTransform();
 
-  const Texture& getTexture(int index = 0) const { return m_textures[index]; }
+  const Texture& getTexture(int index) const { return m_textures[index]; }
+  const std::vector<Texture>& getTextures() const { return m_textures; }
+  bool hasTexture(int index) const { return index >= 0 && index < (int)m_textures.size(); }
 
   Colour sampleTexture(int u, int v, int index = 0);
 
@@ -56,5 +59,5 @@ private:
   std::vector<Triangle> m_triangles;
   mathz::Mat4 m_translation, m_rotation, m_scale;
   mathz::Mat4 m_transform;
-  Texture m_textures[4];
+  std::vector<Texture> m_textures;
 };

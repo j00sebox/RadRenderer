@@ -46,220 +46,157 @@ void GLTFLoader::readFile(const char* path)
 
     loadBin(bin_path.c_str());
 
-    json attributes = m_json["meshes"][0]["primitives"][0]["attributes"];
-
-    m_position_ind = attributes["POSITION"];
-    m_tex_coord_ind = attributes["TEXCOORD_0"];
-    m_normal_ind = attributes["NORMAL"];
-    m_indices_ind = m_json["meshes"][0]["primitives"][0]["indices"];
-
-    json materials = m_json["materials"][0];
-
-    m_bc_tex_ind = materials["pbrMetallicRoughness"]["baseColorTexture"]["index"];
-
-    if (!materials["pbrMetallicRoughness"]["metallicRoughnessTexture"].is_null())
+    // Iterate all meshes and their primitives
+    for (const auto& mesh : m_json["meshes"])
     {
-        m_spec_tex_ind = materials["pbrMetallicRoughness"]["metallicRoughnessTexture"]["index"];
-    }
+        for (const auto& primitive : mesh["primitives"])
+        {
+            PrimitiveData prim;
 
-    if (!materials["normalTexture"].is_null())
-    {
-        m_norm_tex_ind = materials["normalTexture"]["index"];
-    }
+            const auto& attributes = primitive["attributes"];
 
-    if (!materials["occlusionTexture"].is_null())
-    {
-        m_occ_tex_ind = materials["occlusionTexture"]["index"];
+            prim.position_accessor = attributes["POSITION"];
+
+            if (attributes.contains("NORMAL"))
+                prim.normal_accessor = attributes["NORMAL"];
+
+            if (attributes.contains("TEXCOORD_0"))
+                prim.texcoord_accessor = attributes["TEXCOORD_0"];
+
+            prim.indices_accessor = primitive["indices"];
+
+            if (primitive.contains("material"))
+                prim.material_index = primitive["material"];
+
+            m_primitives.push_back(prim);
+        }
     }
 }
 
 std::vector<float> GLTFLoader::getPositions() const
 {
-    json accessor = m_json["accessors"][m_position_ind];
+    std::vector<float> all_positions;
 
-    std::vector<float> positions;
-    extractFloats(accessor, positions);
+    for (const auto& prim : m_primitives)
+    {
+        extractFloats(prim.position_accessor, all_positions);
+    }
 
-    return positions;
+    return all_positions;
 }
 
 std::vector<float> GLTFLoader::getNormals() const
 {
-    json accessor = m_json["accessors"][m_normal_ind];
+    std::vector<float> all_normals;
 
-    std::vector<float> normals;
-    extractFloats(accessor, normals);
+    for (const auto& prim : m_primitives)
+    {
+        extractFloats(prim.normal_accessor, all_normals);
+    }
 
-    return normals;
+    return all_normals;
 }
 
 std::vector<float> GLTFLoader::getTexCoords() const
 {
-    json accessor = m_json["accessors"][m_tex_coord_ind];
+    std::vector<float> all_texcoords;
 
-    std::vector<float> tex_coords;
-    extractFloats(accessor, tex_coords);
+    for (const auto& prim : m_primitives)
+    {
+        extractFloats(prim.texcoord_accessor, all_texcoords);
+    }
 
-    return tex_coords;
+    return all_texcoords;
 }
 
 std::vector<unsigned int> GLTFLoader::getIndices() const
 {
-    json accessor = m_json["accessors"][m_indices_ind];
+    std::vector<unsigned int> all_indices;
+    unsigned int vertex_offset = 0;
 
-    std::vector<unsigned int> indices;
-
-    unsigned int index = accessor.value("bufferView", 0);
-    unsigned int byte_offset = accessor.value("byteOffset", 0);
-    unsigned int count = accessor["count"];
-    unsigned int component_type = accessor["componentType"];
-    std::string type = accessor["type"];
-
-    json buffer = m_json["bufferViews"][index];
-    unsigned int buffer_byte_offset = buffer.value("byteOffset", 0) + byte_offset;
-
-    switch (component_type)
+    for (const auto& prim : m_primitives)
     {
-    case 5125:
-    {
-        unsigned int length = count * 4;
+        json accessor = m_json["accessors"][prim.position_accessor];
+        unsigned int vertex_count = accessor["count"];
 
-        for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
+        extractIndices(prim.indices_accessor, all_indices, vertex_offset);
+
+        vertex_offset += vertex_count;
+    }
+
+    return all_indices;
+}
+
+std::vector<int> GLTFLoader::getMaterialIndices() const
+{
+    std::vector<int> material_indices;
+
+    for (const auto& primtive : m_primitives)
+    {
+        json accessor = m_json["accessors"][primtive.indices_accessor];
+        unsigned int index_count = accessor["count"];
+        unsigned int triangle_count = index_count / 3;
+
+        for (unsigned int i = 0; i < triangle_count; ++i)
         {
-            unsigned char byte[] = { m_data[i++], m_data[i++], m_data[i++], m_data[i++] };
-            unsigned int val;
-
-            std::memcpy(&val, byte, sizeof(unsigned int));
-
-            indices.push_back(val);
+            material_indices.push_back(primtive.material_index);
         }
-        break;
     }
 
-    case 5123:
-    {
-        unsigned int length = count * 2;
-
-        for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
-        {
-            unsigned char byte[] = { m_data[i++], m_data[i++] };
-            unsigned short val;
-
-            std::memcpy(&val, byte, sizeof(unsigned short));
-
-            indices.push_back(val);
-        }
-        break;
-    }
-
-
-    // TODO: add the other types
-//		case 5122:
-//			for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
-//			{
-//				unsigned char byte[] = { m_data[i++], m_data[i++], m_data[i++], m_data[i++] };
-//				float val;
-//
-//				std::memcpy(&val, byte, sizeof(short));
-//
-//				indices.push_back(val);
-//			}
-//			break;*/
-    }
-
-    return indices;
+    return material_indices;
 }
 
 std::vector<std::string> GLTFLoader::getTextures() const
 {
-    std::vector<std::string> vec;
+    std::vector<std::string> textures;
 
-    vec.emplace_back(getBaseColourTexture());
+    if (!m_json.contains("materials"))
+        return textures;
 
-    if (m_spec_tex_ind != -1)
-        vec.emplace_back(getSpecularTexture());
+    for (const auto& material : m_json["materials"])
+    {
+        if (material.contains("pbrMetallicRoughness") &&
+            material["pbrMetallicRoughness"].contains("baseColorTexture"))
+        {
+            int tex_index = material["pbrMetallicRoughness"]["baseColorTexture"]["index"];
+            int image_index = m_json["textures"][tex_index]["source"];
+            std::string image_uri = m_json["images"][image_index]["uri"];
+            textures.push_back(m_base_dir + image_uri);
+        }
+        else
+        {
+            // No texture for this material, push empty string
+            textures.push_back("");
+        }
+    }
 
-    if (m_norm_tex_ind != -1)
-        vec.emplace_back(getNormalTexture());
-
-    if (m_occ_tex_ind != -1)
-        vec.emplace_back(getOcclusionTexture());
-
-    return vec;
-}
-
-std::string GLTFLoader::getBaseColourTexture() const
-{
-    json uri = m_json["images"][m_bc_tex_ind];
-    std::string image = uri["uri"];
-
-    return m_base_dir + image;
-}
-
-std::string GLTFLoader::getSpecularTexture() const
-{
-    json uri;
-    if (m_spec_tex_ind != -1)
-        uri = m_json["images"][m_spec_tex_ind];
-    else
-        return "none";
-
-    std::string image = uri["uri"];
-
-    return m_base_dir + image;
-}
-
-std::string GLTFLoader::getNormalTexture() const
-{
-    json uri;
-    if (m_spec_tex_ind != -1)
-        uri = m_json["images"][m_norm_tex_ind];
-    else
-        return "none";
-
-    std::string image = uri["uri"];
-
-    return m_base_dir + image;
-}
-
-std::string GLTFLoader::getOcclusionTexture() const
-{
-    json uri;
-    if (m_spec_tex_ind != -1)
-        uri = m_json["images"][m_occ_tex_ind];
-    else
-        return "none";
-
-    std::string image = uri["uri"];
-
-    return m_base_dir + image;
+    return textures;
 }
 
 void GLTFLoader::loadBin(const char* file_path)
 {
-    // Open file
     std::streampos file_size;
     std::ifstream file(file_path, std::ios::binary);
 
-    // Get size
     file.seekg(0, std::ios::end);
     file_size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    // Read data
     m_data.assign(file_size, 0);
     file.read((char*)&m_data[0], file_size);
 }
 
-void GLTFLoader::extractFloats(const json& accessor, std::vector<float>& flts) const
+void GLTFLoader::extractFloats(unsigned int accessor_index, std::vector<float>& flts) const
 {
+    json accessor = m_json["accessors"][accessor_index];
+
     unsigned int index = accessor.value("bufferView", 0);
     unsigned int byte_offset = accessor.value("byteOffset", 0);
     unsigned int count = accessor["count"];
     std::string type = accessor["type"];
 
     json buffer = m_json["bufferViews"][index];
-    unsigned int buffer_offset = buffer.value("byteOffset", 0); // buffer["byteOffset"];
+    unsigned int buffer_offset = buffer.value("byteOffset", 0);
     unsigned int buffer_byte_offset = buffer_offset + byte_offset;
     unsigned int length = count * GetVertexCount(type) * 4;
 
@@ -271,5 +208,53 @@ void GLTFLoader::extractFloats(const json& accessor, std::vector<float>& flts) c
         std::memcpy(&val, byte, sizeof(float));
 
         flts.push_back(val);
+    }
+}
+
+void GLTFLoader::extractIndices(unsigned int accessor_index, std::vector<unsigned int>& indices, unsigned int vertex_offset) const
+{
+    json accessor = m_json["accessors"][accessor_index];
+
+    unsigned int index = accessor.value("bufferView", 0);
+    unsigned int byte_offset = accessor.value("byteOffset", 0);
+    unsigned int count = accessor["count"];
+    unsigned int component_type = accessor["componentType"];
+
+    json buffer = m_json["bufferViews"][index];
+    unsigned int buffer_byte_offset = buffer.value("byteOffset", 0) + byte_offset;
+
+    switch (component_type)
+    {
+    case 5125: // UNSIGNED_INT
+    {
+        unsigned int length = count * 4;
+
+        for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
+        {
+            unsigned char byte[] = { m_data[i++], m_data[i++], m_data[i++], m_data[i++] };
+            unsigned int val;
+
+            std::memcpy(&val, byte, sizeof(unsigned int));
+
+            indices.push_back(val + vertex_offset);
+        }
+        break;
+    }
+
+    case 5123: // UNSIGNED_SHORT
+    {
+        unsigned int length = count * 2;
+
+        for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
+        {
+            unsigned char byte[] = { m_data[i++], m_data[i++] };
+            unsigned short val;
+
+            std::memcpy(&val, byte, sizeof(unsigned short));
+
+            indices.push_back(val + vertex_offset);
+        }
+        break;
+    }
     }
 }

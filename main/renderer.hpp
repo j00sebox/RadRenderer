@@ -28,7 +28,7 @@ public:
   const RenderStats& getStats() const { return m_stats; }
 
 private:
-  void rasterize(const Triangle& t, const Texture& texture = {});
+  void rasterize(const Triangle& t, const std::vector<Texture>& textures);
   float edgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
   void setPixel(int x, int y, const Pixel& col);
   Pixel getColour(float lum);
