@@ -3,10 +3,19 @@
 
 #include <cstdint>
 #include <memory>
+#include <thread>
+#include <atomic>
 
 struct RenderStats
 {
   int triangles_rendered = 0;
+};
+
+struct Tile
+{
+  int x0, y0, x1, y1;  // Screen bounds
+  std::vector<size_t> triangles;  // Indices into render mesh
+  std::vector<size_t> clipped_triangles;  // Indices into clipped mesh
 };
 
 struct Pixel
@@ -28,6 +37,7 @@ public:
   const RenderStats& getStats() const { return m_stats; }
 
 private:
+  void rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures, int tile_x0, int tile_y0, int tile_x1, int tile_y1);
   void rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures);
   float edgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
   void setPixel(int x, int y, const Pixel& col);
@@ -38,6 +48,8 @@ private:
   void transformVertices(MeshData& mesh, const mathz::Mat4& transform);
   mathz::Vec3 calculateNormal(size_t tri_idx, const MeshData& mesh);
   void clearFrameBuffer();
+  void binTriangles();
+  void renderTile(size_t tile_idx, const MeshData& model_mesh, const std::vector<Texture>& textures);
 
   float m_far, m_near;
 
@@ -55,4 +67,10 @@ private:
   std::unique_ptr<std::uint8_t> m_frame_buffer;
   std::vector<float> m_depth_buffer;
   RenderStats m_stats;
+
+  // Tiling
+  static constexpr int TILE_SIZE = 64;
+  std::vector<Tile> m_tiles;
+  unsigned int m_tiles_x, m_tiles_y;
+  std::atomic<int> m_triangles_rendered{0};
 };

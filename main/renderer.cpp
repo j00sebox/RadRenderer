@@ -18,6 +18,23 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
 
   m_directional_light = { 0.f, 4.f, -1.f };
   m_directional_light.normalize();
+
+  // Initialize tiles
+  m_tiles_x = (screen_width + TILE_SIZE - 1) / TILE_SIZE;
+  m_tiles_y = (screen_height + TILE_SIZE - 1) / TILE_SIZE;
+  m_tiles.resize(m_tiles_x * m_tiles_y);
+
+  for (unsigned int ty = 0; ty < m_tiles_y; ++ty)
+  {
+    for (unsigned int tx = 0; tx < m_tiles_x; ++tx)
+    {
+      Tile& tile = m_tiles[ty * m_tiles_x + tx];
+      tile.x0 = tx * TILE_SIZE;
+      tile.y0 = ty * TILE_SIZE;
+      tile.x1 = std::min(tile.x0 + TILE_SIZE, (int)screen_width);
+      tile.y1 = std::min(tile.y0 + TILE_SIZE, (int)screen_height);
+    }
+  }
 }
 
 void Renderer::render(const Model& model, Camera& camera)
@@ -83,9 +100,10 @@ void Renderer::render(const Model& model, Camera& camera)
   // Apply perspective and backface cull to clipped triangles
   transformVertices(m_clipped_mesh, camera.getPerspective());
 
-  const auto& textures = model.getTextures();
+  // Apply perspective to main mesh
+  transformVertices(m_render_mesh, camera.getPerspective());
 
-  // Rasterize clipped triangles (clipped mesh has its own uvs/materials)
+  // Prepare z values and filter by screen-space winding
   for (size_t i = 0; i < m_clipped_mesh.triangleCount(); ++i)
   {
     size_t base = i * 3;
@@ -95,20 +113,16 @@ void Renderer::render(const Model& model, Camera& camera)
     float sign = ab.x * ac.y - ac.x * ab.y;
 
     if (sign < 0)
+    {
+      m_clipped_mesh.z[base] = -999.f; // Mark as culled
       continue;
+    }
 
     m_clipped_mesh.z[base] = m_clipped_mesh.vertices[base].z;
     m_clipped_mesh.z[base + 1] = m_clipped_mesh.vertices[base + 1].z;
     m_clipped_mesh.z[base + 2] = m_clipped_mesh.vertices[base + 2].z;
-
-    rasterize(i, m_clipped_mesh, m_clipped_mesh, textures);
   }
 
-  // Apply perspective to main mesh
-  transformVertices(m_render_mesh, camera.getPerspective());
-
-  // Rasterize visible triangles (use model_mesh for uvs/materials)
-  int rendered = 0;
   for (size_t i = 0; i < triangle_count; ++i)
   {
     if (!m_visible[i])
@@ -121,17 +135,48 @@ void Renderer::render(const Model& model, Camera& camera)
     float sign = ab.x * ac.y - ac.x * ab.y;
 
     if (sign < 0)
+    {
+      m_visible[i] = false;
       continue;
+    }
 
     m_render_mesh.z[base] = m_render_mesh.vertices[base].z;
     m_render_mesh.z[base + 1] = m_render_mesh.vertices[base + 1].z;
     m_render_mesh.z[base + 2] = m_render_mesh.vertices[base + 2].z;
-
-    rasterize(i, m_render_mesh, model_mesh, textures);
-    ++rendered;
   }
 
-  m_stats.triangles_rendered = rendered + static_cast<int>(m_clipped_mesh.triangleCount());
+  // Bin triangles into tiles
+  binTriangles();
+
+  const auto& textures = model.getTextures();
+  m_triangles_rendered = 0;
+
+  // Render tiles in parallel
+  unsigned int num_threads = std::thread::hardware_concurrency();
+  if (num_threads == 0) num_threads = 4;
+
+  std::vector<std::thread> threads;
+  std::atomic<size_t> next_tile{0};
+  size_t total_tiles = m_tiles.size();
+
+  for (unsigned int t = 0; t < num_threads; ++t)
+  {
+    threads.emplace_back([this, &next_tile, total_tiles, &model_mesh, &textures]()
+    {
+      while (true)
+      {
+        size_t tile_idx = next_tile.fetch_add(1);
+        if (tile_idx >= total_tiles)
+          break;
+        renderTile(tile_idx, model_mesh, textures);
+      }
+    });
+  }
+
+  for (auto& t : threads)
+    t.join();
+
+  m_stats.triangles_rendered = m_triangles_rendered;
 }
 
 void Renderer::transformVertices(MeshData& mesh, const mathz::Mat4& transform)
@@ -554,4 +599,286 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
 
   // in_count == 0 - triangle is fully clipped
   return true;
+}
+
+void Renderer::binTriangles()
+{
+  // Clear all tile triangle lists
+  for (Tile& tile : m_tiles)
+  {
+    tile.triangles.clear();
+    tile.clipped_triangles.clear();
+  }
+
+  // Bin main mesh triangles
+  for (size_t i = 0; i < m_visible.size(); ++i)
+  {
+    if (!m_visible[i])
+      continue;
+
+    size_t base = i * 3;
+
+    // Convert to screen space and compute bounding box
+    auto [sx0, sy0] = imageToScreenSpace(m_render_mesh.vertices[base].x, m_render_mesh.vertices[base].y);
+    auto [sx1, sy1] = imageToScreenSpace(m_render_mesh.vertices[base + 1].x, m_render_mesh.vertices[base + 1].y);
+    auto [sx2, sy2] = imageToScreenSpace(m_render_mesh.vertices[base + 2].x, m_render_mesh.vertices[base + 2].y);
+
+    int min_x = std::min({sx0, sx1, sx2});
+    int max_x = std::max({sx0, sx1, sx2});
+    int min_y = std::min({sy0, sy1, sy2});
+    int max_y = std::max({sy0, sy1, sy2});
+
+    // Clamp to screen
+    min_x = std::max(min_x, 0);
+    min_y = std::max(min_y, 0);
+    max_x = std::min(max_x, (int)m_screen_width - 1);
+    max_y = std::min(max_y, (int)m_screen_height - 1);
+
+    if (min_x > max_x || min_y > max_y)
+      continue;
+
+    // Find overlapping tiles
+    int tile_x0 = min_x / TILE_SIZE;
+    int tile_y0 = min_y / TILE_SIZE;
+    int tile_x1 = max_x / TILE_SIZE;
+    int tile_y1 = max_y / TILE_SIZE;
+
+    for (int ty = tile_y0; ty <= tile_y1; ++ty)
+    {
+      for (int tx = tile_x0; tx <= tile_x1; ++tx)
+      {
+        m_tiles[ty * m_tiles_x + tx].triangles.push_back(i);
+      }
+    }
+  }
+
+  // Bin clipped mesh triangles
+  for (size_t i = 0; i < m_clipped_mesh.triangleCount(); ++i)
+  {
+    size_t base = i * 3;
+
+    // Skip culled triangles
+    if (m_clipped_mesh.z[base] < -100.f)
+      continue;
+
+    auto [sx0, sy0] = imageToScreenSpace(m_clipped_mesh.vertices[base].x, m_clipped_mesh.vertices[base].y);
+    auto [sx1, sy1] = imageToScreenSpace(m_clipped_mesh.vertices[base + 1].x, m_clipped_mesh.vertices[base + 1].y);
+    auto [sx2, sy2] = imageToScreenSpace(m_clipped_mesh.vertices[base + 2].x, m_clipped_mesh.vertices[base + 2].y);
+
+    int min_x = std::min({sx0, sx1, sx2});
+    int max_x = std::max({sx0, sx1, sx2});
+    int min_y = std::min({sy0, sy1, sy2});
+    int max_y = std::max({sy0, sy1, sy2});
+
+    min_x = std::max(min_x, 0);
+    min_y = std::max(min_y, 0);
+    max_x = std::min(max_x, (int)m_screen_width - 1);
+    max_y = std::min(max_y, (int)m_screen_height - 1);
+
+    if (min_x > max_x || min_y > max_y)
+      continue;
+
+    int tile_x0 = min_x / TILE_SIZE;
+    int tile_y0 = min_y / TILE_SIZE;
+    int tile_x1 = max_x / TILE_SIZE;
+    int tile_y1 = max_y / TILE_SIZE;
+
+    for (int ty = tile_y0; ty <= tile_y1; ++ty)
+    {
+      for (int tx = tile_x0; tx <= tile_x1; ++tx)
+      {
+        m_tiles[ty * m_tiles_x + tx].clipped_triangles.push_back(i);
+      }
+    }
+  }
+}
+
+void Renderer::renderTile(size_t tile_idx, const MeshData& model_mesh, const std::vector<Texture>& textures)
+{
+  const Tile& tile = m_tiles[tile_idx];
+  int count = 0;
+
+  // Render main mesh triangles in this tile
+  for (size_t tri_idx : tile.triangles)
+  {
+    rasterize(tri_idx, m_render_mesh, model_mesh, textures, tile.x0, tile.y0, tile.x1, tile.y1);
+    ++count;
+  }
+
+  // Render clipped triangles in this tile
+  for (size_t tri_idx : tile.clipped_triangles)
+  {
+    rasterize(tri_idx, m_clipped_mesh, m_clipped_mesh, textures, tile.x0, tile.y0, tile.x1, tile.y1);
+    ++count;
+  }
+
+  m_triangles_rendered += count;
+}
+
+void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures, int tile_x0, int tile_y0, int tile_x1, int tile_y1)
+{
+  size_t base = tri_idx * 3;
+
+  mathz::Vec2<int> v0 = {imageToScreenSpace(transformed.vertices[base].x, transformed.vertices[base].y)};
+  mathz::Vec2<int> v1 = {imageToScreenSpace(transformed.vertices[base + 1].x, transformed.vertices[base + 1].y)};
+  mathz::Vec2<int> v2 = {imageToScreenSpace(transformed.vertices[base + 2].x, transformed.vertices[base + 2].y)};
+
+  // Compute triangle bounding box, clipped to tile bounds
+  int min_x = std::max({std::min({v0.x, v1.x, v2.x}), tile_x0, 0});
+  int max_x = std::min({std::max({v0.x, v1.x, v2.x}), tile_x1, (int)m_screen_width});
+  int min_y = std::max({std::min({v0.y, v1.y, v2.y}), tile_y0, 0});
+  int max_y = std::min({std::max({v0.y, v1.y, v2.y}), tile_y1, (int)m_screen_height});
+
+  if (min_x >= max_x || min_y >= max_y)
+    return;
+
+  const Texture& texture = textures[source.materials[tri_idx]];
+
+  const mathz::Vec3& n0 = transformed.normals[base];
+  const mathz::Vec3& n1 = transformed.normals[base + 1];
+  const mathz::Vec3& n2 = transformed.normals[base + 2];
+
+  const mathz::Vec2<float>& uv0 = source.uvs[base];
+  const mathz::Vec2<float>& uv1 = source.uvs[base + 1];
+  const mathz::Vec2<float>& uv2 = source.uvs[base + 2];
+
+  float tz0 = transformed.z[base];
+  float tz1 = transformed.z[base + 1];
+  float tz2 = transformed.z[base + 2];
+
+  float fx0 = (float)v0.x, fy0 = (float)v0.y;
+  float fx1 = (float)v1.x, fy1 = (float)v1.y;
+  float fx2 = (float)v2.x, fy2 = (float)v2.y;
+
+  float e0_dx = fy1 - fy0;
+  float e0_dy = fx0 - fx1;
+  float e1_dx = fy2 - fy1;
+  float e1_dy = fx1 - fx2;
+  float e2_dx = fy0 - fy2;
+  float e2_dy = fx2 - fx0;
+
+  float area_t = (fx2 - fx0) * (fy1 - fy0) - (fy2 - fy0) * (fx1 - fx0);
+  if (area_t == 0.0f) return;
+  float inv_area = 1.0f / area_t;
+
+  float start_x = min_x + 0.5f;
+  float start_y = min_y + 0.5f;
+
+  float e0_row = (start_x - fx0) * (fy1 - fy0) - (start_y - fy0) * (fx1 - fx0);
+  float e1_row = (start_x - fx1) * (fy2 - fy1) - (start_y - fy1) * (fx2 - fx1);
+  float e2_row = (start_x - fx2) * (fy0 - fy2) - (start_y - fy2) * (fx0 - fx2);
+
+  __m128 e0_dx4 = _mm_set1_ps(e0_dx * 4.0f);
+  __m128 e1_dx4 = _mm_set1_ps(e1_dx * 4.0f);
+  __m128 e2_dx4 = _mm_set1_ps(e2_dx * 4.0f);
+  __m128 e0_dx_step = _mm_setr_ps(0, e0_dx, e0_dx * 2, e0_dx * 3);
+  __m128 e1_dx_step = _mm_setr_ps(0, e1_dx, e1_dx * 2, e1_dx * 3);
+  __m128 e2_dx_step = _mm_setr_ps(0, e2_dx, e2_dx * 2, e2_dx * 3);
+  __m128 zeros = _mm_setzero_ps();
+
+  for (int y = min_y; y < max_y; y++)
+  {
+    float e0 = e0_row;
+    float e1 = e1_row;
+    float e2 = e2_row;
+
+    int x = min_x;
+
+    for (; x + 4 <= max_x; x += 4)
+    {
+      __m128 edge0 = _mm_add_ps(_mm_set1_ps(e0), e0_dx_step);
+      __m128 edge1 = _mm_add_ps(_mm_set1_ps(e1), e1_dx_step);
+      __m128 edge2 = _mm_add_ps(_mm_set1_ps(e2), e2_dx_step);
+
+      __m128 mask0 = _mm_cmpge_ps(edge0, zeros);
+      __m128 mask1 = _mm_cmpge_ps(edge1, zeros);
+      __m128 mask2 = _mm_cmpge_ps(edge2, zeros);
+      __m128 inside = _mm_and_ps(_mm_and_ps(mask0, mask1), mask2);
+
+      int mask = _mm_movemask_ps(inside);
+
+      if (mask != 0)
+      {
+        alignas(16) float e0_arr[4], e1_arr[4], e2_arr[4];
+        _mm_store_ps(e0_arr, edge0);
+        _mm_store_ps(e1_arr, edge1);
+        _mm_store_ps(e2_arr, edge2);
+
+        for (int i = 0; i < 4; ++i)
+        {
+          if (mask & (1 << i))
+          {
+            float w0 = e1_arr[i] * inv_area;
+            float w1 = e2_arr[i] * inv_area;
+            float w2 = e0_arr[i] * inv_area;
+
+            float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
+
+            int px = x + i;
+            int index = y * m_screen_width + px;
+
+            if (int_z > m_depth_buffer[index])
+            {
+              mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
+              Colour colour = texture.sample(uv.x, uv.y);
+
+              Pixel pixel = {
+                std::uint8_t(colour.r * 255),
+                std::uint8_t(colour.g * 255),
+                std::uint8_t(colour.b * 255),
+                std::uint8_t(colour.a * 255)
+              };
+
+              int fb_index = index * 4;
+              std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
+              m_depth_buffer[index] = int_z;
+            }
+          }
+        }
+      }
+
+      e0 += e0_dx * 4;
+      e1 += e1_dx * 4;
+      e2 += e2_dx * 4;
+    }
+
+    for (; x < max_x; x++)
+    {
+      if (e0 >= 0 && e1 >= 0 && e2 >= 0)
+      {
+        float w0 = e1 * inv_area;
+        float w1 = e2 * inv_area;
+        float w2 = e0 * inv_area;
+
+        float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
+
+        int index = y * m_screen_width + x;
+
+        if (int_z > m_depth_buffer[index])
+        {
+          mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
+          Colour colour = texture.sample(uv.x, uv.y);
+
+          Pixel pixel = {
+            std::uint8_t(colour.r * 255),
+            std::uint8_t(colour.g * 255),
+            std::uint8_t(colour.b * 255),
+            std::uint8_t(colour.a * 255)
+          };
+
+          int fb_index = index * 4;
+          std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
+          m_depth_buffer[index] = int_z;
+        }
+      }
+
+      e0 += e0_dx;
+      e1 += e1_dx;
+      e2 += e2_dx;
+    }
+
+    e0_row += e0_dy;
+    e1_row += e1_dy;
+    e2_row += e2_dy;
+  }
 }
