@@ -5,11 +5,12 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <xmmintrin.h>  // SSE
+#include <emmintrin.h>  // SSE2
 
 Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far)
-
     : m_screen_width(screen_width), m_screen_height(screen_height),
-      m_buffer_size(screen_width * screen_height * 4), // RGBA
+      m_buffer_size(screen_width * screen_height * 4),
       m_near(near), m_far(far),
       m_depth_buffer(screen_width * screen_height, -1.f)
 {
@@ -21,76 +22,182 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
 
 void Renderer::render(const Model& model, Camera& camera)
 {
-  // Clear screen to redraw
   clearFrameBuffer();
 
-  mathz::Mat4 cam_transform = camera.getTransform();
-  m_view = cam_transform.inverse();
+  const MeshData& model_mesh = model.getMeshData();
+  size_t triangle_count = model_mesh.triangleCount();
+  size_t vertex_count = model_mesh.vertices.size();
 
-  for (Triangle triangle : model)
+  // Only copy vertices (we need to transform them)
+  // UVs and materials are read-only - reference from model
+  if (m_render_mesh.vertices.size() != vertex_count)
   {
-    transformTriangle(triangle, model.getTransform());
-    transformTriangle(triangle, m_view);
-
-    triangle.normal[0] = calculateNormal(triangle);
-    triangle.normal[1] = triangle.normal[0];
-    triangle.normal[2] = triangle.normal[0];
-    
-    bool clipped = false;
-
-    // Clip on near and far planes
-    // First parameter is plane point, second is normal
-    clipped |= clipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, triangle); // Front plane
-    clipped |= clipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, triangle);   // Back plane
-
-    if (!clipped)
-    {
-        transformTriangle(triangle, camera.getPerspective());
-
-        mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
-        mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
-        float sign = ab.x * ac.y - ac.x * ab.y;
-
-        if (sign < 0)
-            continue;
-
-        triangle.z[0] = triangle.vertices[0].z;
-        triangle.z[1] = triangle.vertices[1].z;
-        triangle.z[2] = triangle.vertices[2].z;
-
-        m_render_triangles.push_back(triangle);
-    }
+    m_render_mesh.vertices.resize(vertex_count);
+    m_render_mesh.normals.resize(vertex_count);
+    m_render_mesh.z.resize(vertex_count);
+    m_visible.resize(triangle_count);
   }
 
-  for (Triangle& triangle : m_clipped_triangles)
-  {
-    transformTriangle(triangle, camera.getPerspective());
+  std::memcpy(m_render_mesh.vertices.data(), model_mesh.vertices.data(), vertex_count * sizeof(mathz::Vec3));
 
-    mathz::Vec3 ab = triangle.vertices[1] - triangle.vertices[0];
-    mathz::Vec3 ac = triangle.vertices[2] - triangle.vertices[0];
+  // Transform all vertices by model transform, then view transform
+  mathz::Mat4 cam_transform = camera.getTransform();
+  m_view = cam_transform.inverse();
+  mathz::Mat4 model_view = m_view * model.getTransform();
+
+  transformVertices(m_render_mesh, model_view);
+
+  // Clear clipped mesh
+  m_clipped_mesh.clear();
+
+  // Calculate normals, early backface cull, and clip in one pass
+  for (size_t i = 0; i < triangle_count; ++i)
+  {
+    size_t base = i * 3;
+
+    // Calculate normal
+    mathz::Vec3 normal = calculateNormal(i, m_render_mesh);
+    m_render_mesh.normals[base] = normal;
+    m_render_mesh.normals[base + 1] = normal;
+    m_render_mesh.normals[base + 2] = normal;
+
+    // Early backface cull in view space (camera looks down -Z)
+    // If normal points away from camera (positive Z), cull it
+    if (normal.z > 0)
+    {
+      m_visible[i] = false;
+      continue;
+    }
+
+    m_visible[i] = true;
+
+    // Clip only triangles that passed backface cull
+    bool clipped = false;
+    clipped |= clipTriangle({0.f, 0.f, -m_near}, {0.f, 0.f, -1.f}, i, m_render_mesh, model_mesh);
+    clipped |= clipTriangle({0.f, 0.f, -m_far}, {0.f, 0.f, 1.f}, i, m_render_mesh, model_mesh);
+
+    if (clipped)
+      m_visible[i] = false;
+  }
+
+  // Apply perspective and backface cull to clipped triangles
+  transformVertices(m_clipped_mesh, camera.getPerspective());
+
+  const auto& textures = model.getTextures();
+
+  // Rasterize clipped triangles (clipped mesh has its own uvs/materials)
+  for (size_t i = 0; i < m_clipped_mesh.triangleCount(); ++i)
+  {
+    size_t base = i * 3;
+
+    mathz::Vec3 ab = m_clipped_mesh.vertices[base + 1] - m_clipped_mesh.vertices[base];
+    mathz::Vec3 ac = m_clipped_mesh.vertices[base + 2] - m_clipped_mesh.vertices[base];
     float sign = ab.x * ac.y - ac.x * ab.y;
 
     if (sign < 0)
-        continue;
+      continue;
 
-    triangle.z[0] = triangle.vertices[0].z;
-    triangle.z[1] = triangle.vertices[1].z;
-    triangle.z[2] = triangle.vertices[2].z;
+    m_clipped_mesh.z[base] = m_clipped_mesh.vertices[base].z;
+    m_clipped_mesh.z[base + 1] = m_clipped_mesh.vertices[base + 1].z;
+    m_clipped_mesh.z[base + 2] = m_clipped_mesh.vertices[base + 2].z;
 
-    m_render_triangles.push_back(triangle);
+    rasterize(i, m_clipped_mesh, m_clipped_mesh, textures);
   }
 
-  const auto& textures = model.getTextures();
-  for (const auto& t : m_render_triangles)
+  // Apply perspective to main mesh
+  transformVertices(m_render_mesh, camera.getPerspective());
+
+  // Rasterize visible triangles (use model_mesh for uvs/materials)
+  int rendered = 0;
+  for (size_t i = 0; i < triangle_count; ++i)
   {
-    rasterize(t, textures);
+    if (!m_visible[i])
+      continue;
+
+    size_t base = i * 3;
+
+    mathz::Vec3 ab = m_render_mesh.vertices[base + 1] - m_render_mesh.vertices[base];
+    mathz::Vec3 ac = m_render_mesh.vertices[base + 2] - m_render_mesh.vertices[base];
+    float sign = ab.x * ac.y - ac.x * ab.y;
+
+    if (sign < 0)
+      continue;
+
+    m_render_mesh.z[base] = m_render_mesh.vertices[base].z;
+    m_render_mesh.z[base + 1] = m_render_mesh.vertices[base + 1].z;
+    m_render_mesh.z[base + 2] = m_render_mesh.vertices[base + 2].z;
+
+    rasterize(i, m_render_mesh, model_mesh, textures);
+    ++rendered;
   }
 
-  m_stats.triangles_rendered = static_cast<int>(m_render_triangles.size());
+  m_stats.triangles_rendered = rendered + static_cast<int>(m_clipped_mesh.triangleCount());
+}
 
-  // Vectors needs to be empty for next redraw
-  m_render_triangles.clear();
-  m_clipped_triangles.clear();
+void Renderer::transformVertices(MeshData& mesh, const mathz::Mat4& transform)
+{
+  // Load matrix columns (transpose from row-major for column-wise multiply)
+  __m128 col0 = _mm_setr_ps(transform[0][0], transform[1][0], transform[2][0], transform[3][0]);
+  __m128 col1 = _mm_setr_ps(transform[0][1], transform[1][1], transform[2][1], transform[3][1]);
+  __m128 col2 = _mm_setr_ps(transform[0][2], transform[1][2], transform[2][2], transform[3][2]);
+  __m128 col3 = _mm_setr_ps(transform[0][3], transform[1][3], transform[2][3], transform[3][3]);
+
+  for (size_t i = 0; i < mesh.vertices.size(); ++i)
+  {
+    mathz::Vec3& v = mesh.vertices[i];
+
+    // Broadcast x, y, z to all lanes
+    __m128 vx = _mm_set1_ps(v.x);
+    __m128 vy = _mm_set1_ps(v.y);
+    __m128 vz = _mm_set1_ps(v.z);
+
+    // result = col0*x + col1*y + col2*z + col3 (w=1)
+    __m128 result = _mm_add_ps(
+        _mm_add_ps(_mm_mul_ps(col0, vx), _mm_mul_ps(col1, vy)),
+        _mm_add_ps(_mm_mul_ps(col2, vz), col3)
+    );
+
+    // Extract to array for perspective divide
+    alignas(16) float out[4];
+    _mm_store_ps(out, result);
+
+    // Perspective divide
+    if (out[3] != 0.0f)
+    {
+      float inv_w = 1.0f / out[3];
+      v.x = out[0] * inv_w;
+      v.y = out[1] * inv_w;
+      v.z = out[2] * inv_w;
+    }
+    else
+    {
+      v.x = out[0];
+      v.y = out[1];
+      v.z = out[2];
+    }
+  }
+}
+
+mathz::Vec3 Renderer::calculateNormal(size_t tri_idx, const MeshData& mesh)
+{
+  size_t base = tri_idx * 3;
+
+  mathz::Vec3 l0 = {
+      mesh.vertices[base + 1].x - mesh.vertices[base].x,
+      mesh.vertices[base + 1].y - mesh.vertices[base].y,
+      mesh.vertices[base + 1].z - mesh.vertices[base].z
+  };
+
+  mathz::Vec3 l1 = {
+      mesh.vertices[base + 2].x - mesh.vertices[base].x,
+      mesh.vertices[base + 2].y - mesh.vertices[base].y,
+      mesh.vertices[base + 2].z - mesh.vertices[base].z
+  };
+
+  mathz::Vec3 face_normal = l1.cross(l0);
+  face_normal.normalize();
+
+  return face_normal;
 }
 
 Pixel Renderer::getColour(float lum)
@@ -99,79 +206,192 @@ Pixel Renderer::getColour(float lum)
     return p;
 }
 
-void Renderer::rasterize(const Triangle& t, const std::vector<Texture>& textures)
+void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures)
 {
-  int min_x, max_x;
-  int min_y, max_y;
+  size_t base = tri_idx * 3;
 
-  mathz::Vec2<int> v0 = {imageToScreenSpace(t.vertices[0].x, t.vertices[0].y)};
-  mathz::Vec2<int> v1 = {imageToScreenSpace(t.vertices[1].x, t.vertices[1].y)};
-  mathz::Vec2<int> v2 = {imageToScreenSpace(t.vertices[2].x, t.vertices[2].y)};
+  mathz::Vec2<int> v0 = {imageToScreenSpace(transformed.vertices[base].x, transformed.vertices[base].y)};
+  mathz::Vec2<int> v1 = {imageToScreenSpace(transformed.vertices[base + 1].x, transformed.vertices[base + 1].y)};
+  mathz::Vec2<int> v2 = {imageToScreenSpace(transformed.vertices[base + 2].x, transformed.vertices[base + 2].y)};
 
-  // Bounding box
-  min_x = std::min(v0.x, v1.x);
-  min_x = std::min(min_x, v2.x);
+  int min_x = std::min({v0.x, v1.x, v2.x});
+  int max_x = std::max({v0.x, v1.x, v2.x});
+  int min_y = std::min({v0.y, v1.y, v2.y});
+  int max_y = std::max({v0.y, v1.y, v2.y});
 
-  max_x = std::max(v0.x, v1.x);
-  max_x = std::max(max_x, v2.x);
-
-  min_y = std::min(v0.y, v1.y);
-  min_y = std::min(min_y, v2.y);
-
-  max_y = std::max(v0.y, v1.y);
-  max_y = std::max(max_y, v2.y);
-
-  // Clamp bounding box to screen bounds
   min_x = std::max(min_x, 0);
   min_y = std::max(min_y, 0);
   max_x = std::min(max_x, (int)m_screen_width);
   max_y = std::min(max_y, (int)m_screen_height);
 
-  const Texture& texture = textures[t.material_index];
+  if (min_x >= max_x || min_y >= max_y)
+    return;
+
+  const Texture& texture = textures[source.materials[tri_idx]];
+
+  const mathz::Vec3& n0 = transformed.normals[base];
+  const mathz::Vec3& n1 = transformed.normals[base + 1];
+  const mathz::Vec3& n2 = transformed.normals[base + 2];
+
+  const mathz::Vec2<float>& uv0 = source.uvs[base];
+  const mathz::Vec2<float>& uv1 = source.uvs[base + 1];
+  const mathz::Vec2<float>& uv2 = source.uvs[base + 2];
+
+  float tz0 = transformed.z[base];
+  float tz1 = transformed.z[base + 1];
+  float tz2 = transformed.z[base + 2];
+
+  // Convert to float for edge calculations
+  float fx0 = (float)v0.x, fy0 = (float)v0.y;
+  float fx1 = (float)v1.x, fy1 = (float)v1.y;
+  float fx2 = (float)v2.x, fy2 = (float)v2.y;
+
+  // Precompute edge function deltas (for incremental calculation)
+  // Edge 0: v0 -> v1
+  float e0_dx = fy1 - fy0;  // delta when x increases by 1
+  float e0_dy = fx0 - fx1;  // delta when y increases by 1
+
+  // Edge 1: v1 -> v2
+  float e1_dx = fy2 - fy1;
+  float e1_dy = fx1 - fx2;
+
+  // Edge 2: v2 -> v0
+  float e2_dx = fy0 - fy2;
+  float e2_dy = fx2 - fx0;
+
+  // Precompute total area and inverse (avoid division in inner loop)
+  // Must match edgeFunction(v0, v1, v2): (v2-v0) x (v1-v0)
+  float area_t = (fx2 - fx0) * (fy1 - fy0) - (fy2 - fy0) * (fx1 - fx0);
+  if (area_t == 0.0f) return;
+  float inv_area = 1.0f / area_t;
+
+  // Compute edge values at starting corner (min_x + 0.5, min_y + 0.5)
+  float start_x = min_x + 0.5f;
+  float start_y = min_y + 0.5f;
+
+  float e0_row = (start_x - fx0) * (fy1 - fy0) - (start_y - fy0) * (fx1 - fx0);
+  float e1_row = (start_x - fx1) * (fy2 - fy1) - (start_y - fy1) * (fx2 - fx1);
+  float e2_row = (start_x - fx2) * (fy0 - fy2) - (start_y - fy2) * (fx0 - fx2);
+
+  // SSE constants for processing 4 pixels at once
+  __m128 e0_dx4 = _mm_set1_ps(e0_dx * 4.0f);
+  __m128 e1_dx4 = _mm_set1_ps(e1_dx * 4.0f);
+  __m128 e2_dx4 = _mm_set1_ps(e2_dx * 4.0f);
+  __m128 e0_dx_step = _mm_setr_ps(0, e0_dx, e0_dx * 2, e0_dx * 3);
+  __m128 e1_dx_step = _mm_setr_ps(0, e1_dx, e1_dx * 2, e1_dx * 3);
+  __m128 e2_dx_step = _mm_setr_ps(0, e2_dx, e2_dx * 2, e2_dx * 3);
+  __m128 zeros = _mm_setzero_ps();
 
   for (int y = min_y; y < max_y; y++)
   {
-    for (int x = min_x; x < max_x; x++)
+    float e0 = e0_row;
+    float e1 = e1_row;
+    float e2 = e2_row;
+
+    int x = min_x;
+
+    // Process 4 pixels at a time with SSE
+    for (; x + 4 <= max_x; x += 4)
     {
-      mathz::Vec2<float> p = {x + 0.5f, y + 0.5f};
+      // Load edge values for 4 consecutive pixels
+      __m128 edge0 = _mm_add_ps(_mm_set1_ps(e0), e0_dx_step);
+      __m128 edge1 = _mm_add_ps(_mm_set1_ps(e1), e1_dx_step);
+      __m128 edge2 = _mm_add_ps(_mm_set1_ps(e2), e2_dx_step);
 
-      float area0 = edgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, p.x, p.y);
-      float area1 = edgeFunction((float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y, p.x, p.y);
-      float area2 = edgeFunction((float)v2.x, (float)v2.y, (float)v0.x, (float)v0.y, p.x, p.y);
+      // Check which pixels are inside triangle (all edges >= 0)
+      __m128 mask0 = _mm_cmpge_ps(edge0, zeros);
+      __m128 mask1 = _mm_cmpge_ps(edge1, zeros);
+      __m128 mask2 = _mm_cmpge_ps(edge2, zeros);
+      __m128 inside = _mm_and_ps(_mm_and_ps(mask0, mask1), mask2);
 
-      if (area0 >= 0 &&
-          area1 >= 0 &&
-          area2 >= 0)
+      int mask = _mm_movemask_ps(inside);
+
+      if (mask != 0)
       {
+        // At least one pixel is inside - process individually
+        alignas(16) float e0_arr[4], e1_arr[4], e2_arr[4];
+        _mm_store_ps(e0_arr, edge0);
+        _mm_store_ps(e1_arr, edge1);
+        _mm_store_ps(e2_arr, edge2);
 
-        float area_t = edgeFunction((float)v0.x, (float)v0.y, (float)v1.x, (float)v1.y, (float)v2.x, (float)v2.y);
-
-        // Barycentric coordinates
-        float w0 = area1 / area_t;
-        float w1 = area2 / area_t;
-        float w2 = area0 / area_t;
-
-        mathz::Vec3 normal = t.normal[0] * w0 + t.normal[1] * w1 + t.normal[2] * w2;
-        mathz::Vec2<float> uv = t.uv[0] * w0 + t.uv[1] * w1 + t.uv[2] * w2;
-        float int_z = w0 * t.z[0] + w1 * t.z[1] + w2 * t.z[2];
-
-        Colour colour = texture.sample(uv.x, uv.y);
-
-        int index = (y * m_screen_width + x);
-        if (int_z > m_depth_buffer[index])
+        for (int i = 0; i < 4; ++i)
         {
-            float lum = normal.dot(m_directional_light);
-            Pixel pixel = {
-              std::uint8_t(colour.r * 255),
-              std::uint8_t(colour.g * 255),
-              std::uint8_t(colour.b * 255),
-              std::uint8_t(colour.a * 255)
-            };
-            setPixel(x, y, pixel);
-            m_depth_buffer[index] = int_z;
+          if (mask & (1 << i))
+          {
+            float w0 = e1_arr[i] * inv_area;
+            float w1 = e2_arr[i] * inv_area;
+            float w2 = e0_arr[i] * inv_area;
+
+            float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
+
+            int px = x + i;
+            int index = y * m_screen_width + px;
+
+            if (int_z > m_depth_buffer[index])
+            {
+              mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
+              Colour colour = texture.sample(uv.x, uv.y);
+
+              Pixel pixel = {
+                std::uint8_t(colour.r * 255),
+                std::uint8_t(colour.g * 255),
+                std::uint8_t(colour.b * 255),
+                std::uint8_t(colour.a * 255)
+              };
+
+              int fb_index = index * 4;
+              std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
+              m_depth_buffer[index] = int_z;
+            }
+          }
         }
       }
+
+      e0 += e0_dx * 4;
+      e1 += e1_dx * 4;
+      e2 += e2_dx * 4;
     }
+
+    // Handle remaining pixels (less than 4)
+    for (; x < max_x; x++)
+    {
+      if (e0 >= 0 && e1 >= 0 && e2 >= 0)
+      {
+        float w0 = e1 * inv_area;
+        float w1 = e2 * inv_area;
+        float w2 = e0 * inv_area;
+
+        float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
+
+        int index = y * m_screen_width + x;
+
+        if (int_z > m_depth_buffer[index])
+        {
+          mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
+          Colour colour = texture.sample(uv.x, uv.y);
+
+          Pixel pixel = {
+            std::uint8_t(colour.r * 255),
+            std::uint8_t(colour.g * 255),
+            std::uint8_t(colour.b * 255),
+            std::uint8_t(colour.a * 255)
+          };
+
+          int fb_index = index * 4;
+          std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
+          m_depth_buffer[index] = int_z;
+        }
+      }
+
+      e0 += e0_dx;
+      e1 += e1_dx;
+      e2 += e2_dx;
+    }
+
+    // Move to next row
+    e0_row += e0_dy;
+    e1_row += e1_dy;
+    e2_row += e2_dy;
   }
 }
 
@@ -183,19 +403,14 @@ float Renderer::edgeFunction(float x0, float y0, float x1, float y1, float x2, f
 void Renderer::setPixel(int x, int y, const Pixel& pixel)
 {
   int index = (y * m_screen_width + x) * 4;
-
   std::memcpy(&m_frame_buffer.get()[index], &pixel, sizeof(Pixel));
 }
 
 std::pair<int, int> Renderer::imageToScreenSpace(float x, float y)
 {
-  // NDC coordinates are in range [-1, 1]
-  // Screen coordinates are in range [0, screenWidth] for x and [0, screenHeight] for y
   const float normalized_x = (x + 1.0) * 0.5;
   const float normalized_y = (y + 1.0) * 0.5;
 
-  // Then scale to screen dimensions
-  // Note: Y is flipped because screen coordinates typically have 0 at the top
   const int screen_x = (int)std::floor(normalized_x * m_screen_width);
   const int screen_y = (int)std::floor((1.0 - normalized_y) * m_screen_height);
 
@@ -208,10 +423,8 @@ void Renderer::clearFrameBuffer()
   std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), -1.0f);
 }
 
-// Returns the point that the given plane and line intersect
 mathz::Vec3 Renderer::linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
 {
-  // Using the equation for a plane Ax + Bx + Cx = D and line P(t) = P + (Q - P) *  t and solving for t
   float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
             (plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
@@ -220,106 +433,125 @@ mathz::Vec3 Renderer::linePlaneIntersect(const mathz::Vec3& point, const mathz::
   return intersection_point;
 }
 
-bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t)
+bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, size_t tri_idx, MeshData& transformed, const MeshData& source)
 {
+  size_t base = tri_idx * 3;
+
   int in_count = 0;
   int out_count = 0;
 
-  // This will keep track of which vertices are in vs out
   mathz::Vec3 in_vertices[3];
   mathz::Vec3 out_vertices[3];
+  int in_indices[3];
+  int out_indices[3];
 
-  for (const mathz::Vec3& vertex : t.vertices)
+  for (int i = 0; i < 3; ++i)
   {
+    mathz::Vec3& vertex = transformed.vertices[base + i];
     mathz::Vec3 line = vertex - plane_point;
+
     if (plane_normal.dot(line) >= 0)
     {
-      in_vertices[in_count++] = vertex;
+      in_vertices[in_count] = vertex;
+      in_indices[in_count] = i;
+      ++in_count;
     }
     else
     {
-      out_vertices[out_count++] = vertex;
+      out_vertices[out_count] = vertex;
+      out_indices[out_count] = i;
+      ++out_count;
     }
   }
 
+  if (in_count == 3)
+  {
+    return false; // No clipping needed
+  }
+
+  mathz::Vec3 normal = transformed.normals[base];
+  int material = source.materials[tri_idx];
+
+  // Get UVs for interpolation from source
+  mathz::Vec2<float> uvs[3] = {
+    source.uvs[base],
+    source.uvs[base + 1],
+    source.uvs[base + 2]
+  };
+
   if (in_count == 2)
   {
-    Triangle t1, t2;
+    // Two vertices inside - create two triangles
+    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
 
-    t1.vertices[0] = in_vertices[0];
-    t1.vertices[1] = in_vertices[1];
+    // Triangle 1: in[0], in[1], new_v1
+    m_clipped_mesh.vertices.push_back(in_vertices[0]);
+    m_clipped_mesh.vertices.push_back(in_vertices[1]);
+    m_clipped_mesh.vertices.push_back(new_v1);
 
-    t2.vertices[0] = in_vertices[1];
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
 
-    // The intersecting points to the plane will make up the rest of both triangles
-    t1.vertices[2] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
 
-    t2.vertices[1] = linePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
-    t2.vertices[2] = t1.vertices[2]; // Both new triangles share this vertex
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
 
-    t1.normal[0] = t.normal[0];
-    t1.normal[1] = t.normal[1];
-    t1.normal[2] = t.normal[2];
-    t1.material_index = t.material_index;
+    m_clipped_mesh.materials.push_back(material);
 
-    t2.normal[0] = t.normal[0];
-    t2.normal[1] = t.normal[1];
-    t2.normal[2] = t.normal[2];
-    t2.material_index = t.material_index;
+    // Triangle 2: in[1], new_v2, new_v1
+    m_clipped_mesh.vertices.push_back(in_vertices[1]);
+    m_clipped_mesh.vertices.push_back(new_v2);
+    m_clipped_mesh.vertices.push_back(new_v1);
 
-    m_clipped_triangles.push_back(t1);
-    m_clipped_triangles.push_back(t2);
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
+
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]); // Approximate
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
+
+    m_clipped_mesh.materials.push_back(material);
 
     return true;
   }
   else if (in_count == 1)
   {
-    Triangle t1;
-    t1.vertices[0] = in_vertices[0];
+    // One vertex inside - create one triangle
+    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
+    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
 
-    t1.vertices[1] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
-    t1.vertices[2] = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
+    m_clipped_mesh.vertices.push_back(in_vertices[0]);
+    m_clipped_mesh.vertices.push_back(new_v1);
+    m_clipped_mesh.vertices.push_back(new_v2);
 
-    t1.normal[0] = t.normal[0];
-    t1.normal[1] = t.normal[1];
-    t1.normal[2] = t.normal[2];
-    t1.material_index = t.material_index;
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
+    m_clipped_mesh.normals.push_back(normal);
 
-    m_clipped_triangles.push_back(t1);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]);
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
+    m_clipped_mesh.z.push_back(0.f);
+
+    m_clipped_mesh.materials.push_back(material);
 
     return true;
   }
-  else if (in_count == 0)
-  {
-    return true;
-  }
 
-  return false;
-}
-
-void Renderer::transformTriangle(Triangle& t, const mathz::Mat4& transform)
-{
-  t.vertices[0] = transform * t.vertices[0];
-  t.vertices[1] = transform * t.vertices[1];
-  t.vertices[2] = transform * t.vertices[2];
-}
-
-mathz::Vec3 Renderer::calculateNormal(Triangle& t)
-{
-  // Construct line 1 of the triangle
-  mathz::Vec3 l0 = {
-      t.vertices[1].x - t.vertices[0].x,
-      t.vertices[1].y - t.vertices[0].y,
-      t.vertices[1].z - t.vertices[0].z};
-
-  // Construct line 2 of the triangle
-  mathz::Vec3 l1 = {
-      t.vertices[2].x - t.vertices[0].x,
-      t.vertices[2].y - t.vertices[0].y,
-      t.vertices[2].z - t.vertices[0].z};
-
-  mathz::Vec3 face_normal = l1.cross(l0);
-  face_normal.normalize();
-
-  return face_normal;
+  // in_count == 0 - triangle is fully clipped
+  return true;
 }

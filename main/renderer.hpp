@@ -28,22 +28,23 @@ public:
   const RenderStats& getStats() const { return m_stats; }
 
 private:
-  void rasterize(const Triangle& t, const std::vector<Texture>& textures);
+  void rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures);
   float edgeFunction(float x0, float y0, float x1, float y1, float x2, float y2);
   void setPixel(int x, int y, const Pixel& col);
   Pixel getColour(float lum);
   std::pair<int, int> imageToScreenSpace(float x, float y);
   mathz::Vec3 linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
-  bool clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, Triangle& t);
-  inline void transformTriangle(Triangle& t, const mathz::Mat4& transform);
-  inline mathz::Vec3 calculateNormal(Triangle& t);
+  bool clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, size_t tri_idx, MeshData& transformed, const MeshData& source);
+  void transformVertices(MeshData& mesh, const mathz::Mat4& transform);
+  mathz::Vec3 calculateNormal(size_t tri_idx, const MeshData& mesh);
   void clearFrameBuffer();
 
   float m_far, m_near;
 
   mathz::Mat4 m_view;
-  std::vector<Triangle> m_render_triangles;
-  std::vector<Triangle> m_clipped_triangles;
+  MeshData m_render_mesh;    // Transformed vertices, normals, z
+  MeshData m_clipped_mesh;   // SoA for clipped triangles
+  std::vector<bool> m_visible; // Triangle visibility flags
 
   // Lighting stuff
   mathz::Vec3 m_directional_light;

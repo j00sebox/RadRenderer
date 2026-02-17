@@ -10,23 +10,18 @@ Model::Model(const char* file_name)
 
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-    if (ext == "obj") 
+    if (ext == "obj")
     {
         loadOBJ(file_name);
-    } 
-    else if (ext == "gltf") 
+    }
+    else if (ext == "gltf")
     {
         loadGLTF(file_name);
-    } 
-    else 
+    }
+    else
     {
         std::cerr << "Unknown file format: " << ext << std::endl;
     }
-}
-
-Model::Model(const std::vector<Triangle>& triangles)
-    : m_triangles(triangles)
-{
 }
 
 void Model::setPosition(float x, float y, float z)
@@ -66,11 +61,6 @@ void Model::resetTransform()
   m_transform.clear();
 }
 
-Colour Model::sampleTexture(int u, int v, int index)
-{
-    return m_textures[index].sample(u, v);
-}
-
 void Model::loadOBJ(const char* file_name)
 {
   std::ifstream file(file_name);
@@ -95,8 +85,6 @@ void Model::loadOBJ(const char* file_name)
       ss >> v.x >> v.y >> v.z;
       vertices.push_back(v);
     }
-    // Gives the indices of the vertices that make up each triangle
-    // Denoted by f for face
     else if (type == "f")
     {
       int index[3];
@@ -106,12 +94,32 @@ void Model::loadOBJ(const char* file_name)
         ss >> token;
         std::istringstream tokenStream(token);
         std::string indexStr;
-        std::getline(tokenStream, indexStr, '/'); // Only read vertex index
-        index[i] = std::stoi(indexStr) - 1;       // OBJ indices start at 1
+        std::getline(tokenStream, indexStr, '/');
+        index[i] = std::stoi(indexStr) - 1;
       }
-      m_triangles.push_back({vertices[index[0]], vertices[index[1]], vertices[index[2]]});
+
+      m_mesh.vertices.push_back(vertices[index[0]]);
+      m_mesh.vertices.push_back(vertices[index[1]]);
+      m_mesh.vertices.push_back(vertices[index[2]]);
+
+      m_mesh.normals.push_back({});
+      m_mesh.normals.push_back({});
+      m_mesh.normals.push_back({});
+
+      m_mesh.uvs.push_back({});
+      m_mesh.uvs.push_back({});
+      m_mesh.uvs.push_back({});
+
+      m_mesh.z.push_back(0.f);
+      m_mesh.z.push_back(0.f);
+      m_mesh.z.push_back(0.f);
+
+      m_mesh.materials.push_back(0);
     }
   }
+
+  // Add default texture for OBJ
+  m_textures.emplace_back();
 }
 
 void Model::loadGLTF(const char* file_name)
@@ -124,53 +132,55 @@ void Model::loadGLTF(const char* file_name)
     std::vector<float> uvs = loader.getTexCoords();
     std::vector<int> material_indices = loader.getMaterialIndices();
 
-    int triangle_index = 0;
+    size_t triangle_count = indices.size() / 3;
+    m_mesh.reserve(triangle_count);
+
     for (size_t i = 0; i < indices.size(); i += 3)
     {
-        int index1 = indices[i];
-        int index2 = indices[i + 1];
-        int index3 = indices[i + 2];
+        int idx0 = indices[i];
+        int idx1 = indices[i + 1];
+        int idx2 = indices[i + 2];
 
-        mathz::Vec3 vertex1 = {
-            vertices[index1 * 3],
-            vertices[index1 * 3 + 1],
-            vertices[index1 * 3 + 2]
-        };
-
-        mathz::Vec3 vertex2 = {
-            vertices[index2 * 3],
-            vertices[index2 * 3 + 1],
-            vertices[index2 * 3 + 2]
-        };
-
-        mathz::Vec3 vertex3 = {
-            vertices[index3 * 3],
-            vertices[index3 * 3 + 1],
-            vertices[index3 * 3 + 2]
-        };
-
-        mathz::Vec2<float> uv1 = {
-            uvs[index1 * 2],
-            uvs[index1 * 2 + 1]
-        };
-
-        mathz::Vec2<float> uv2 = {
-            uvs[index2 * 2],
-            uvs[index2 * 2 + 1]
-        };
-
-        mathz::Vec2<float> uv3 = {
-            uvs[index3 * 2],
-            uvs[index3 * 2 + 1]
-        };
-
-        m_triangles.push_back({
-            .vertices = { vertex1, vertex2, vertex3 },
-            .uv = { uv1, uv2, uv3 },
-            .material_index = material_indices[triangle_index]
+        m_mesh.vertices.push_back({
+            vertices[idx0 * 3],
+            vertices[idx0 * 3 + 1],
+            vertices[idx0 * 3 + 2]
+        });
+        m_mesh.vertices.push_back({
+            vertices[idx1 * 3],
+            vertices[idx1 * 3 + 1],
+            vertices[idx1 * 3 + 2]
+        });
+        m_mesh.vertices.push_back({
+            vertices[idx2 * 3],
+            vertices[idx2 * 3 + 1],
+            vertices[idx2 * 3 + 2]
         });
 
-        ++triangle_index;
+        m_mesh.uvs.push_back({
+            uvs[idx0 * 2],
+            uvs[idx0 * 2 + 1]
+        });
+        m_mesh.uvs.push_back({
+            uvs[idx1 * 2],
+            uvs[idx1 * 2 + 1]
+        });
+        m_mesh.uvs.push_back({
+            uvs[idx2 * 2],
+            uvs[idx2 * 2 + 1]
+        });
+
+        // Normals computed during rendering
+        m_mesh.normals.push_back({});
+        m_mesh.normals.push_back({});
+        m_mesh.normals.push_back({});
+
+        // Z filled during rendering
+        m_mesh.z.push_back(0.f);
+        m_mesh.z.push_back(0.f);
+        m_mesh.z.push_back(0.f);
+
+        m_mesh.materials.push_back(material_indices[i / 3]);
     }
 
     std::vector<std::string> texture_paths = loader.getTextures();
@@ -180,17 +190,17 @@ void Model::loadGLTF(const char* file_name)
         if (!texture_path.empty())
             m_textures.emplace_back(texture_path.c_str());
         else
-            m_textures.emplace_back(); 
+            m_textures.emplace_back();
     }
 
     // Add default pink texture at the end for triangles with no material
     int default_material_index = static_cast<int>(m_textures.size());
-    m_textures.emplace_back(); 
+    m_textures.emplace_back();
 
     // Fix up any invalid material indices
-    for (Triangle& tri : m_triangles)
+    for (int& mat : m_mesh.materials)
     {
-        if (tri.material_index < 0 || tri.material_index >= default_material_index)
-            tri.material_index = default_material_index;
+        if (mat < 0 || mat >= default_material_index)
+            mat = default_material_index;
     }
 }
