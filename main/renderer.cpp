@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <xmmintrin.h>  // SSE
-#include <emmintrin.h>  // SSE2
+#include <xmmintrin.h>  
+#include <emmintrin.h>  
 
 Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far)
     : m_screen_width(screen_width), m_screen_height(screen_height),
@@ -19,7 +19,6 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_directional_light = { 0.f, 4.f, -1.f };
   m_directional_light.normalize();
 
-  // Initialize tiles
   m_tiles_x = (screen_width + TILE_SIZE - 1) / TILE_SIZE;
   m_tiles_y = (screen_height + TILE_SIZE - 1) / TILE_SIZE;
   m_tiles.resize(m_tiles_x * m_tiles_y);
@@ -45,8 +44,6 @@ void Renderer::render(const Model& model, Camera& camera)
   size_t triangle_count = model_mesh.triangleCount();
   size_t vertex_count = model_mesh.vertices.size();
 
-  // Only copy vertices (we need to transform them)
-  // UVs and materials are read-only - reference from model
   if (m_render_mesh.vertices.size() != vertex_count)
   {
     m_render_mesh.vertices.resize(vertex_count);
@@ -57,30 +54,30 @@ void Renderer::render(const Model& model, Camera& camera)
 
   std::memcpy(m_render_mesh.vertices.data(), model_mesh.vertices.data(), vertex_count * sizeof(mathz::Vec3));
 
-  // Transform all vertices by model transform, then view transform
   mathz::Mat4 cam_transform = camera.getTransform();
   m_view = cam_transform.inverse();
   mathz::Mat4 model_view = m_view * model.getTransform();
 
   transformVertices(m_render_mesh, model_view);
 
-  // Clear clipped mesh
   m_clipped_mesh.clear();
 
-  // Calculate normals, early backface cull, and clip in one pass
   for (size_t i = 0; i < triangle_count; ++i)
   {
     size_t base = i * 3;
 
-    // Calculate normal
     mathz::Vec3 normal = calculateNormal(i, m_render_mesh);
     m_render_mesh.normals[base] = normal;
     m_render_mesh.normals[base + 1] = normal;
     m_render_mesh.normals[base + 2] = normal;
 
-    // Early backface cull in view space (camera looks down -Z)
-    // If normal points away from camera (positive Z), cull it
-    if (normal.z > 0)
+    mathz::Vec3 centroid = {
+      (m_render_mesh.vertices[base].x + m_render_mesh.vertices[base + 1].x + m_render_mesh.vertices[base + 2].x) / 3.f,
+      (m_render_mesh.vertices[base].y + m_render_mesh.vertices[base + 1].y + m_render_mesh.vertices[base + 2].y) / 3.f,
+      (m_render_mesh.vertices[base].z + m_render_mesh.vertices[base + 1].z + m_render_mesh.vertices[base + 2].z) / 3.f
+    };
+
+    if (normal.dot(centroid) < 0)
     {
       m_visible[i] = false;
       continue;
@@ -97,13 +94,9 @@ void Renderer::render(const Model& model, Camera& camera)
       m_visible[i] = false;
   }
 
-  // Apply perspective and backface cull to clipped triangles
   transformVertices(m_clipped_mesh, camera.getPerspective());
-
-  // Apply perspective to main mesh
   transformVertices(m_render_mesh, camera.getPerspective());
 
-  // Prepare z values and filter by screen-space winding
   for (size_t i = 0; i < m_clipped_mesh.triangleCount(); ++i)
   {
     size_t base = i * 3;
@@ -114,7 +107,7 @@ void Renderer::render(const Model& model, Camera& camera)
 
     if (sign < 0)
     {
-      m_clipped_mesh.z[base] = -999.f; // Mark as culled
+      m_clipped_mesh.z[base] = -999.f; 
       continue;
     }
 
@@ -145,13 +138,11 @@ void Renderer::render(const Model& model, Camera& camera)
     m_render_mesh.z[base + 2] = m_render_mesh.vertices[base + 2].z;
   }
 
-  // Bin triangles into tiles
   binTriangles();
 
   const auto& textures = model.getTextures();
   m_triangles_rendered = 0;
 
-  // Render tiles in parallel
   unsigned int num_threads = std::thread::hardware_concurrency();
   if (num_threads == 0) num_threads = 4;
 
@@ -191,22 +182,18 @@ void Renderer::transformVertices(MeshData& mesh, const mathz::Mat4& transform)
   {
     mathz::Vec3& v = mesh.vertices[i];
 
-    // Broadcast x, y, z to all lanes
     __m128 vx = _mm_set1_ps(v.x);
     __m128 vy = _mm_set1_ps(v.y);
     __m128 vz = _mm_set1_ps(v.z);
 
-    // result = col0*x + col1*y + col2*z + col3 (w=1)
     __m128 result = _mm_add_ps(
         _mm_add_ps(_mm_mul_ps(col0, vx), _mm_mul_ps(col1, vy)),
         _mm_add_ps(_mm_mul_ps(col2, vz), col3)
     );
 
-    // Extract to array for perspective divide
     alignas(16) float out[4];
     _mm_store_ps(out, result);
 
-    // Perspective divide
     if (out[3] != 0.0f)
     {
       float inv_w = 1.0f / out[3];
@@ -698,14 +685,12 @@ void Renderer::renderTile(size_t tile_idx, const MeshData& model_mesh, const std
   const Tile& tile = m_tiles[tile_idx];
   int count = 0;
 
-  // Render main mesh triangles in this tile
   for (size_t tri_idx : tile.triangles)
   {
     rasterize(tri_idx, m_render_mesh, model_mesh, textures, tile.x0, tile.y0, tile.x1, tile.y1);
     ++count;
   }
 
-  // Render clipped triangles in this tile
   for (size_t tri_idx : tile.clipped_triangles)
   {
     rasterize(tri_idx, m_clipped_mesh, m_clipped_mesh, textures, tile.x0, tile.y0, tile.x1, tile.y1);

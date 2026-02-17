@@ -61,7 +61,7 @@ int main()
   float forward = 0.f;
   float right = 0.f;
   float rotation_speed = 0.005f;
-  float move_speed = 0.1f;
+  float move_speed = 0.001f;
 
   float fps_timer = 0.0f;
   int frame_count = 0;
@@ -152,7 +152,7 @@ int main()
         camera.rotate(pitch, yaw);
       }
 
-      sf::Mouse::setPosition(window_center, window); // Reset cursor to center
+      sf::Mouse::setPosition(window_center, window); 
 
       float delta_forward = forward * elapsed_time.asMilliseconds() * move_speed;
       float delta_right = right * elapsed_time.asMilliseconds() * move_speed;
