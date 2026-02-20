@@ -3,6 +3,7 @@
 #include "vector.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <xmmintrin.h>  
@@ -52,13 +53,24 @@ void Renderer::render(const Model& model, Camera& camera)
     m_visible.resize(triangle_count);
   }
 
-  std::memcpy(m_render_mesh.vertices.data(), model_mesh.vertices.data(), vertex_count * sizeof(mathz::Vec3));
-
   mathz::Mat4 cam_transform = camera.getTransform();
   m_view = cam_transform.inverse();
   mathz::Mat4 model_view = m_view * model.getTransform();
 
-  transformVertices(m_render_mesh, model_view);
+  transformVertices(model_mesh.vertices, m_render_mesh, model_view);
+
+  // Precompute side frustum plane normals in view space.
+  // All 4 planes pass through the origin so we only need the inward normals.
+  float half_fov_y = camera.getFov() * 0.5f * (3.14159265f / 180.f);
+  float half_fov_x = std::atan(std::tan(half_fov_y) * (float)m_screen_width / (float)m_screen_height);
+  float cx = std::cos(half_fov_x), sx = std::sin(half_fov_x);
+  float cy = std::cos(half_fov_y), sy = std::sin(half_fov_y);
+  mathz::Vec3 frustum_planes[4] = {
+    { -cx, 0.f, -sx },  // right
+    {  cx, 0.f, -sx },  // left
+    { 0.f, -cy, -sy },  // top
+    { 0.f,  cy, -sy },  // bottom
+  };
 
   m_clipped_mesh.clear();
 
@@ -66,15 +78,35 @@ void Renderer::render(const Model& model, Camera& camera)
   {
     size_t base = i * 3;
 
+    const mathz::Vec3& v0 = m_render_mesh.vertices[base];
+    const mathz::Vec3& v1 = m_render_mesh.vertices[base + 1];
+    const mathz::Vec3& v2 = m_render_mesh.vertices[base + 2];
+
+    // Reject if all 3 vertices are outside any single frustum side plane
+    bool outside = false;
+    for (const mathz::Vec3& n : frustum_planes)
+    {
+      if (n.dot(v0) < 0.f && n.dot(v1) < 0.f && n.dot(v2) < 0.f)
+      {
+        outside = true;
+        break;
+      }
+    }
+    if (outside)
+    {
+      m_visible[i] = false;
+      continue;
+    }
+
     mathz::Vec3 normal = calculateNormal(i, m_render_mesh);
     m_render_mesh.normals[base] = normal;
     m_render_mesh.normals[base + 1] = normal;
     m_render_mesh.normals[base + 2] = normal;
 
     mathz::Vec3 centroid = {
-      (m_render_mesh.vertices[base].x + m_render_mesh.vertices[base + 1].x + m_render_mesh.vertices[base + 2].x) / 3.f,
-      (m_render_mesh.vertices[base].y + m_render_mesh.vertices[base + 1].y + m_render_mesh.vertices[base + 2].y) / 3.f,
-      (m_render_mesh.vertices[base].z + m_render_mesh.vertices[base + 1].z + m_render_mesh.vertices[base + 2].z) / 3.f
+      (v0.x + v1.x + v2.x) / 3.f,
+      (v0.y + v1.y + v2.y) / 3.f,
+      (v0.z + v1.z + v2.z) / 3.f
     };
 
     if (normal.dot(centroid) < 0)
@@ -206,6 +238,46 @@ void Renderer::transformVertices(MeshData& mesh, const mathz::Mat4& transform)
       v.x = out[0];
       v.y = out[1];
       v.z = out[2];
+    }
+  }
+}
+
+void Renderer::transformVertices(const std::vector<mathz::Vec3>& src, MeshData& dst, const mathz::Mat4& transform)
+{
+  __m128 col0 = _mm_setr_ps(transform[0][0], transform[1][0], transform[2][0], transform[3][0]);
+  __m128 col1 = _mm_setr_ps(transform[0][1], transform[1][1], transform[2][1], transform[3][1]);
+  __m128 col2 = _mm_setr_ps(transform[0][2], transform[1][2], transform[2][2], transform[3][2]);
+  __m128 col3 = _mm_setr_ps(transform[0][3], transform[1][3], transform[2][3], transform[3][3]);
+
+  for (size_t i = 0; i < src.size(); ++i)
+  {
+    const mathz::Vec3& v = src[i];
+
+    __m128 vx = _mm_set1_ps(v.x);
+    __m128 vy = _mm_set1_ps(v.y);
+    __m128 vz = _mm_set1_ps(v.z);
+
+    __m128 result = _mm_add_ps(
+        _mm_add_ps(_mm_mul_ps(col0, vx), _mm_mul_ps(col1, vy)),
+        _mm_add_ps(_mm_mul_ps(col2, vz), col3)
+    );
+
+    alignas(16) float out[4];
+    _mm_store_ps(out, result);
+
+    mathz::Vec3& d = dst.vertices[i];
+    if (out[3] != 0.0f)
+    {
+      float inv_w = 1.0f / out[3];
+      d.x = out[0] * inv_w;
+      d.y = out[1] * inv_w;
+      d.z = out[2] * inv_w;
+    }
+    else
+    {
+      d.x = out[0];
+      d.y = out[1];
+      d.z = out[2];
     }
   }
 }

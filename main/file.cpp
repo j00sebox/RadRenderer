@@ -4,17 +4,17 @@
 std::string OpenFileDialog()
 {
     const char* filterPatterns[] = { "*.gltf", "*.glb", "*.obj" };
-
     const char* result = tinyfd_openFileDialog(
-        "Open Model",                    // title
-        "",                              // default path
-        3,                               // number of filter patterns
-        filterPatterns,                  // filter patterns
-        "3D Models (*.gltf, *.glb, *.obj)",  // filter description
-        0                                // allow multiple selects
+        "Open Model",                    
+        "",                              
+        3,                               
+        filterPatterns,                  
+        "3D Models (*.gltf, *.glb, *.obj)",  
+        0                                
     );
 
-    if (result) {
+    if (result)
+    {
         return std::string(result);
     }
 

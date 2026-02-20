@@ -20,6 +20,7 @@ public:
   inline const mathz::Vec3& getRight() const { return m_right; }
   const mathz::Mat4& getTransform() const { return m_transform; }
   const mathz::Mat4& getPerspective() const { return m_perspective; }
+  float getFov() const { return m_fov; }
 
 private:
   mathz::Vec3 m_position;

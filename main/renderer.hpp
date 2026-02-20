@@ -46,6 +46,7 @@ private:
   mathz::Vec3 linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
   bool clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, size_t tri_idx, MeshData& transformed, const MeshData& source);
   void transformVertices(MeshData& mesh, const mathz::Mat4& transform);
+  void transformVertices(const std::vector<mathz::Vec3>& src, MeshData& dst, const mathz::Mat4& transform);
   mathz::Vec3 calculateNormal(size_t tri_idx, const MeshData& mesh);
   void clearFrameBuffer();
   void binTriangles();
