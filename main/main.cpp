@@ -10,13 +10,16 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+Camera* g_camera = nullptr;
+
 int main()
 {
-  const int width = 1280, height = 720;
+  const int width = 2560, height = 1440;
   const float near = 0.1f, far = 10000.f;
 
   Model model("../assets/objs/Sponza/glTF/Sponza.gltf");
   Camera camera(width, height, near, far, 60.f);
+  g_camera = &camera;
 
   Renderer renderer(width, height, near, far);
   sf::RenderWindow window;
@@ -45,7 +48,7 @@ int main()
   rendered_tri_text.setFillColor(sf::Color::White);
   rendered_tri_text.setPosition({0.f, 60.f});
 
-  sf::RectangleShape stats_background(sf::Vector2f(320.f, 85.f));
+  sf::RectangleShape stats_background(sf::Vector2f(420.f, 90.f));
   stats_background.setFillColor(sf::Color(50, 50, 50, 180));
 
   window.create(sf::VideoMode(sf::Vector2u(width, height)), "Rad Renderer", sf::Style::Default);
@@ -166,7 +169,7 @@ int main()
       }
     }
 
-    renderer.render(model, camera);
+    renderer.render(model);
 
     fps_timer += elapsed_time.asSeconds();
     ++frame_count;

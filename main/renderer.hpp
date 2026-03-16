@@ -6,6 +6,8 @@
 #include <thread>
 #include <atomic>
 
+extern Camera* g_camera;
+
 struct RenderStats
 {
   int triangles_rendered = 0;
@@ -32,7 +34,7 @@ public:
   Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far);
   ~Renderer() {}
 
-  void render(const Model& model, Camera& camera);
+  void render(const Model& model);
   std::uint8_t* getFrameBuffer() const { return m_frame_buffer.get(); }
   const RenderStats& getStats() const { return m_stats; }
 
@@ -43,7 +45,7 @@ private:
   void setPixel(int x, int y, const Pixel& col);
   Pixel getColour(float lum);
   std::pair<int, int> imageToScreenSpace(float x, float y);
-  mathz::Vec3 linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end);
+  mathz::Vec3 linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end, float& t);
   bool clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, size_t tri_idx, MeshData& transformed, const MeshData& source);
   void transformVertices(MeshData& mesh, const mathz::Mat4& transform);
   void transformVertices(const std::vector<mathz::Vec3>& src, MeshData& dst, const mathz::Mat4& transform);
@@ -61,13 +63,18 @@ private:
 
   // Lighting stuff
   mathz::Vec3 m_directional_light;
+  mathz::Vec3 m_view_light;  // m_directional_light transformed to view space each frame
   float m_diffuse_constant = 0.75f;
+  float m_ambient = 0.4f;
 
   // Screen stuff
   unsigned int m_screen_width, m_screen_height, m_buffer_size;
   std::unique_ptr<std::uint8_t> m_frame_buffer;
   std::vector<float> m_depth_buffer;
   RenderStats m_stats;
+
+  // Frustum
+  mathz::Vec3 m_frustum_planes[4];
 
   // Tiling
   static constexpr int TILE_SIZE = 64;

@@ -198,16 +198,20 @@ void GLTFLoader::extractFloats(unsigned int accessor_index, std::vector<float>& 
     json buffer = m_json["bufferViews"][index];
     unsigned int buffer_offset = buffer.value("byteOffset", 0);
     unsigned int buffer_byte_offset = buffer_offset + byte_offset;
-    unsigned int length = count * GetVertexCount(type) * 4;
 
-    for (unsigned int i = buffer_byte_offset; i < (buffer_byte_offset + length);)
+    int components = GetVertexCount(type);
+    unsigned int element_size = components * 4;
+    unsigned int byte_stride = buffer.value("byteStride", element_size);
+
+    for (unsigned int i = 0; i < count; ++i)
     {
-        unsigned char byte[] = { m_data[i++], m_data[i++], m_data[i++], m_data[i++] };
-        float val;
-
-        std::memcpy(&val, byte, sizeof(float));
-
-        flts.push_back(val);
+        unsigned int offset = buffer_byte_offset + i * byte_stride;
+        for (int j = 0; j < components; ++j)
+        {
+            float val;
+            std::memcpy(&val, &m_data[offset + j * 4], sizeof(float));
+            flts.push_back(val);
+        }
     }
 }
 

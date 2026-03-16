@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "texture.hpp"
 
+#include <cmath>
 #include <stb_image.h>
 
 Texture::Texture()
@@ -49,6 +50,8 @@ Colour Texture::getPixel(int x, int y) const
 
 Colour Texture::sampleNearest(float u, float v) const
 {
+    u = u - std::floor(u);
+    v = v - std::floor(v);
     int x = static_cast<int>(u * (m_width - 1));
     int y = static_cast<int>(v * (m_height - 1));
     return getPixel(x, y);

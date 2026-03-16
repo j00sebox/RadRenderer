@@ -17,8 +17,17 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
 {
   m_frame_buffer.reset(new std::uint8_t[m_buffer_size]);
 
-  m_directional_light = { 0.f, 4.f, -1.f };
+  m_directional_light = { 0.f, 1.f, 0.f };
   m_directional_light.normalize();
+
+  float half_fov_y = g_camera->getFov() * 0.5f * (3.14159265f / 180.f);
+  float half_fov_x = std::atan(std::tan(half_fov_y) * (float)m_screen_width / (float)m_screen_height);
+  float cx = std::cos(half_fov_x), sx = std::sin(half_fov_x);
+  float cy = std::cos(half_fov_y), sy = std::sin(half_fov_y);
+  m_frustum_planes[0] = { -cx, 0.f, -sx };  // Right
+  m_frustum_planes[1] = {  cx, 0.f, -sx };  // Left
+  m_frustum_planes[2] = { 0.f, -cy, -sy };  // Top
+  m_frustum_planes[3] = { 0.f,  cy, -sy };  // Bottom
 
   m_tiles_x = (screen_width + TILE_SIZE - 1) / TILE_SIZE;
   m_tiles_y = (screen_height + TILE_SIZE - 1) / TILE_SIZE;
@@ -37,8 +46,9 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   }
 }
 
-void Renderer::render(const Model& model, Camera& camera)
+void Renderer::render(const Model& model)
 {
+  Camera& camera = *g_camera;
   clearFrameBuffer();
 
   const MeshData& model_mesh = model.getMeshData();
@@ -57,20 +67,15 @@ void Renderer::render(const Model& model, Camera& camera)
   m_view = cam_transform.inverse();
   mathz::Mat4 model_view = m_view * model.getTransform();
 
-  transformVertices(model_mesh.vertices, m_render_mesh, model_view);
-
-  // Precompute side frustum plane normals in view space.
-  // All 4 planes pass through the origin so we only need the inward normals.
-  float half_fov_y = camera.getFov() * 0.5f * (3.14159265f / 180.f);
-  float half_fov_x = std::atan(std::tan(half_fov_y) * (float)m_screen_width / (float)m_screen_height);
-  float cx = std::cos(half_fov_x), sx = std::sin(half_fov_x);
-  float cy = std::cos(half_fov_y), sy = std::sin(half_fov_y);
-  mathz::Vec3 frustum_planes[4] = {
-    { -cx, 0.f, -sx },  // right
-    {  cx, 0.f, -sx },  // left
-    { 0.f, -cy, -sy },  // top
-    { 0.f,  cy, -sy },  // bottom
+  // Transform directional light into view space (direction only, upper 3x3)
+  m_view_light = {
+    m_view[0][0] * m_directional_light.x + m_view[0][1] * m_directional_light.y + m_view[0][2] * m_directional_light.z,
+    m_view[1][0] * m_directional_light.x + m_view[1][1] * m_directional_light.y + m_view[1][2] * m_directional_light.z,
+    m_view[2][0] * m_directional_light.x + m_view[2][1] * m_directional_light.y + m_view[2][2] * m_directional_light.z,
   };
+  m_view_light.normalize();
+
+  transformVertices(model_mesh.vertices, m_render_mesh, model_view);
 
   m_clipped_mesh.clear();
 
@@ -84,7 +89,7 @@ void Renderer::render(const Model& model, Camera& camera)
 
     // Reject if all 3 vertices are outside any single frustum side plane
     bool outside = false;
-    for (const mathz::Vec3& n : frustum_planes)
+    for (const mathz::Vec3& n : m_frustum_planes)
     {
       if (n.dot(v0) < 0.f && n.dot(v1) < 0.f && n.dot(v2) < 0.f)
       {
@@ -204,7 +209,6 @@ void Renderer::render(const Model& model, Camera& camera)
 
 void Renderer::transformVertices(MeshData& mesh, const mathz::Mat4& transform)
 {
-  // Load matrix columns (transpose from row-major for column-wise multiply)
   __m128 col0 = _mm_setr_ps(transform[0][0], transform[1][0], transform[2][0], transform[3][0]);
   __m128 col1 = _mm_setr_ps(transform[0][1], transform[1][1], transform[2][1], transform[3][1]);
   __m128 col2 = _mm_setr_ps(transform[0][2], transform[1][2], transform[2][2], transform[3][2]);
@@ -345,6 +349,21 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
   float tz1 = transformed.z[base + 1];
   float tz2 = transformed.z[base + 2];
 
+  // Perspective-correct interpolation: recover 1/w from NDC z
+  float pc_A = (m_far + m_near) / (m_far - m_near);
+  float pc_B = 2.f * m_far * m_near / (m_far - m_near);
+  float inv_w0 = (tz0 + pc_A) / pc_B;
+  float inv_w1 = (tz1 + pc_A) / pc_B;
+  float inv_w2 = (tz2 + pc_A) / pc_B;
+  float u0w = uv0.x * inv_w0, v0w = uv0.y * inv_w0;
+  float u1w = uv1.x * inv_w1, v1w = uv1.y * inv_w1;
+  float u2w = uv2.x * inv_w2, v2w = uv2.y * inv_w2;
+
+  float diffuse = -n0.dot(m_view_light);  // normals are inward, negate for outward
+  if (diffuse < 0.f) diffuse = 0.f;
+  float light = m_ambient + diffuse * m_diffuse_constant;
+  if (light > 1.f) light = 1.f;
+
   // Convert to float for edge calculations
   float fx0 = (float)v0.x, fy0 = (float)v0.y;
   float fx1 = (float)v1.x, fy1 = (float)v1.y;
@@ -433,13 +452,15 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
 
             if (int_z > m_depth_buffer[index])
             {
-              mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
-              Colour colour = texture.sample(uv.x, uv.y);
+              float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
+              float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
+              float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
+              Colour colour = texture.sample(pc_u, pc_v);
 
               Pixel pixel = {
-                std::uint8_t(colour.r * 255),
-                std::uint8_t(colour.g * 255),
-                std::uint8_t(colour.b * 255),
+                std::uint8_t(colour.r * light * 255),
+                std::uint8_t(colour.g * light * 255),
+                std::uint8_t(colour.b * light * 255),
                 std::uint8_t(colour.a * 255)
               };
 
@@ -471,13 +492,15 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
 
         if (int_z > m_depth_buffer[index])
         {
-          mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
-          Colour colour = texture.sample(uv.x, uv.y);
+          float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
+          float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
+          float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
+          Colour colour = texture.sample(pc_u, pc_v);
 
           Pixel pixel = {
-            std::uint8_t(colour.r * 255),
-            std::uint8_t(colour.g * 255),
-            std::uint8_t(colour.b * 255),
+            std::uint8_t(colour.r * light * 255),
+            std::uint8_t(colour.g * light * 255),
+            std::uint8_t(colour.b * light * 255),
             std::uint8_t(colour.a * 255)
           };
 
@@ -527,14 +550,12 @@ void Renderer::clearFrameBuffer()
   std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), -1.0f);
 }
 
-mathz::Vec3 Renderer::linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end)
+mathz::Vec3 Renderer::linePlaneIntersect(const mathz::Vec3& point, const mathz::Vec3& plane_normal, mathz::Vec3& line_begin, mathz::Vec3& line_end, float& t)
 {
-  float t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
-            (plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
+  t = -(plane_normal.x * (line_begin.x - point.x) + plane_normal.y * (line_begin.y - point.y) + plane_normal.z * (line_begin.z - point.z)) /
+      (plane_normal.x * (line_end.x - line_begin.x) + plane_normal.y * (line_end.y - line_begin.y) + plane_normal.z * (line_end.z - line_begin.z));
 
-  mathz::Vec3 intersection_point = line_begin + (line_end - line_begin) * t;
-
-  return intersection_point;
+  return line_begin + (line_end - line_begin) * t;
 }
 
 bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& plane_normal, size_t tri_idx, MeshData& transformed, const MeshData& source)
@@ -568,6 +589,24 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     }
   }
 
+  // Preserve original winding order (v0 -> v1 -> v2)
+  if (in_count == 1 && out_count == 2)
+  {
+    if (out_indices[0] != (in_indices[0] + 1) % 3)
+    {
+      std::swap(out_vertices[0], out_vertices[1]);
+      std::swap(out_indices[0], out_indices[1]);
+    }
+  }
+  else if (in_count == 2 && out_count == 1)
+  {
+    if (in_indices[0] != (out_indices[0] + 1) % 3)
+    {
+      std::swap(in_vertices[0], in_vertices[1]);
+      std::swap(in_indices[0], in_indices[1]);
+    }
+  }
+
   if (in_count == 3)
   {
     return false; // No clipping needed
@@ -586,8 +625,13 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
   if (in_count == 2)
   {
     // Two vertices inside - create two triangles
-    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
-    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0]);
+    float t1, t2;
+    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0], t1);
+    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[1], out_vertices[0], t2);
+
+    // Interpolate UVs at clip points
+    mathz::Vec2<float> new_uv1 = uvs[in_indices[0]] * (1.f - t1) + uvs[out_indices[0]] * t1;
+    mathz::Vec2<float> new_uv2 = uvs[in_indices[1]] * (1.f - t2) + uvs[out_indices[0]] * t2;
 
     // Triangle 1: in[0], in[1], new_v1
     m_clipped_mesh.vertices.push_back(in_vertices[0]);
@@ -600,7 +644,7 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
 
     m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]);
     m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]);
-    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+    m_clipped_mesh.uvs.push_back(new_uv1);
 
     m_clipped_mesh.z.push_back(0.f);
     m_clipped_mesh.z.push_back(0.f);
@@ -618,8 +662,8 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     m_clipped_mesh.normals.push_back(normal);
 
     m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]);
-    m_clipped_mesh.uvs.push_back(uvs[in_indices[1]]); // Approximate
-    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+    m_clipped_mesh.uvs.push_back(new_uv2);
+    m_clipped_mesh.uvs.push_back(new_uv1);
 
     m_clipped_mesh.z.push_back(0.f);
     m_clipped_mesh.z.push_back(0.f);
@@ -632,8 +676,12 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
   else if (in_count == 1)
   {
     // One vertex inside - create one triangle
-    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0]);
-    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1]);
+    float t1, t2;
+    mathz::Vec3 new_v1 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[0], t1);
+    mathz::Vec3 new_v2 = linePlaneIntersect(plane_point, plane_normal, in_vertices[0], out_vertices[1], t2);
+
+    mathz::Vec2<float> new_uv1 = uvs[in_indices[0]] * (1.f - t1) + uvs[out_indices[0]] * t1;
+    mathz::Vec2<float> new_uv2 = uvs[in_indices[0]] * (1.f - t2) + uvs[out_indices[1]] * t2;
 
     m_clipped_mesh.vertices.push_back(in_vertices[0]);
     m_clipped_mesh.vertices.push_back(new_v1);
@@ -644,8 +692,8 @@ bool Renderer::clipTriangle(const mathz::Vec3& plane_point, const mathz::Vec3& p
     m_clipped_mesh.normals.push_back(normal);
 
     m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]);
-    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
-    m_clipped_mesh.uvs.push_back(uvs[in_indices[0]]); // Approximate
+    m_clipped_mesh.uvs.push_back(new_uv1);
+    m_clipped_mesh.uvs.push_back(new_uv2);
 
     m_clipped_mesh.z.push_back(0.f);
     m_clipped_mesh.z.push_back(0.f);
@@ -803,6 +851,21 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
   float tz1 = transformed.z[base + 1];
   float tz2 = transformed.z[base + 2];
 
+  // Perspective-correct interpolation: recover 1/w from NDC z
+  float pc_A = (m_far + m_near) / (m_far - m_near);
+  float pc_B = 2.f * m_far * m_near / (m_far - m_near);
+  float inv_w0 = (tz0 + pc_A) / pc_B;
+  float inv_w1 = (tz1 + pc_A) / pc_B;
+  float inv_w2 = (tz2 + pc_A) / pc_B;
+  float u0w = uv0.x * inv_w0, v0w = uv0.y * inv_w0;
+  float u1w = uv1.x * inv_w1, v1w = uv1.y * inv_w1;
+  float u2w = uv2.x * inv_w2, v2w = uv2.y * inv_w2;
+
+  float diffuse = -n0.dot(m_view_light);  // normals are inward, negate for outward
+  if (diffuse < 0.f) diffuse = 0.f;
+  float light = m_ambient + diffuse * m_diffuse_constant;
+  if (light > 1.f) light = 1.f;
+
   float fx0 = (float)v0.x, fy0 = (float)v0.y;
   float fx1 = (float)v1.x, fy1 = (float)v1.y;
   float fx2 = (float)v2.x, fy2 = (float)v2.y;
@@ -876,13 +939,15 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
 
             if (int_z > m_depth_buffer[index])
             {
-              mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
-              Colour colour = texture.sample(uv.x, uv.y);
+              float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
+              float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
+              float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
+              Colour colour = texture.sample(pc_u, pc_v);
 
               Pixel pixel = {
-                std::uint8_t(colour.r * 255),
-                std::uint8_t(colour.g * 255),
-                std::uint8_t(colour.b * 255),
+                std::uint8_t(colour.r * light * 255),
+                std::uint8_t(colour.g * light * 255),
+                std::uint8_t(colour.b * light * 255),
                 std::uint8_t(colour.a * 255)
               };
 
@@ -913,13 +978,15 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
 
         if (int_z > m_depth_buffer[index])
         {
-          mathz::Vec2<float> uv = uv0 * w0 + uv1 * w1 + uv2 * w2;
-          Colour colour = texture.sample(uv.x, uv.y);
+          float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
+          float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
+          float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
+          Colour colour = texture.sample(pc_u, pc_v);
 
           Pixel pixel = {
-            std::uint8_t(colour.r * 255),
-            std::uint8_t(colour.g * 255),
-            std::uint8_t(colour.b * 255),
+            std::uint8_t(colour.r * light * 255),
+            std::uint8_t(colour.g * light * 255),
+            std::uint8_t(colour.b * light * 255),
             std::uint8_t(colour.a * 255)
           };
 
