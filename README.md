@@ -21,6 +21,8 @@ End Result:
 
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/8822026b-d5f5-4b24-9424-aec792483dca" />
 
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/2acc8023-2bb3-4b90-8e75-9977eecd82a9" />
+
 ## Assets
 
 OBJ models (Teapot, Stanford Bunny) from [common-3d-test-models](https://github.com/alecjacobson/common-3d-test-models).
