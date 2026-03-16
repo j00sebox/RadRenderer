@@ -20,6 +20,9 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
   m_directional_light = { 0.f, 1.f, 0.f };
   m_directional_light.normalize();
 
+  m_persp_offset = (m_far + m_near) / (m_far - m_near);
+  m_persp_scale = 2.f * m_far * m_near / (m_far - m_near);
+
   float half_fov_y = g_camera->getFov() * 0.5f * (3.14159265f / 180.f);
   float half_fov_x = std::atan(std::tan(half_fov_y) * (float)m_screen_width / (float)m_screen_height);
   float cx = std::cos(half_fov_x), sx = std::sin(half_fov_x);
@@ -346,231 +349,6 @@ mathz::Vec3 Renderer::calculateNormal(size_t tri_idx, const MeshData& mesh)
   return face_normal;
 }
 
-Pixel Renderer::getColour(float lum)
-{
-    Pixel p = { (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), (std::uint8_t)(255 * cosf(lum) * m_diffuse_constant), 255 };
-    return p;
-}
-
-void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const MeshData& source, const std::vector<Texture>& textures)
-{
-  size_t base = tri_idx * 3;
-
-  mathz::Vec2<int> v0 = {imageToScreenSpace(transformed.vertices[base].x, transformed.vertices[base].y)};
-  mathz::Vec2<int> v1 = {imageToScreenSpace(transformed.vertices[base + 1].x, transformed.vertices[base + 1].y)};
-  mathz::Vec2<int> v2 = {imageToScreenSpace(transformed.vertices[base + 2].x, transformed.vertices[base + 2].y)};
-
-  int min_x = std::min({v0.x, v1.x, v2.x});
-  int max_x = std::max({v0.x, v1.x, v2.x});
-  int min_y = std::min({v0.y, v1.y, v2.y});
-  int max_y = std::max({v0.y, v1.y, v2.y});
-
-  min_x = std::max(min_x, 0);
-  min_y = std::max(min_y, 0);
-  max_x = std::min(max_x, (int)m_screen_width);
-  max_y = std::min(max_y, (int)m_screen_height);
-
-  if (min_x >= max_x || min_y >= max_y)
-    return;
-
-  const Texture& texture = textures[source.materials[tri_idx]];
-
-  const mathz::Vec3& n0 = transformed.normals[base];
-  const mathz::Vec3& n1 = transformed.normals[base + 1];
-  const mathz::Vec3& n2 = transformed.normals[base + 2];
-
-  const mathz::Vec2<float>& uv0 = source.uvs[base];
-  const mathz::Vec2<float>& uv1 = source.uvs[base + 1];
-  const mathz::Vec2<float>& uv2 = source.uvs[base + 2];
-
-  float tz0 = transformed.z[base];
-  float tz1 = transformed.z[base + 1];
-  float tz2 = transformed.z[base + 2];
-
-  // Perspective-correct interpolation: recover 1/w from NDC z
-  float pc_A = (m_far + m_near) / (m_far - m_near);
-  float pc_B = 2.f * m_far * m_near / (m_far - m_near);
-  float inv_w0 = (tz0 + pc_A) / pc_B;
-  float inv_w1 = (tz1 + pc_A) / pc_B;
-  float inv_w2 = (tz2 + pc_A) / pc_B;
-  float u0w = uv0.x * inv_w0, v0w = uv0.y * inv_w0;
-  float u1w = uv1.x * inv_w1, v1w = uv1.y * inv_w1;
-  float u2w = uv2.x * inv_w2, v2w = uv2.y * inv_w2;
-
-  float diffuse = -n0.dot(m_view_light);  // normals are inward, negate for outward
-  if (diffuse < 0.f) diffuse = 0.f;
-  float light = m_ambient + diffuse * m_diffuse_constant;
-  if (light > 1.f) light = 1.f;
-
-  // Convert to float for edge calculations
-  float fx0 = (float)v0.x, fy0 = (float)v0.y;
-  float fx1 = (float)v1.x, fy1 = (float)v1.y;
-  float fx2 = (float)v2.x, fy2 = (float)v2.y;
-
-  // Precompute edge function deltas (for incremental calculation)
-  // Edge 0: v0 -> v1
-  float e0_dx = fy1 - fy0;  // delta when x increases by 1
-  float e0_dy = fx0 - fx1;  // delta when y increases by 1
-
-  // Edge 1: v1 -> v2
-  float e1_dx = fy2 - fy1;
-  float e1_dy = fx1 - fx2;
-
-  // Edge 2: v2 -> v0
-  float e2_dx = fy0 - fy2;
-  float e2_dy = fx2 - fx0;
-
-  // Precompute total area and inverse (avoid division in inner loop)
-  // Must match edgeFunction(v0, v1, v2): (v2-v0) x (v1-v0)
-  float area_t = (fx2 - fx0) * (fy1 - fy0) - (fy2 - fy0) * (fx1 - fx0);
-  if (area_t == 0.0f) return;
-  float inv_area = 1.0f / area_t;
-
-  // Compute edge values at starting corner (min_x + 0.5, min_y + 0.5)
-  float start_x = min_x + 0.5f;
-  float start_y = min_y + 0.5f;
-
-  float e0_row = (start_x - fx0) * (fy1 - fy0) - (start_y - fy0) * (fx1 - fx0);
-  float e1_row = (start_x - fx1) * (fy2 - fy1) - (start_y - fy1) * (fx2 - fx1);
-  float e2_row = (start_x - fx2) * (fy0 - fy2) - (start_y - fy2) * (fx0 - fx2);
-
-  // SSE constants for processing 4 pixels at once
-  __m128 e0_dx4 = _mm_set1_ps(e0_dx * 4.0f);
-  __m128 e1_dx4 = _mm_set1_ps(e1_dx * 4.0f);
-  __m128 e2_dx4 = _mm_set1_ps(e2_dx * 4.0f);
-  __m128 e0_dx_step = _mm_setr_ps(0, e0_dx, e0_dx * 2, e0_dx * 3);
-  __m128 e1_dx_step = _mm_setr_ps(0, e1_dx, e1_dx * 2, e1_dx * 3);
-  __m128 e2_dx_step = _mm_setr_ps(0, e2_dx, e2_dx * 2, e2_dx * 3);
-  __m128 zeros = _mm_setzero_ps();
-
-  for (int y = min_y; y < max_y; y++)
-  {
-    float e0 = e0_row;
-    float e1 = e1_row;
-    float e2 = e2_row;
-
-    int x = min_x;
-
-    // Process 4 pixels at a time with SSE
-    for (; x + 4 <= max_x; x += 4)
-    {
-      // Load edge values for 4 consecutive pixels
-      __m128 edge0 = _mm_add_ps(_mm_set1_ps(e0), e0_dx_step);
-      __m128 edge1 = _mm_add_ps(_mm_set1_ps(e1), e1_dx_step);
-      __m128 edge2 = _mm_add_ps(_mm_set1_ps(e2), e2_dx_step);
-
-      // Check which pixels are inside triangle (all edges >= 0)
-      __m128 mask0 = _mm_cmpge_ps(edge0, zeros);
-      __m128 mask1 = _mm_cmpge_ps(edge1, zeros);
-      __m128 mask2 = _mm_cmpge_ps(edge2, zeros);
-      __m128 inside = _mm_and_ps(_mm_and_ps(mask0, mask1), mask2);
-
-      int mask = _mm_movemask_ps(inside);
-
-      if (mask != 0)
-      {
-        // At least one pixel is inside - process individually
-        alignas(16) float e0_arr[4], e1_arr[4], e2_arr[4];
-        _mm_store_ps(e0_arr, edge0);
-        _mm_store_ps(e1_arr, edge1);
-        _mm_store_ps(e2_arr, edge2);
-
-        for (int i = 0; i < 4; ++i)
-        {
-          if (mask & (1 << i))
-          {
-            float w0 = e1_arr[i] * inv_area;
-            float w1 = e2_arr[i] * inv_area;
-            float w2 = e0_arr[i] * inv_area;
-
-            float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
-
-            int px = x + i;
-            int index = y * m_screen_width + px;
-
-            if (int_z > m_depth_buffer[index])
-            {
-              float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
-              float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
-              float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
-              Colour colour = texture.sample(pc_u, pc_v);
-
-              Pixel pixel = {
-                std::uint8_t(colour.r * light * 255),
-                std::uint8_t(colour.g * light * 255),
-                std::uint8_t(colour.b * light * 255),
-                std::uint8_t(colour.a * 255)
-              };
-
-              int fb_index = index * 4;
-              std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
-              m_depth_buffer[index] = int_z;
-            }
-          }
-        }
-      }
-
-      e0 += e0_dx * 4;
-      e1 += e1_dx * 4;
-      e2 += e2_dx * 4;
-    }
-
-    // Handle remaining pixels (less than 4)
-    for (; x < max_x; x++)
-    {
-      if (e0 >= 0 && e1 >= 0 && e2 >= 0)
-      {
-        float w0 = e1 * inv_area;
-        float w1 = e2 * inv_area;
-        float w2 = e0 * inv_area;
-
-        float int_z = w0 * tz0 + w1 * tz1 + w2 * tz2;
-
-        int index = y * m_screen_width + x;
-
-        if (int_z > m_depth_buffer[index])
-        {
-          float pc_w = w0 * inv_w0 + w1 * inv_w1 + w2 * inv_w2;
-          float pc_u = (w0 * u0w + w1 * u1w + w2 * u2w) / pc_w;
-          float pc_v = (w0 * v0w + w1 * v1w + w2 * v2w) / pc_w;
-          Colour colour = texture.sample(pc_u, pc_v);
-
-          Pixel pixel = {
-            std::uint8_t(colour.r * light * 255),
-            std::uint8_t(colour.g * light * 255),
-            std::uint8_t(colour.b * light * 255),
-            std::uint8_t(colour.a * 255)
-          };
-
-          int fb_index = index * 4;
-          std::memcpy(&m_frame_buffer.get()[fb_index], &pixel, sizeof(Pixel));
-          m_depth_buffer[index] = int_z;
-        }
-      }
-
-      e0 += e0_dx;
-      e1 += e1_dx;
-      e2 += e2_dx;
-    }
-
-    // Move to next row
-    e0_row += e0_dy;
-    e1_row += e1_dy;
-    e2_row += e2_dy;
-  }
-}
-
-float Renderer::edgeFunction(float x0, float y0, float x1, float y1, float x2, float y2)
-{
-  return ((x2 - x0) * (y1 - y0) - (y2 - y0) * (x1 - x0));
-}
-
-void Renderer::setPixel(int x, int y, const Pixel& pixel)
-{
-  int index = (y * m_screen_width + x) * 4;
-  std::memcpy(&m_frame_buffer.get()[index], &pixel, sizeof(Pixel));
-}
-
 std::pair<int, int> Renderer::imageToScreenSpace(float x, float y)
 {
   const float normalized_x = (x + 1.0) * 0.5;
@@ -878,8 +656,6 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
   const Texture& texture = textures[source.materials[tri_idx]];
 
   const mathz::Vec3& n0 = transformed.normals[base];
-  const mathz::Vec3& n1 = transformed.normals[base + 1];
-  const mathz::Vec3& n2 = transformed.normals[base + 2];
 
   const mathz::Vec2<float>& uv0 = source.uvs[base];
   const mathz::Vec2<float>& uv1 = source.uvs[base + 1];
@@ -889,12 +665,9 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
   float tz1 = transformed.z[base + 1];
   float tz2 = transformed.z[base + 2];
 
-  // Perspective-correct interpolation: recover 1/w from NDC z
-  float pc_A = (m_far + m_near) / (m_far - m_near);
-  float pc_B = 2.f * m_far * m_near / (m_far - m_near);
-  float inv_w0 = (tz0 + pc_A) / pc_B;
-  float inv_w1 = (tz1 + pc_A) / pc_B;
-  float inv_w2 = (tz2 + pc_A) / pc_B;
+  float inv_w0 = (tz0 + m_persp_offset) / m_persp_scale;
+  float inv_w1 = (tz1 + m_persp_offset) / m_persp_scale;
+  float inv_w2 = (tz2 + m_persp_offset) / m_persp_scale;
   float u0w = uv0.x * inv_w0, v0w = uv0.y * inv_w0;
   float u1w = uv1.x * inv_w1, v1w = uv1.y * inv_w1;
   float u2w = uv2.x * inv_w2, v2w = uv2.y * inv_w2;
@@ -926,9 +699,6 @@ void Renderer::rasterize(size_t tri_idx, const MeshData& transformed, const Mesh
   float e1_row = (start_x - fx1) * (fy2 - fy1) - (start_y - fy1) * (fx2 - fx1);
   float e2_row = (start_x - fx2) * (fy0 - fy2) - (start_y - fy2) * (fx0 - fx2);
 
-  __m128 e0_dx4 = _mm_set1_ps(e0_dx * 4.0f);
-  __m128 e1_dx4 = _mm_set1_ps(e1_dx * 4.0f);
-  __m128 e2_dx4 = _mm_set1_ps(e2_dx * 4.0f);
   __m128 e0_dx_step = _mm_setr_ps(0, e0_dx, e0_dx * 2, e0_dx * 3);
   __m128 e1_dx_step = _mm_setr_ps(0, e1_dx, e1_dx * 2, e1_dx * 3);
   __m128 e2_dx_step = _mm_setr_ps(0, e2_dx, e2_dx * 2, e2_dx * 3);
