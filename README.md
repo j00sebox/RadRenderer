@@ -19,7 +19,7 @@ window and display the image; I also use it to handle events.
 
 End Result:
 
-![Teapot](/screenshots/teapot.png)
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/8822026b-d5f5-4b24-9424-aec792483dca" />
 
 ## Assets
 
