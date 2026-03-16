@@ -44,6 +44,43 @@ Renderer::Renderer(unsigned int screen_width, unsigned int screen_height, float 
       tile.y1 = std::min(tile.y0 + TILE_SIZE, (int)screen_height);
     }
   }
+
+  // Start thread pool
+  m_pool_size = std::thread::hardware_concurrency();
+  if (m_pool_size == 0) m_pool_size = 4;
+
+  for (unsigned int i = 0; i < m_pool_size; ++i)
+  {
+    m_thread_pool.emplace_back([this]()
+    {
+      unsigned int last_epoch = 0;
+      while (true)
+      {
+        std::function<void()> task;
+        {
+          std::unique_lock<std::mutex> lock(m_pool_mutex);
+          m_pool_cv.wait(lock, [this, &last_epoch]() { return m_pool_shutdown || m_pool_epoch != last_epoch; });
+          if (m_pool_shutdown) return;
+          last_epoch = m_pool_epoch;
+          task = m_pool_task;
+        }
+        task();
+        if (m_pool_finished.fetch_add(1) + 1 == m_pool_size)
+          m_pool_done_cv.notify_one();
+      }
+    });
+  }
+}
+
+Renderer::~Renderer()
+{
+  {
+    std::unique_lock<std::mutex> lock(m_pool_mutex);
+    m_pool_shutdown = true;
+  }
+  m_pool_cv.notify_all();
+  for (auto& t : m_thread_pool)
+    t.join();
 }
 
 void Renderer::render(const Model& model)
@@ -180,16 +217,13 @@ void Renderer::render(const Model& model)
   const auto& textures = model.getTextures();
   m_triangles_rendered = 0;
 
-  unsigned int num_threads = std::thread::hardware_concurrency();
-  if (num_threads == 0) num_threads = 4;
-
-  std::vector<std::thread> threads;
   std::atomic<size_t> next_tile{0};
   size_t total_tiles = m_tiles.size();
 
-  for (unsigned int t = 0; t < num_threads; ++t)
   {
-    threads.emplace_back([this, &next_tile, total_tiles, &model_mesh, &textures]()
+    std::unique_lock<std::mutex> lock(m_pool_mutex);
+    m_pool_finished = 0;
+    m_pool_task = [this, &next_tile, total_tiles, &model_mesh, &textures]()
     {
       while (true)
       {
@@ -198,11 +232,15 @@ void Renderer::render(const Model& model)
           break;
         renderTile(tile_idx, model_mesh, textures);
       }
-    });
+    };
+    ++m_pool_epoch;
   }
+  m_pool_cv.notify_all();
 
-  for (auto& t : threads)
-    t.join();
+  {
+    std::unique_lock<std::mutex> lock(m_pool_mutex);
+    m_pool_done_cv.wait(lock, [this]() { return m_pool_finished == m_pool_size; });
+  }
 
   m_stats.triangles_rendered = m_triangles_rendered;
 }

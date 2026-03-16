@@ -5,6 +5,9 @@
 #include <memory>
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
 extern Camera* g_camera;
 
@@ -32,7 +35,7 @@ class Renderer
 {
 public:
   Renderer(unsigned int screen_width, unsigned int screen_height, float near, float far);
-  ~Renderer() {}
+  ~Renderer();
 
   void render(const Model& model);
   std::uint8_t* getFrameBuffer() const { return m_frame_buffer.get(); }
@@ -81,4 +84,15 @@ private:
   std::vector<Tile> m_tiles;
   unsigned int m_tiles_x, m_tiles_y;
   std::atomic<int> m_triangles_rendered{0};
+
+  // Thread pool
+  std::vector<std::thread> m_thread_pool;
+  std::mutex m_pool_mutex;
+  std::condition_variable m_pool_cv;
+  std::condition_variable m_pool_done_cv;
+  std::function<void()> m_pool_task;
+  unsigned int m_pool_size;
+  unsigned int m_pool_epoch = 0;
+  std::atomic<unsigned int> m_pool_finished{0};
+  bool m_pool_shutdown = false;
 };
