@@ -17,7 +17,7 @@ int main()
   const int width = 2560, height = 1440;
   const float near = 0.1f, far = 10000.f;
 
-  Model model("../assets/objs/Sponza/glTF/Sponza.gltf");
+  Model model("../test_assets/Sponza/glTF/Sponza.gltf");
   Camera camera(width, height, near, far, 75.f);
   g_camera = &camera;
 

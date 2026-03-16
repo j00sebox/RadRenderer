@@ -21,4 +21,8 @@ End Result:
 
 ![Teapot](/screenshots/teapot.png)
 
+## Assets
 
+OBJ models (Teapot, Stanford Bunny) from [common-3d-test-models](https://github.com/alecjacobson/common-3d-test-models).
+
+glTF models (Sponza, Avocado) from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models).
