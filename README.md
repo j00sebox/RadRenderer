@@ -2,20 +2,9 @@
 
 ## Description
 
-Trying to apply my knowledge of rendering to make a rasterizer from scratch. This is just for fun and learning not planning on making any triple A games.
-So far it can load vertex position info from an .obj file and render it on screen. The only outside library I am currently using is SFML to create a
-window and display the image; I also use it to handle events. 
+My attempt to make a software renderer to learn more about the algorithms behind graphics. It can load gltf or obj file formats.
 
-## How it Works
-
-1. Creates triangles based off the data from the .obj file. 
-2. Applies model and view transformations to object
-3. Does all necessary clipping
-4. Performs a perpective projection on all vertices
-5. Does back face culling of triangles
-6. Rasterizes each triangle using an edge function to figure out what pixels are in the triangle
-7. Determines if pixels should be drawn using a depth buffer
-8. Writes pixels to a frame buffer that is displayed by SFML
+I implemented a simple rasterization algorithm that does the classic World -> View -> Projection transforms to get the verices into screen space where I then figure out how to colour each pixel. The lighting is nothing fancy just a simple phong shading calculation that is baked into the rasterization step. To improve performance I am using a vectorized way of doing the vertex transform with the desired matrix and am using a tile-based approach with multi-threading.
 
 End Result:
 
@@ -23,7 +12,17 @@ End Result:
 
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/2acc8023-2bb3-4b90-8e75-9977eecd82a9" />
 
-## Assets
+## Controls
+
+- Hold down RMB and use the mouse to look around.
+
+- While holding RMB can move around using WASD.
+
+- Q will open a file dialog that allows selection of a model to load.
+
+- ESC to close the window.
+
+## Assets Included
 
 OBJ models (Teapot, Stanford Bunny) from [common-3d-test-models](https://github.com/alecjacobson/common-3d-test-models).
 
