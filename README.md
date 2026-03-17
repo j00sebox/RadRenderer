@@ -4,7 +4,7 @@
 
 My attempt to make a software renderer to learn more about the algorithms behind graphics. It can load gltf or obj file formats.
 
-I implemented a simple rasterization algorithm that does the classic World -> View -> Projection transforms to get the verices into screen space where I then figure out how to colour each pixel. The lighting is nothing fancy just a simple phong shading calculation that is baked into the rasterization step. To improve performance I am using a vectorized way of doing the vertex transform with the desired matrix and am using a tile-based approach with multi-threading.
+I implemented a simple rasterization algorithm that does the classic World -> View -> Projection transforms to get the vertices into screen space where I then figure out how to colour each pixel. The lighting is nothing fancy just a simple diffuse lighting calculation that is baked into the rasterization step. To improve performance I am using a vectorized way of doing the vertex transform with the desired matrix and am using a tile-based approach with multi-threading.
 
 End Result:
 
